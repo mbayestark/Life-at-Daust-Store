@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link, Navigate } from "react-router-dom";
 import { useAdmin } from "../../context/AdminContext";
 import { Lock, ArrowRight, Shield } from "lucide-react";
 import Button from "../../components/ui/Button";
@@ -15,7 +15,7 @@ export default function AdminLogin() {
     const from = location.state?.from?.pathname || "/admin";
 
     if (isAdmin) {
-        return <navigate to={from} replace />;
+        return <Navigate to={from} replace />;
     }
 
     const handleSubmit = async (e) => {
@@ -36,13 +36,13 @@ export default function AdminLogin() {
 
     return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-            <div className="max-w-md w-full">
+            <div className="w-full max-w-[440px] animate-in fade-in zoom-in duration-500">
                 <div className="text-center mb-10">
                     <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-brand-navy text-white mb-6">
                         <Shield size={32} />
                     </div>
                     <h1 className="text-3xl font-black text-brand-navy tracking-tighter mb-2">Admin Portal</h1>
-                    <p className="text-gray-500 font-medium">Access restricted to DAUST staff and administrators</p>
+                    <p className="text-gray-500 font-medium max-w-[280px] mx-auto">Access restricted to DAUST staff and administrators</p>
                 </div>
 
                 <div className="bg-white rounded-[2rem] p-8 sm:p-10 shadow-2xl shadow-gray-200/50 border border-gray-100">
