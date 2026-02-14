@@ -81,7 +81,7 @@ export default function ProductDetails() {
 
             <main className="max-w-7xl mx-auto px-4 py-12 sm:py-24 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
                 {/* Left: Image Gallery (Span 7) */}
-                <div className="lg:col-span-7 space-y-6">
+                <div className="lg:col-span-5 space-y-6">
                     <div className="aspect-[4/5] rounded-[2rem] overflow-hidden bg-gray-50/50 premium-shadow border border-gray-100 animate-in fade-in zoom-in-95 duration-700">
                         <img
                             src={mainImage || product.image}
@@ -95,8 +95,8 @@ export default function ProductDetails() {
                                 key={idx}
                                 onClick={() => setMainImage(img)}
                                 className={`flex-shrink-0 w-24 h-28 rounded-2xl overflow-hidden border-2 transition-all duration-300 interactive-scale ${mainImage === img
-                                        ? "border-brand-orange shadow-lg scale-105"
-                                        : "border-transparent opacity-60 grayscale-[50%]"
+                                    ? "border-brand-orange shadow-lg scale-105"
+                                    : "border-transparent opacity-60 grayscale-[50%]"
                                     }`}
                             >
                                 <img src={img} alt="" className="w-full h-full object-cover" />
@@ -106,7 +106,7 @@ export default function ProductDetails() {
                 </div>
 
                 {/* Right: Info & Actions (Span 5) */}
-                <div className="lg:col-span-5 flex flex-col pt-4">
+                <div className="lg:col-span-7 flex flex-col pt-4">
                     <div className="mb-10 animate-in slide-in-from-right-10 duration-700 delay-100">
                         {product.badge && (
                             <span className="inline-block px-4 py-1.5 rounded-full bg-orange-100 text-brand-orange text-[10px] font-black uppercase tracking-[0.2em] mb-6 shadow-sm">
@@ -129,7 +129,7 @@ export default function ProductDetails() {
                         </div>
                     </div>
 
-                    <p className="text-gray-500 text-lg leading-relaxed mb-10 font-medium max-w-xl">
+                    <p className="text-gray-500 text-lg leading-relaxed mb-10 font-medium">
                         {product.description || "Inspired by campus life, this DAUST essential combines comfort with university spirit. Perfect for everyday wear or as a special gift."}
                     </p>
 
@@ -147,8 +147,8 @@ export default function ProductDetails() {
                                             key={color.name}
                                             onClick={() => setSelectedColor(color)}
                                             className={`relative w-12 h-12 rounded-full ring-2 ring-offset-4 transition-all duration-300 interactive-scale ${selectedColor?.name === color.name
-                                                    ? "ring-brand-orange"
-                                                    : "ring-transparent"
+                                                ? "ring-brand-orange"
+                                                : "ring-transparent"
                                                 }`}
                                         >
                                             <span
@@ -181,8 +181,8 @@ export default function ProductDetails() {
                                             key={size}
                                             onClick={() => setSelectedSize(size)}
                                             className={`min-w-[70px] h-14 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${selectedSize === size
-                                                    ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
-                                                    : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
+                                                ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
+                                                : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
                                                 }`}
                                         >
                                             {size}
@@ -213,36 +213,12 @@ export default function ProductDetails() {
                                 </button>
                             </div>
 
-                            {/* Add to Cart Button - Using inline styles for guaranteed visibility */}
-                            <button
-                                style={{
-                                    backgroundColor: '#0a2342',
-                                    color: 'white',
-                                    flex: 1,
-                                    height: '64px',
-                                    borderRadius: '16px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '16px',
-                                    fontSize: '16px',
-                                    fontWeight: '700',
-                                    boxShadow: '0 10px 40px rgba(10, 35, 66, 0.1)',
-                                    transition: 'all 300ms ease',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    minWidth: '200px'
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.backgroundColor = '#f37021';
-                                    e.currentTarget.style.transform = 'translateY(-2px)';
-                                    e.currentTarget.style.boxShadow = '0 20px 50px rgba(243, 112, 33, 0.2)';
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.backgroundColor = '#0a2342';
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = '0 10px 40px rgba(10, 35, 66, 0.1)';
-                                }}
+                            {/* Add to Cart Button - Now using Tailwind classes */}
+                            <Button
+                                variant="primary"
+                                size="lg"
+                                uppercase={false}
+                                className="flex-1 h-16 rounded-2xl gap-4 shadow-xl shadow-brand-navy/10 group normal-case min-w-[200px] hover:-translate-y-0.5 hover:shadow-brand-orange/20"
                                 onClick={() => {
                                     // Validate selections
                                     if (product.colors?.length > 0 && !selectedColor) {
@@ -261,9 +237,9 @@ export default function ProductDetails() {
                                     }, quantity);
                                 }}
                             >
-                                <ShoppingCart size={22} />
-                                <span>Add to Shopping Bag</span>
-                            </button>
+                                <ShoppingCart size={22} className="group-hover:rotate-12 transition-transform" />
+                                <span className="text-base">Add to Shopping Bag</span>
+                            </Button>
 
                             {/* Wishlist Button */}
                             <button

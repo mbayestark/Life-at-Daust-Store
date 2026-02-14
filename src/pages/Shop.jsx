@@ -21,6 +21,7 @@ export default function Shop() {
     const filtered = PRODUCTS.filter((p) =>
       category === "All Categories" ? true : p.category === category
     );
+
     if (sort === "Price: Low to High") return [...filtered].sort((a, b) => a.price - b.price);
     if (sort === "Price: High to Low") return [...filtered].sort((a, b) => b.price - a.price);
     if (sort === "Newest Arrivals") return [...filtered].sort((a, b) => b.id - a.id);
@@ -57,8 +58,8 @@ export default function Shop() {
                   key={c}
                   onClick={() => setCategory(c)}
                   className={`px-5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-300 ${category === c
-                    ? "bg-brand-navy text-white shadow-lg shadow-brand-navy/20"
-                    : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-100"
+                      ? "bg-brand-navy text-white shadow-lg shadow-brand-navy/20"
+                      : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-100"
                     }`}
                 >
                   {c}
