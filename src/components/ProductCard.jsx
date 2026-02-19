@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { Heart, Star, ShoppingCart, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
+import { useWishlist } from "../context/WishlistContext";
 import { formatPrice } from "../utils/format.js";
 import Button from "./ui/Button";
 
 export default function ProductCard({ product }) {
   const { addItem } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
   const [isHovered, setIsHovered] = useState(false);
 
   // If product has multiple images, show the second on hover
@@ -33,10 +35,16 @@ export default function ProductCard({ product }) {
 
         {/* Wishlist Button */}
         <button
-          className="absolute top-4 right-4 p-2.5 rounded-full glass-morphism text-brand-navy hover:text-red-500 transition-colors duration-300 z-10 interactive-scale"
-          aria-label="Add to Wishlist"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleWishlist(product);
+          }}
+          className={`absolute top-4 right-4 p-2.5 rounded-full glass-morphism transition-all duration-300 z-10 interactive-scale ${isInWishlist(product.id) ? "text-red-500 bg-red-50/50" : "text-brand-navy hover:text-red-500"
+            }`}
+          aria-label={isInWishlist(product.id) ? "Remove from Wishlist" : "Add to Wishlist"}
         >
-          <Heart className="h-5 w-5" />
+          <Heart className={`h-5 w-5 ${isInWishlist(product.id) ? "fill-current" : ""}`} />
         </button>
 
         {/* Badge */}

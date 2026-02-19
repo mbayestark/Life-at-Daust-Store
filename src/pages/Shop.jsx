@@ -8,6 +8,7 @@ import Hero from "../components/Hero.jsx";
 import Skeleton from "../components/ui/Skeleton.jsx";
 import { PRODUCTS as STATIC_PRODUCTS, CATEGORIES } from "../data/products.js";
 import { Filter, ChevronDown, X, LayoutGrid, Search } from "lucide-react";
+import shopHero from "../assets/shop-hero.jpg";
 
 export default function Shop() {
   const location = useLocation();
@@ -97,7 +98,7 @@ export default function Shop() {
         title="Global DAUST Collection"
         subtitle="Discover premium university apparel and essentials designed for the ambitious."
         cta="New Arrivals"
-        image="http://static.photos/fashion/1200x630/42"
+        image={shopHero}
         to="#products"
       />
 

@@ -45,7 +45,7 @@ export default function AdminLogin() {
                 {/* Logo & Header */}
                 <div className="text-center mb-10">
                     <div className="inline-flex items-center justify-center mb-6 p-4 bg-white/5 backdrop-blur-xl rounded-[2rem] border border-white/10 shadow-2xl">
-                        <img src={logo} alt="Life at DAUST" className="h-[70px] w-auto brightness-0 invert" />
+                        <img src={logo} alt="Life at DAUST" className="h-[70px] w-auto" />
                     </div>
                     <h1 className="text-3xl font-[900] text-white tracking-tight mb-3">Admin Portal</h1>
                     <p className="text-white/40 text-sm font-medium tracking-wide">Secure access for authorized DAUST personnel</p>
