@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Search, X, ShoppingBag, ChevronDown } from "lucide-react";
+import { Menu, Search, X, ShoppingBag, ChevronDown } from "lucide-react";
 import { useCart } from "../context/CartContext.jsx";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
