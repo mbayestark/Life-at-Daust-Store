@@ -1,19 +1,17 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronRight, ShoppingCart, Star, Heart, Info, Shield, Truck } from "lucide-react";
+import { ChevronRight, ShoppingCart, Star, Info, Shield, Truck } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { PRODUCTS } from "../data/products";
 import { useCart } from "../context/CartContext.jsx";
 import { formatPrice } from "../utils/format.js";
-import { useWishlist } from "../context/WishlistContext";
 import Button from "../components/ui/Button";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
 
 export default function ProductDetails() {
     const { id } = useParams();
     const { addItem } = useCart();
-    const { toggleWishlist, isInWishlist } = useWishlist();
 
     // Determine if this looks like a Convex ID (longer strings or specific format)
     const isConvexId = typeof id === "string" && (id.length > 20 || id.includes(":"));
@@ -264,17 +262,6 @@ export default function ProductDetails() {
                                 <span className="text-base">Add to Shopping Bag</span>
                             </Button>
 
-                            {/* Wishlist Button */}
-                            <button
-                                onClick={() => toggleWishlist(product)}
-                                className={`w-16 h-16 rounded-2xl border-2 flex items-center justify-center transition-all duration-300 interactive-scale ${isInWishlist(product._id || product.id)
-                                        ? "text-red-500 bg-red-50 border-red-100"
-                                        : "text-gray-400 border-gray-100 hover:text-red-500 hover:bg-red-50 hover:border-red-100"
-                                    }`}
-                                aria-label={isInWishlist(product._id || product.id) ? "Remove from Wishlist" : "Add to Wishlist"}
-                            >
-                                <Heart size={24} className={isInWishlist(product._id || product.id) ? "fill-current" : ""} />
-                            </button>
                         </div>
 
                         {/* Trust Badges */}

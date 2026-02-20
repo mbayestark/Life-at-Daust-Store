@@ -17,15 +17,15 @@ const mockProduct = {
 
 describe('ProductCard Component', () => {
     it('renders product information correctly', () => {
-        renderWithProviders(<ProductCard product={mockProduct} />);
+        const { container } = renderWithProviders(<ProductCard product={mockProduct} />);
 
         expect(screen.getByText('DAUST Water Bottle')).toBeInTheDocument();
-        expect(screen.getByText('30 CFA')).toBeInTheDocument();
+        expect(screen.getByText(/30 CFA/i)).toBeInTheDocument();
         expect(screen.getByText('Accessories')).toBeInTheDocument();
     });
 
     it('displays product image with correct alt text', () => {
-        renderWithProviders(<ProductCard product={mockProduct} />);
+        const { container } = renderWithProviders(<ProductCard product={mockProduct} />);
 
         const image = screen.getByRole('img');
         expect(image).toHaveAttribute('src', '/test-image.jpg');

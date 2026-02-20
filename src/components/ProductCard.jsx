@@ -1,14 +1,12 @@
 import React, { useState } from "react";
-import { Heart, Star, ShoppingCart, Eye } from "lucide-react";
+import { Star, ShoppingCart, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
-import { useWishlist } from "../context/WishlistContext";
 import { formatPrice } from "../utils/format.js";
 import Button from "./ui/Button";
 
 export default function ProductCard({ product }) {
   const { addItem } = useCart();
-  const { toggleWishlist, isInWishlist } = useWishlist();
   const [isHovered, setIsHovered] = useState(false);
 
   if (!product) return null;
@@ -37,19 +35,6 @@ export default function ProductCard({ product }) {
           />
         </Link>
 
-        {/* Wishlist Button */}
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleWishlist(product);
-          }}
-          className={`absolute top-3 right-3 sm:top-4 sm:right-4 p-2 sm:p-2.5 rounded-full glass-morphism transition-all duration-300 z-10 interactive-scale ${isInWishlist(productId) ? "text-red-500 bg-red-50/50" : "text-brand-navy hover:text-red-500"
-            }`}
-          aria-label={isInWishlist(productId) ? "Remove from Wishlist" : "Add to Wishlist"}
-        >
-          <Heart className={`h-4 w-4 sm:h-5 sm:w-5 ${isInWishlist(productId) ? "fill-current" : ""}`} />
-        </button>
 
         {/* Badge */}
         {product.badge && (

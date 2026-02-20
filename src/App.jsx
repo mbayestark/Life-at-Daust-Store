@@ -23,8 +23,6 @@ import AdminDashboard from "./pages/admin/Dashboard";
 import AdminProducts from "./pages/admin/Products";
 import AdminCollections from "./pages/admin/Collections";
 import AdminOrders from "./pages/admin/Orders";
-import Wishlist from "./pages/Wishlist";
-import { WishlistProvider } from "./context/WishlistContext";
 
 export default function App() {
   useEffect(() => {
@@ -34,33 +32,30 @@ export default function App() {
   return (
     <ErrorBoundary>
       <AdminProvider>
-        <WishlistProvider>
-          <Routes>
-            {/* Main Storefront Routes */}
-            <Route element={<Layout />}>
-              <Route index element={<Home />} />
-              <Route path="/shop" element={<Shop />} />
-              <Route path="/collections/:slug" element={<Collection />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/wishlist" element={<Wishlist />} />
-              <Route path="/product/:id" element={<ProductDetails />} />
-            </Route>
+        <Routes>
+          {/* Main Storefront Routes */}
+          <Route element={<Layout />}>
+            <Route index element={<Home />} />
+            <Route path="/shop" element={<Shop />} />
+            <Route path="/collections/:slug" element={<Collection />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/product/:id" element={<ProductDetails />} />
+          </Route>
 
-            {/* Admin Routes */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="products" element={<AdminProducts />} />
-              <Route path="collections" element={<AdminCollections />} />
-              <Route path="orders" element={<AdminOrders />} />
-            </Route>
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="collections" element={<AdminCollections />} />
+            <Route path="orders" element={<AdminOrders />} />
+          </Route>
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </WishlistProvider>
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </AdminProvider>
     </ErrorBoundary>
   );

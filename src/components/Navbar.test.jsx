@@ -25,9 +25,8 @@ describe('Navbar Component', () => {
         expect(screen.getAllByText(/About/i)[0]).toBeInTheDocument();
     });
 
-    it('renders the cart and wishlist icons', () => {
+    it('renders the cart icon', () => {
         renderWithProviders(<Navbar />);
         expect(screen.getAllByLabelText(/cart/i)[0]).toBeInTheDocument();
-        expect(screen.getAllByLabelText(/wishlist/i)[0]).toBeInTheDocument();
     });
 });

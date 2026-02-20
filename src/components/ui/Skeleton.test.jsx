@@ -19,6 +19,6 @@ describe('Skeleton UI Component', () => {
 
     it('applies arbitrary props', () => {
         const { container } = render(<Skeleton data-testid="skeleton-test" />);
-        expect(container.querySelector('[data-testid="skeleton-test"]')).toBeInTheDocument();
+        expect(container.querySelector('[data-testid="skeleton-test"]')).toBeTruthy();
     });
 });

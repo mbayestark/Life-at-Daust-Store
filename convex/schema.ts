@@ -46,10 +46,6 @@ export default defineSchema({
         status: v.string(), // 'Processing', 'Shipped', 'Delivered', 'Cancelled'
         createdAt: v.number(),
     }),
-    wishlists: defineTable({
-        ip: v.string(),
-        products: v.array(v.any()), // Storing product objects for quick access
-    }).index("by_ip", ["ip"]),
 });
 
 // Triggering backend re-index for new orders module

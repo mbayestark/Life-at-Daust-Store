@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, Search, X, ShoppingBag, ChevronDown, Heart } from "lucide-react";
+import { Menu, Search, X, ShoppingBag, ChevronDown } from "lucide-react";
 import { useCart } from "../context/CartContext.jsx";
-import { useWishlist } from "../context/WishlistContext";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import logo from "../assets/logo.png";
@@ -11,7 +10,6 @@ import { NAV_LINKS } from "../data/navigation.js";
 export default function Navbar() {
   const navigate = useNavigate();
   const { count } = useCart();
-  const { wishlistCount } = useWishlist();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const collections = useQuery(api.collections.list);
@@ -121,21 +119,6 @@ export default function Navbar() {
                 />
               </form>
 
-              {/* Wishlist */}
-              <Link
-                to="/wishlist"
-                className="relative flex items-center gap-3 px-4 py-3 text-gray-700 hover:text-red-500 rounded-2xl hover:bg-gray-50 transition-all duration-300 group"
-                aria-label="Wishlist"
-              >
-                <div className="relative">
-                  <Heart size={22} strokeWidth={2} className="group-hover:scale-110 transition-transform" />
-                  {wishlistCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-[900] rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 shadow-lg animate-scale-in">
-                      {wishlistCount}
-                    </span>
-                  )}
-                </div>
-              </Link>
 
               {/* Cart */}
               <Link
