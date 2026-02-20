@@ -81,7 +81,7 @@ export default function AdminOrders() {
                                     <p className="text-[10px] text-gray-400 mt-1">{new Date(order.createdAt).toLocaleDateString()}</p>
                                 </div>
                                 <div className="text-right flex items-center gap-3">
-                                    <p className="font-black text-brand-navy text-sm">${order.total.toFixed(2)}</p>
+                                    <p className="font-black text-brand-navy text-sm">${(order?.total || 0).toFixed(2)}</p>
                                     <ChevronRight size={16} className={`text-gray-300 group-hover:text-brand-orange transition-all ${selectedOrder?._id === order._id ? "translate-x-1 text-brand-orange" : ""}`} />
                                 </div>
                             </button>
@@ -194,16 +194,16 @@ export default function AdminOrders() {
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-sm font-bold text-brand-navy truncate">{item.name}</p>
                                                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                                            QTY: {item.qty} {item.size ? `• Size: ${item.size}` : ""} {item.color ? `• ${item.color}` : ""}
+                                                            QTY: {item.qty} {item?.size ? `• Size: ${item.size}` : ""} {item?.color ? `• ${item.color}` : ""}
                                                         </p>
                                                     </div>
-                                                    <p className="font-black text-brand-navy text-sm">${(item.price * item.qty).toFixed(2)}</p>
+                                                    <p className="font-black text-brand-navy text-sm">${((item.price || 0) * (item.qty || 1)).toFixed(2)}</p>
                                                 </div>
                                             ))}
                                         </div>
                                         <div className="p-4 bg-brand-navy text-white flex justify-between items-center">
                                             <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Grand Total</span>
-                                            <span className="text-lg font-black">${selectedOrder.total.toFixed(2)}</span>
+                                            <span className="text-lg font-black">${(selectedOrder?.total || 0).toFixed(2)}</span>
                                         </div>
                                     </div>
                                 </div>

@@ -24,7 +24,7 @@ export default function AdminDashboard() {
     const stats = useMemo(() => {
         if (!products || !orders) return [];
 
-        const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+        const totalRevenue = orders.reduce((sum, order) => sum + (order?.total || 0), 0);
         const activeOrders = orders.filter(o => o.status === "Processing" || o.status === "Shipped").length;
         const totalProducts = products.length;
         const completedOrders = orders.filter(o => o.status === "Delivered").length;
@@ -45,7 +45,8 @@ export default function AdminDashboard() {
         if (!products) return [];
         const counts = {};
         products.forEach(p => {
-            counts[p.category] = (counts[p.category] || 0) + 1;
+            const cat = p.category || "Uncategorized";
+            counts[cat] = (counts[cat] || 0) + 1;
         });
         return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 4);
     }, [products]);

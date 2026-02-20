@@ -49,27 +49,12 @@ export default function AdminLogin() {
                 </div>
 
                 {/* Login Form (No Card) */}
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="space-y-2">
-                        <label htmlFor="username" className="block text-sm font-semibold text-gray-300 ml-1">
-                            Username
-                        </label>
-                        <input
-                            id="username"
-                            type="text"
-                            placeholder="Eg: testUser"
-                            className="w-full bg-brand-navy border border-gray-800 rounded-lg px-4 py-3.5 text-white placeholder-gray-500 focus:border-brand-orange/50 focus:ring-1 focus:ring-brand-orange/30 outline-none transition-all"
-                        />
-                    </div>
-
-                    <div className="space-y-2">
+                <form onSubmit={handleSubmit} className="space-y-8">
+                    <div className="space-y-3">
                         <div className="flex justify-between items-center px-1">
-                            <label htmlFor="password" className="text-sm font-semibold text-gray-300">
-                                Password
+                            <label htmlFor="password" className="text-sm font-bold text-gray-300 uppercase tracking-widest">
+                                Admin Portal Access
                             </label>
-                            <button type="button" className="text-sm font-semibold text-brand-orange hover:text-orange-400 transition-colors">
-                                Forgot password?
-                            </button>
                         </div>
                         <div className="relative">
                             <input
@@ -77,15 +62,19 @@ export default function AdminLogin() {
                                 type="password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                className="w-full bg-brand-navy border border-gray-800 rounded-lg px-4 py-3.5 text-white placeholder-transparent focus:border-brand-orange/50 focus:ring-1 focus:ring-brand-orange/30 outline-none transition-all"
+                                placeholder="Enter Access Password"
+                                className="w-full bg-brand-navy border border-gray-800 rounded-2xl px-6 py-4 text-white placeholder-gray-600 focus:border-brand-orange/50 focus:ring-1 focus:ring-brand-orange/30 outline-none transition-all text-center tracking-[0.5em]"
                                 required
                             />
-                            <Lock className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 h-4 w-4" />
+                            <Lock className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-700 h-4 w-4" />
                         </div>
+                        <p className="text-[10px] text-center text-gray-500 font-bold uppercase tracking-widest mt-4 opacity-50">
+                            Secure single-factor authentication
+                        </p>
                     </div>
 
                     {error && (
-                        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 animate-shake">
+                        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 animate-shake">
                             <p className="text-red-400 text-xs font-bold text-center">
                                 {error}
                             </p>
@@ -96,23 +85,17 @@ export default function AdminLogin() {
                         type="submit"
                         variant="primary"
                         size="lg"
-                        className="w-full rounded-lg h-14 bg-brand-orange hover:bg-orange-500 text-white font-bold flex items-center justify-center gap-2 group transition-all"
+                        className="w-full rounded-2xl h-14 bg-brand-orange hover:bg-orange-500 text-white font-black uppercase tracking-widest flex items-center justify-center gap-3 group transition-all"
                         loading={loading}
                     >
-                        Sign in
+                        Enter Portal
                         <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                     </Button>
                 </form>
 
-                <div className="mt-8 text-center">
-                    <p className="text-sm text-gray-400">
-                        Don't have an account? <Link to="/" className="text-brand-orange font-bold hover:underline">Join us</Link>
-                    </p>
-                </div>
-
-                <div className="mt-16 text-center">
-                    <p className="text-[10px] text-white/20 font-black uppercase tracking-[0.3em] font-mono">
-                        Life at DAUST · V2.4.1
+                <div className="mt-20 text-center">
+                    <p className="text-[10px] text-white/10 font-black uppercase tracking-[0.4em] font-mono">
+                        Life at DAUST · V2.4.2
                     </p>
                 </div>
             </div>
