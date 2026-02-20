@@ -12,6 +12,7 @@ import {
     Minus
 } from "lucide-react";
 import Button from "../../components/ui/Button";
+import { optimizeImage, createPreviewUrl, revokePreviewUrl } from "../../utils/imageOptimizer";
 
 export default function AdminProductForm({ product, onSave, onCancel }) {
     const [formData, setFormData] = useState({
@@ -56,28 +57,35 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
             setImagePreview(product.image || "");
         }
     }, [product]);
-
+    useEffect(() => {
+        return () => {
+            // Cleanup generic preview URL if it's a blob
+            if (imagePreview && imagePreview.startsWith("blob:")) {
+                revokePreviewUrl(imagePreview);
+            }
+        };
+    }, [imagePreview]);
 
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            // Revoke old preview if it exists
+            if (imagePreview && imagePreview.startsWith("blob:")) {
+                revokePreviewUrl(imagePreview);
+            }
             setImageFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result);
-            };
-            reader.readAsDataURL(file);
+            setImagePreview(createPreviewUrl(file));
         }
     };
 
-    const handleUpload = async () => {
-        if (!imageFile) return formData.image;
+    const handleUpload = async (fileToUpload) => {
+        if (!fileToUpload) return formData.image;
 
         const postUrl = await generateUploadUrl();
         const result = await fetch(postUrl, {
             method: "POST",
-            headers: { "Content-Type": imageFile.type },
-            body: imageFile,
+            headers: { "Content-Type": fileToUpload.type },
+            body: fileToUpload,
         });
         const { storageId } = await result.json();
 
@@ -97,11 +105,11 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
         try {
             let finalImageUrl = formData.image;
             if (imageFile) {
-                // Upload the file and get the storage ID
-                const storageId = await handleUpload();
+                // Compress and optimize image before upload
+                const optimizedFile = await optimizeImage(imageFile);
 
-                // Convert storage ID to a public URL using Convex storage
-                // We'll use the storage ID directly - Convex will handle URL conversion on read
+                // Upload the file and get the storage ID
+                const storageId = await handleUpload(optimizedFile);
                 finalImageUrl = storageId;
             }
 

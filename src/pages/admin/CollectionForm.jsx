@@ -3,6 +3,7 @@ import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { X, Upload, Image as ImageIcon } from "lucide-react";
 import Button from "../../components/ui/Button";
+import { optimizeImage, createPreviewUrl, revokePreviewUrl } from "../../utils/imageOptimizer";
 
 export default function CollectionForm({ collection, onClose, onSave }) {
     const [formData, setFormData] = useState({
@@ -32,6 +33,14 @@ export default function CollectionForm({ collection, onClose, onSave }) {
         }
     }, [collection]);
 
+    useEffect(() => {
+        return () => {
+            if (imagePreview && imagePreview.startsWith("blob:")) {
+                revokePreviewUrl(imagePreview);
+            }
+        };
+    }, [imagePreview]);
+
     const generateSlug = (name) => {
         return name
             .toLowerCase()
@@ -51,23 +60,22 @@ export default function CollectionForm({ collection, onClose, onSave }) {
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            if (imagePreview && imagePreview.startsWith("blob:")) {
+                revokePreviewUrl(imagePreview);
+            }
             setImageFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result);
-            };
-            reader.readAsDataURL(file);
+            setImagePreview(createPreviewUrl(file));
         }
     };
 
-    const handleUpload = async () => {
-        if (!imageFile) return formData.image;
+    const handleUpload = async (fileToUpload) => {
+        if (!fileToUpload) return formData.image;
 
         const postUrl = await generateUploadUrl();
         const result = await fetch(postUrl, {
             method: "POST",
-            headers: { "Content-Type": imageFile.type },
-            body: imageFile,
+            headers: { "Content-Type": fileToUpload.type },
+            body: fileToUpload,
         });
         const { storageId } = await result.json();
         return storageId;
@@ -87,7 +95,8 @@ export default function CollectionForm({ collection, onClose, onSave }) {
 
             let finalImageUrl = formData.image;
             if (imageFile) {
-                const storageId = await handleUpload();
+                const optimizedFile = await optimizeImage(imageFile);
+                const storageId = await handleUpload(optimizedFile);
                 finalImageUrl = storageId;
             }
 

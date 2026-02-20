@@ -179,8 +179,8 @@ export default function Home() {
   const collections = useQuery(api.collections.list);
   const scrollRef = useRef(null);
 
-  // Sync products with Convex if available
-  const PRODUCTS_DATA = (convexProducts && convexProducts.length > 0) ? convexProducts : PRODUCTS;
+  // Sync products with Convex if available. Only fallback if loading (undefined).
+  const PRODUCTS_DATA = (convexProducts !== undefined) ? convexProducts : PRODUCTS;
 
   // Derive featured and trending from the current data source
   const featuredProduct = useMemo(() => {
