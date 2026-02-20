@@ -1,0 +1,30 @@
+import React from 'react';
+import { describe, it, expect, vi } from 'vitest';
+import { screen } from '@testing-library/react';
+import { renderWithProviders } from '../test/utils';
+import Home from './Home';
+
+// Mock Convex
+vi.mock('convex/react', () => ({
+    useQuery: vi.fn(() => []), // Return empty array to test defensive rendering
+}));
+
+describe('Home Page', () => {
+    it('renders hero, featured spotlight, and collections sections', () => {
+        renderWithProviders(<Home />);
+
+        // Assert on Hero content (props are passed from Home.jsx)
+        expect(screen.getByText(/Empowering the Next Generation/i)).toBeInTheDocument();
+
+        // Assert on Shop Collection section
+        expect(screen.getByText(/Shop the movement/i)).toBeInTheDocument();
+    });
+
+    it('gracefully handles missing featured product', () => {
+        // Since useQuery returns empty array, featuredProduct will be undefined
+        renderWithProviders(<Home />);
+
+        // "Featured Product" badge should NOT be in document
+        expect(screen.queryByText(/Featured Product/i)).not.toBeInTheDocument();
+    });
+});

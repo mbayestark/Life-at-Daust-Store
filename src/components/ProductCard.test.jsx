@@ -43,17 +43,14 @@ describe('ProductCard Component', () => {
     it('displays rating stars', () => {
         renderWithProviders(<ProductCard product={mockProduct} />);
 
-        // Check for rating display (4.5)
         expect(screen.getByText('4.5')).toBeInTheDocument();
     });
 
     it('shows quick add button on desktop', () => {
         renderWithProviders(<ProductCard product={mockProduct} />);
 
-        // Quick add button should be in the document
         expect(screen.getByText(/quick add/i)).toBeInTheDocument();
 
-        // Mobile add to cart button should have the aria-label we added
         expect(screen.getByLabelText(/add to cart/i)).toBeInTheDocument();
     });
 
@@ -76,5 +73,10 @@ describe('ProductCard Component', () => {
 
         renderWithProviders(<ProductCard product={simpleProduct} />);
         expect(screen.getByText('Simple Product')).toBeInTheDocument();
+    });
+
+    it('returns null when product is undefined', () => {
+        const { container } = renderWithProviders(<ProductCard product={undefined} />);
+        expect(container.firstChild).toBeNull();
     });
 });

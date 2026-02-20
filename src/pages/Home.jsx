@@ -263,64 +263,66 @@ export default function Home() {
       {/* 4 ── Removed Brand Stats Section ── */}
 
       {/* 5 ── PRODUCT SPOTLIGHT ── */}
-      <section className="bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
-          <div ref={spotlightRef} className="section-reveal grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+      {featuredProduct && (
+        <section className="bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
+            <div ref={spotlightRef} className="section-reveal grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
-            {/* Image */}
-            <div className="relative">
-              <div className="aspect-[4/5] rounded-2xl overflow-hidden bg-gray-50 shadow-2xl shadow-brand-navy/10">
-                <img
-                  src={featuredProduct.image}
-                  alt={featuredProduct.name}
-                  className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-                />
-              </div>
-              {/* Accent blobs */}
-              <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-brand-orange/12 rounded-full blur-[70px]" />
-              <div className="absolute -top-8 -left-8 w-32 h-32 bg-brand-navy/8 rounded-full blur-[60px]" />
-            </div>
-
-            {/* Copy */}
-            <div>
-              <span className="inline-block text-brand-orange text-[11px] font-[900] uppercase tracking-[0.22em] mb-4 px-3 py-1.5 bg-brand-orange/8 rounded-full">
-                Featured Product
-              </span>
-              <h2 className="text-[var(--text-4xl)] font-[900] text-brand-navy tracking-tight mb-4 leading-[1.05]">
-                {featuredProduct.name}
-              </h2>
-              <p className="text-gray-500 text-base leading-relaxed mb-6 max-w-md">
-                {featuredProduct.description}
-              </p>
-
-              {/* Stars */}
-              <div className="flex items-center gap-3 mb-8">
-                <div className="flex gap-0.5">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star
-                      key={i}
-                      size={15}
-                      className={
-                        i < Math.floor(featuredProduct.rating)
-                          ? "text-yellow-400 fill-current"
-                          : "text-gray-200"
-                      }
-                    />
-                  ))}
+              {/* Image */}
+              <div className="relative">
+                <div className="aspect-[4/5] rounded-2xl overflow-hidden bg-gray-50 shadow-2xl shadow-brand-navy/10">
+                  <img
+                    src={featuredProduct.image}
+                    alt={featuredProduct.name}
+                    className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
+                  />
                 </div>
-                <span className="text-sm font-[700] text-gray-400">{featuredProduct.rating} / 5</span>
+                {/* Accent blobs */}
+                <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-brand-orange/12 rounded-full blur-[70px]" />
+                <div className="absolute -top-8 -left-8 w-32 h-32 bg-brand-navy/8 rounded-full blur-[60px]" />
               </div>
 
-              <Link to={`/product/${featuredProduct._id || featuredProduct.id}`}>
-                <Button variant="primary" size="lg" className="rounded-full group gap-2.5 pr-5">
-                  Shop Now
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
+              {/* Copy */}
+              <div>
+                <span className="inline-block text-brand-orange text-[11px] font-[900] uppercase tracking-[0.22em] mb-4 px-3 py-1.5 bg-brand-orange/8 rounded-full">
+                  Featured Product
+                </span>
+                <h2 className="text-[var(--text-4xl)] font-[900] text-brand-navy tracking-tight mb-4 leading-[1.05]">
+                  {featuredProduct.name}
+                </h2>
+                <p className="text-gray-500 text-base leading-relaxed mb-6 max-w-md">
+                  {featuredProduct.description}
+                </p>
+
+                {/* Stars */}
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Star
+                        key={i}
+                        size={15}
+                        className={
+                          i < Math.floor(featuredProduct.rating)
+                            ? "text-yellow-400 fill-current"
+                            : "text-gray-200"
+                        }
+                      />
+                    ))}
+                  </div>
+                  <span className="text-sm font-[700] text-gray-400">{featuredProduct.rating} / 5</span>
+                </div>
+
+                <Link to={`/product/${featuredProduct._id || featuredProduct.id}`}>
+                  <Button variant="primary" size="lg" className="rounded-full group gap-2.5 pr-5">
+                    Shop Now
+                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* 6 ── TRENDING NOW ── */}
       <section className="bg-brand-cream py-20 sm:py-28">

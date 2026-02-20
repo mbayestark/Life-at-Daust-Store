@@ -3,7 +3,6 @@ import { screen } from '@testing-library/react';
 import { renderWithProviders, userEvent } from '../test/utils';
 import ErrorBoundary from './ErrorBoundary';
 
-// A component that throws an error for testing purposes
 const BuggyComponent = ({ shouldThrow = false }) => {
     if (shouldThrow) {
         throw new Error('Test error');
@@ -15,8 +14,6 @@ describe('ErrorBoundary Component', () => {
     const originalLocation = window.location;
 
     beforeEach(() => {
-        // Mock window.location for reload tests
-        // In jsdom/vitest, we need to use this pattern to mock location.reload
         delete window.location;
         window.location = {
             ...originalLocation,
@@ -56,7 +53,6 @@ describe('ErrorBoundary Component', () => {
     });
 
     it('shows error details in development mode', () => {
-        // Mock process.env.NODE_ENV
         const originalEnv = process.env.NODE_ENV;
         process.env.NODE_ENV = 'development';
 

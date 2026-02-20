@@ -11,6 +11,8 @@ export default function ProductCard({ product }) {
   const { toggleWishlist, isInWishlist } = useWishlist();
   const [isHovered, setIsHovered] = useState(false);
 
+  if (!product) return null;
+
   // If product has multiple images, show the second on hover
   const displayImage = isHovered && product.images?.length > 1
     ? product.images[1]

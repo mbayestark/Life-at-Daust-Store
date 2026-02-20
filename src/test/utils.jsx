@@ -1,6 +1,7 @@
 import { render } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { CartProvider } from '../context/CartContext';
+import { WishlistProvider } from '../context/WishlistContext';
 
 /**
  * Custom render function that wraps components with necessary providers
@@ -19,7 +20,9 @@ export function renderWithProviders(ui, options = {}) {
     return render(
         <BrowserRouter>
             <CartProvider>
-                {ui}
+                <WishlistProvider>
+                    {ui}
+                </WishlistProvider>
             </CartProvider>
         </BrowserRouter>,
         renderOptions
