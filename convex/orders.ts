@@ -1,5 +1,6 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 
 export const list = query({
   args: {},
@@ -20,8 +21,8 @@ export const addOrder = mutation({
     orderId: v.string(),
     customer: v.object({
       name: v.string(),
-      email: v.string(),
-      year: v.string(),
+      phone: v.string(),
+      location: v.string(),
     }),
     items: v.array(v.object({
       name: v.string(),
@@ -31,6 +32,7 @@ export const addOrder = mutation({
       size: v.optional(v.string()),
     })),
     subtotal: v.number(),
+    deliveryFee: v.number(),
     total: v.number(),
   },
   handler: async (ctx, args) => {
@@ -41,35 +43,17 @@ export const addOrder = mutation({
       createdAt: Date.now(),
     });
 
-    // Backup to Google Sheets (if configured)
-    const sheetsUrl = process.env.SHEETS_WEBAPP_URL;
-    const sheetsSecret = process.env.SHEETS_SECRET;
-
-    if (sheetsUrl && sheetsSecret) {
-      try {
-        const payload = {
-          orderId: args.orderId,
-          name: args.customer.name,
-          email: args.customer.email,
-          year: args.customer.year,
-          items: args.items.map(item =>
-            `${item.name} (x${item.qty})${item.color ? ` - ${item.color}` : ""}${item.size ? ` - ${item.size}` : ""}`  // Fixed: Added closing backtick and parenthesis
-          ).join(", "),
-          total: args.total,
-          secret: sheetsSecret,
-          timestamp: new Date().toISOString(),
-        };
-
-        await fetch(sheetsUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-      } catch (error) {
-        // Log but don't fail the order if sheets sync fails
-        console.error("Google Sheets backup failed:", error);
-      }
-    }
+    // Schedule Google Sheets backup via Action (to avoid side-effect error in mutation)
+    await ctx.scheduler.runAfter(0, internal.actions.syncToSheets, {
+      orderId: args.orderId,
+      name: args.customer.name,
+      phone: args.customer.phone,
+      location: args.customer.location,
+      items: args.items.map(item =>
+        `${item.name} (x${item.qty})${item.color ? ` - ${item.color}` : ""}${item.size ? ` - ${item.size}` : ""}`
+      ).join(", "),
+      total: args.total,
+    });
 
     return orderId;
   },

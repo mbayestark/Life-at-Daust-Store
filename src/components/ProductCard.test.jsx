@@ -1,6 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { describe, it, expect } from 'vitest';
+import { screen } from '@testing-library/react';
 import { renderWithProviders } from '../test/utils';
 import ProductCard from './ProductCard';
 
@@ -17,7 +16,7 @@ const mockProduct = {
 
 describe('ProductCard Component', () => {
     it('renders product information correctly', () => {
-        const { container } = renderWithProviders(<ProductCard product={mockProduct} />);
+        renderWithProviders(<ProductCard product={mockProduct} />);
 
         expect(screen.getByText('DAUST Water Bottle')).toBeInTheDocument();
         expect(screen.getByText(/30 CFA/i)).toBeInTheDocument();
@@ -25,7 +24,7 @@ describe('ProductCard Component', () => {
     });
 
     it('displays product image with correct alt text', () => {
-        const { container } = renderWithProviders(<ProductCard product={mockProduct} />);
+        renderWithProviders(<ProductCard product={mockProduct} />);
 
         const image = screen.getByRole('img');
         expect(image).toHaveAttribute('src', '/test-image.jpg');

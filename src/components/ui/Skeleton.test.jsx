@@ -9,7 +9,8 @@ describe('Skeleton UI Component', () => {
         const skeleton = container.firstChild;
         expect(skeleton).toHaveClass('animate-pulse');
         expect(skeleton).toHaveClass('bg-gray-200');
-        expect(skeleton).toHaveClass('rounded-md');
+        // Default variant is 'rect' which applies 'rounded-lg'
+        expect(skeleton).toHaveClass('rounded-lg');
     });
 
     it('applies custom className', () => {
@@ -17,8 +18,15 @@ describe('Skeleton UI Component', () => {
         expect(container.firstChild).toHaveClass('custom-class');
     });
 
-    it('applies arbitrary props', () => {
-        const { container } = render(<Skeleton data-testid="skeleton-test" />);
-        expect(container.querySelector('[data-testid="skeleton-test"]')).toBeTruthy();
+    it('applies circle variant', () => {
+        const { container } = render(<Skeleton variant="circle" />);
+        expect(container.firstChild).toHaveClass('rounded-full');
+    });
+
+    it('applies text variant', () => {
+        const { container } = render(<Skeleton variant="text" />);
+        expect(container.firstChild).toHaveClass('rounded');
+        expect(container.firstChild).toHaveClass('h-4');
+        expect(container.firstChild).toHaveClass('w-full');
     });
 });

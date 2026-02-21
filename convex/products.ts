@@ -60,6 +60,7 @@ export const addProduct = mutation({
         sizes: v.optional(v.array(v.string())),
         description: v.optional(v.string()),
         collection: v.optional(v.string()),
+        stock: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
         const productId = await ctx.db.insert("products", args);
@@ -83,6 +84,7 @@ export const updateProduct = mutation({
         sizes: v.optional(v.array(v.string())),
         description: v.optional(v.string()),
         collection: v.optional(v.string()),
+        stock: v.optional(v.number()),
     },
     handler: async (ctx, args) => {
         const { id, ...fields } = args;

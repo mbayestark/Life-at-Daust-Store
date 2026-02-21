@@ -9,13 +9,6 @@ export default function About() {
     { icon: Users, title: "Family Support", text: "15% of all profits go directly into the DAUST Financial Aid program, ensuring that excellence is never limited by background." },
   ];
 
-  const milestones = [
-    { year: "2023", title: "The Beginning", desc: "DAUST opens its doors in Dakar, and the first student-designed 'Dream' tee is printed." },
-    { year: "2024", title: "Nationwide Growth", desc: "Our apparel becomes a symbol of excellence recognized across Western and Central Africa." },
-    { year: "2025", title: "Innovation Lab", desc: "The store pivots to sustainable tech-fabrics, blending engineering with streetwear." },
-    { year: "2026", title: "Global Family", desc: "DAUST Store launches globally, shipping campus pride to alumni around the world." },
-  ];
-
   return (
     <main className="bg-white">
       {/* Premium Hero Section */}

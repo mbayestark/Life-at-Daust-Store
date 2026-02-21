@@ -17,6 +17,7 @@ export default defineSchema({
         sizes: v.optional(v.array(v.string())),
         description: v.optional(v.string()),
         collection: v.optional(v.string()), // Collection name
+        stock: v.optional(v.number()), // Product stock
     }),
     collections: defineTable({
         name: v.string(),
@@ -31,8 +32,8 @@ export default defineSchema({
         orderId: v.string(),
         customer: v.object({
             name: v.string(),
-            email: v.string(),
-            year: v.string(),
+            phone: v.string(),
+            location: v.string(),
         }),
         items: v.array(v.object({
             name: v.string(),
@@ -42,6 +43,7 @@ export default defineSchema({
             size: v.optional(v.string()),
         })),
         subtotal: v.number(),
+        deliveryFee: v.number(),
         total: v.number(),
         status: v.string(), // 'Processing', 'Shipped', 'Delivered', 'Cancelled'
         createdAt: v.number(),

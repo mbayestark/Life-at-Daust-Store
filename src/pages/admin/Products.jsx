@@ -125,6 +125,7 @@ export default function AdminProducts() {
                                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Product</th>
                                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 md:table-cell hidden">Category</th>
                                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Price</th>
+                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Stock</th>
                                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 lg:table-cell hidden">Rating</th>
                                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 text-right">Actions</th>
                             </tr>
@@ -150,6 +151,16 @@ export default function AdminProducts() {
                                     </td>
                                     <td className="px-8 py-6">
                                         <p className="font-black text-brand-navy text-sm">{formatPrice(p.price)}</p>
+                                    </td>
+                                    <td className="px-8 py-6">
+                                        <div className="flex flex-col gap-1">
+                                            <span className={`text-xs font-bold ${p.stock === 0 ? "text-red-500" : p.stock <= 5 ? "text-orange-500" : "text-green-500"}`}>
+                                                {p.stock === 0 ? "Sold Out" : `${p.stock} units`}
+                                            </span>
+                                            {p.stock <= 5 && p.stock > 0 && (
+                                                <span className="text-[8px] font-black uppercase tracking-widest text-orange-400">Low Stock</span>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="px-8 py-6 lg:table-cell hidden">
                                         <div className="flex items-center gap-1">

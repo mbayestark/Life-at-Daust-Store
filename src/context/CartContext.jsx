@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 
 const STORAGE_KEY = "lifeAtDaust.cart.v1";
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
@@ -78,6 +79,7 @@ export function CartProvider({ children }) {
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {

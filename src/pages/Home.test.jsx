@@ -10,14 +10,14 @@ vi.mock('convex/react', () => ({
 }));
 
 describe('Home Page', () => {
-    it('renders hero, featured spotlight, and collections sections', () => {
+    it('renders hero and featured collections sections', () => {
         renderWithProviders(<Home />);
 
-        // Assert on Hero content (props are passed from Home.jsx)
-        expect(screen.getByText(/Empowering the Next Generation/i)).toBeInTheDocument();
+        // Assert on Hero content (title passed from Home.jsx)
+        expect(screen.getByText(/Welcome to the Life At Daust Store/i)).toBeInTheDocument();
 
-        // Assert on Shop Collection section
-        expect(screen.getByText(/Shop the movement/i)).toBeInTheDocument();
+        // Assert on Featured Collections section heading
+        expect(screen.getByText(/Featured Collections/i)).toBeInTheDocument();
     });
 
     it('gracefully handles missing featured product', () => {

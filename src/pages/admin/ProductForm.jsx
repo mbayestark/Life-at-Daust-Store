@@ -26,6 +26,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
         colors: [],
         sizes: [],
         collection: "",
+        stock: "",
     });
 
     const [imageFile, setImageFile] = useState(null);
@@ -53,6 +54,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                 colors: product.colors || [],
                 sizes: product.sizes || [],
                 collection: product.collection || "",
+                stock: product.stock?.toString() || "",
             });
             setImagePreview(product.image || "");
         }
@@ -117,6 +119,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                 ...formData,
                 price: parseFloat(formData.price),
                 rating: parseFloat(formData.rating),
+                stock: formData.stock !== "" ? parseInt(formData.stock) : undefined,
                 image: finalImageUrl,
             };
 
@@ -232,6 +235,17 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                     <option value="">None</option>
                                     {collections?.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
                                 </select>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Stock Quantity</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    value={formData.stock}
+                                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                                    className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-brand-navy font-bold focus:ring-2 focus:ring-brand-orange/20 transition-all"
+                                    placeholder="0"
+                                />
                             </div>
                         </div>
                     </div>

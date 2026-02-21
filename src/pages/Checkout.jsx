@@ -18,15 +18,33 @@ function makeOrderId() {
   return `ORD-${timestamp}-${random}`;
 }
 
+// Delivery Locations in Senegal
+const locations = [
+  { name: "DAUST Campus", fee: 0 },
+  { name: "Somone", fee: 1000 },
+  { name: "Saly", fee: 2000 },
+  { name: "Mbour", fee: 2500 },
+  { name: "Thies", fee: 3500 },
+  { name: "Dakar", fee: 5000 },
+  { name: "Other (Calculate on delivery)", fee: 0 },
+];
+
 export default function Checkout() {
-  const { items, subtotal, tax, shipping, total, clear } = useCart();
+  const { items, subtotal, tax, clear } = useCart();
   const [orderId] = useState(makeOrderId());
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", year: "" });
+  const [form, setForm] = useState({ name: "", phone: "", location: "" });
   const [error, setError] = useState("");
   const nav = useNavigate();
 
   const addOrder = useMutation(api.orders.addOrder);
+
+  const deliveryFee = useMemo(() => {
+    const loc = locations.find(l => l.name === form.location);
+    return loc ? loc.fee : 0;
+  }, [form.location]);
+
+  const total = subtotal + tax + deliveryFee;
 
   const lines = useMemo(
     () =>
@@ -56,7 +74,7 @@ export default function Checkout() {
     e.preventDefault();
     setError("");
 
-    if (!form.name || !form.email || !form.year) {
+    if (!form.name || !form.phone || !form.location) {
       setError("Please ensure all fields are completed before proceeding.");
       return;
     }
@@ -68,11 +86,12 @@ export default function Checkout() {
         orderId,
         customer: {
           name: form.name,
-          email: form.email,
-          year: form.year,
+          phone: form.phone,
+          location: form.location,
         },
         items: lines,
         subtotal,
+        deliveryFee,
         total,
       });
 
@@ -120,6 +139,7 @@ export default function Checkout() {
                 <label htmlFor="name" className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Full Name</label>
                 <input
                   id="name"
+                  required
                   className="w-full h-16 bg-white border border-gray-100 rounded-2xl px-6 text-brand-navy font-bold focus:ring-4 focus:ring-brand-orange/5 focus:border-brand-orange outline-none transition-all shadow-sm"
                   placeholder="e.g. Moussa Diop"
                   value={form.name}
@@ -128,38 +148,46 @@ export default function Checkout() {
               </div>
 
               <div className="space-y-3">
-                <label htmlFor="email" className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">University Email</label>
+                <label htmlFor="phone" className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Phone Number</label>
                 <input
-                  id="email"
+                  id="phone"
+                  required
                   className="w-full h-16 bg-white border border-gray-100 rounded-2xl px-6 text-brand-navy font-bold focus:ring-4 focus:ring-brand-orange/5 focus:border-brand-orange outline-none transition-all shadow-sm"
-                  placeholder="e.g. moussa@daust.edu"
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  placeholder="e.g. 77 123 45 67"
+                  type="tel"
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 />
               </div>
             </div>
 
             <div className="space-y-3">
-              <label htmlFor="year" className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Academic Year</label>
+              <label htmlFor="location" className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Delivery Location</label>
               <div className="relative">
                 <select
-                  id="year"
+                  id="location"
+                  required
                   className="w-full h-16 bg-white border border-gray-100 rounded-2xl px-6 text-brand-navy font-bold focus:ring-4 focus:ring-brand-orange/5 focus:border-brand-orange outline-none appearance-none transition-all cursor-pointer shadow-sm"
-                  value={form.year}
-                  onChange={(e) => setForm({ ...form, year: e.target.value })}
+                  value={form.location}
+                  onChange={(e) => setForm({ ...form, location: e.target.value })}
                 >
-                  <option value="">Select your class year</option>
-                  <option value="Freshman">Freshman (1st Year)</option>
-                  <option value="Sophomore">Sophomore (2nd Year)</option>
-                  <option value="Junior">Junior (3rd Year)</option>
-                  <option value="Senior">Senior (4th Year)</option>
-                  <option value="Graduate">Graduate Student</option>
+                  <option value="">Select delivery location</option>
+                  {locations.map(loc => (
+                    <option key={loc.name} value={loc.name}>
+                      {loc.name} {loc.fee > 0 ? `(+${fmt(loc.fee)})` : loc.name === "DAUST Campus" ? "(Free)" : ""}
+                    </option>
+                  ))}
                 </select>
                 <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
                   <ChevronLeft className="rotate-[-90deg]" size={18} />
                 </div>
               </div>
+              {form.location && form.location !== "DAUST Campus" && form.location !== "Other (Calculate on delivery)" && (
+                <p className="text-[10px] text-gray-500 ml-1 italic font-medium">Delivery fee to {form.location}: {fmt(deliveryFee)}</p>
+              )}
+              {form.location === "Other (Calculate on delivery)" && (
+                <p className="text-[10px] text-brand-orange ml-1 italic font-bold">A staff member will contact you to confirm the delivery fee for your specific location.</p>
+              )}
             </div>
 
             <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm mt-12 space-y-6">
@@ -177,7 +205,7 @@ export default function Checkout() {
               loading={loading}
               className="w-full h-20 rounded-[1.5rem] !text-lg shadow-2xl shadow-brand-orange/20 mt-8"
             >
-              Confirm Order & Pay
+              Confirm Order
             </Button>
           </form>
         </div>

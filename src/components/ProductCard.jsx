@@ -17,11 +17,12 @@ export default function ProductCard({ product }) {
     : product.image;
 
   const productId = product._id || product.id;
+  const isSoldOut = product.stock === 0;
 
   return (
     <div
-      className="product-card group relative bg-white rounded-xl overflow-hidden premium-shadow transition-all duration-500"
-      onMouseEnter={() => setIsHovered(true)}
+      className={`product-card group relative bg-white rounded-xl overflow-hidden premium-shadow transition-all duration-500 ${isSoldOut ? 'opacity-75' : ''}`}
+      onMouseEnter={() => !isSoldOut && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Image Container */}
@@ -37,38 +38,46 @@ export default function ProductCard({ product }) {
 
 
         {/* Badge */}
-        {product.badge && (
-          <div className="absolute top-4 left-4 z-10">
-            <span className="bg-brand-orange text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-sm">
-              {product.badge}
-            </span>
+        {(product.badge || isSoldOut) && (
+          <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+            {isSoldOut ? (
+              <span className="bg-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-sm">
+                Sold Out
+              </span>
+            ) : product.badge && (
+              <span className="bg-brand-orange text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-sm">
+                {product.badge}
+              </span>
+            )}
           </div>
         )}
 
         {/* Quick Add Overlay (Desktop) */}
-        <div className={`absolute inset-x-0 bottom-0 p-4 transition-all duration-300 translate-y-full group-hover:translate-y-0 hidden lg:block bg-gradient-to-t from-black/20 to-transparent z-20`}>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full glass-morphism border-none text-brand-navy font-black transition-all duration-300 shadow-lg"
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#0a2342';
-              e.currentTarget.style.color = 'white';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = '#0a2342';
-            }}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              addItem(product, 1);
-            }}
-          >
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            Quick Add
-          </Button>
-        </div>
+        {!isSoldOut && (
+          <div className={`absolute inset-x-0 bottom-0 p-4 transition-all duration-300 translate-y-full group-hover:translate-y-0 hidden lg:block bg-gradient-to-t from-black/20 to-transparent z-20`}>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full glass-morphism border-none text-brand-navy font-black transition-all duration-300 shadow-lg"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#0a2342';
+                e.currentTarget.style.color = 'white';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#0a2342';
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                addItem(product, 1);
+              }}
+            >
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              Quick Add
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Info Container */}
@@ -92,16 +101,23 @@ export default function ProductCard({ product }) {
           </p>
 
           {/* Mobile Add to Cart (Visible on mobile, hidden on desktop hover) */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              addItem(product, 1);
-            }}
-            className="lg:hidden p-2 rounded-lg bg-gray-100 text-brand-navy active:bg-brand-navy active:text-white transition-all duration-200"
-            aria-label="Add to Cart"
-          >
-            <ShoppingCart className="h-5 w-5" />
-          </button>
+          {!isSoldOut && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                addItem(product, 1);
+              }}
+              className="lg:hidden p-2 rounded-lg bg-gray-100 text-brand-navy active:bg-brand-navy active:text-white transition-all duration-200"
+              aria-label="Add to Cart"
+            >
+              <ShoppingCart className="h-5 w-5" />
+            </button>
+          )}
+          {isSoldOut && (
+            <span className="text-[10px] font-black uppercase tracking-widest text-red-500">
+              Unavailable
+            </span>
+          )}
         </div>
       </div>
     </div>

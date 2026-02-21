@@ -27,5 +27,6 @@ export function renderWithProviders(ui, options = {}) {
 }
 
 // Re-export everything from React Testing Library
+// eslint-disable-next-line react-refresh/only-export-components
 export * from '@testing-library/react';
 export { default as userEvent } from '@testing-library/user-event';

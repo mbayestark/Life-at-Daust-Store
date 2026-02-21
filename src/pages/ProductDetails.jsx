@@ -217,30 +217,45 @@ export default function ProductDetails() {
                     {/* Add to Cart Actions */}
                     <div className="mt-auto pt-10 border-t border-gray-100 animate-in slide-in-from-bottom-5 duration-700 delay-300">
                         <div className="flex flex-wrap gap-4 items-center">
+                            {/* Stock Status */}
+                            <div className="w-full mb-4">
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-2 h-2 rounded-full ${product.stock === 0 ? "bg-red-500" : product.stock <= 5 ? "bg-orange-500" : "bg-green-500"}`} />
+                                    <span className={`text-[10px] font-black uppercase tracking-widest ${product.stock === 0 ? "text-red-500" : product.stock <= 5 ? "text-orange-500" : "text-green-500"}`}>
+                                        {product.stock === 0 ? "Currently Out of Stock" : product.stock <= 5 ? `Low Stock: Only ${product.stock} Left` : "In Stock & Ready to Ship"}
+                                    </span>
+                                </div>
+                            </div>
+
                             {/* Quantity Selector */}
-                            <div className="flex items-center bg-gray-50 rounded-2xl p-1 h-16 w-full sm:w-auto">
+                            <div className={`flex items-center bg-gray-50 rounded-2xl p-1 h-16 w-full sm:w-auto ${product.stock === 0 ? "opacity-50 pointer-events-none" : ""}`}>
                                 <button
                                     onClick={() => setQuantity(q => Math.max(1, q - 1))}
                                     className="w-12 h-full rounded-xl hover:bg-white hover:shadow-sm text-xl font-bold transition-all"
+                                    disabled={product.stock === 0}
                                 >
                                     −
                                 </button>
                                 <span className="w-14 text-center font-black text-brand-navy">{quantity}</span>
                                 <button
-                                    onClick={() => setQuantity(q => Math.min(99, q + 1))}
+                                    onClick={() => setQuantity(q => Math.min(product.stock || 99, q + 1))}
                                     className="w-12 h-full rounded-xl hover:bg-white hover:shadow-sm text-xl font-bold transition-all"
+                                    disabled={product.stock === 0}
                                 >
                                     +
                                 </button>
                             </div>
 
-                            {/* Add to Cart Button - Now using Tailwind classes */}
+                            {/* Add to Cart Button */}
                             <Button
-                                variant="primary"
+                                variant={product.stock === 0 ? "secondary" : "primary"}
                                 size="lg"
                                 uppercase={false}
-                                className="flex-1 h-16 rounded-2xl gap-4 shadow-xl shadow-brand-navy/10 group normal-case min-w-[200px] hover:-translate-y-0.5 hover:shadow-brand-orange/20"
+                                className={`flex-1 h-16 rounded-2xl gap-4 shadow-xl shadow-brand-navy/10 group normal-case min-w-[200px] transition-all ${product.stock === 0 ? "opacity-50 cursor-not-allowed" : "hover:-translate-y-0.5 hover:shadow-brand-orange/20"}`}
+                                disabled={product.stock === 0}
                                 onClick={() => {
+                                    if (product.stock === 0) return;
+
                                     // Validate selections
                                     if (product.colors?.length > 0 && !selectedColor) {
                                         alert('Please select a color');
@@ -258,8 +273,14 @@ export default function ProductDetails() {
                                     }, quantity);
                                 }}
                             >
-                                <ShoppingCart size={22} className="group-hover:rotate-12 transition-transform" />
-                                <span className="text-base">Add to Shopping Bag</span>
+                                {product.stock === 0 ? (
+                                    <span className="text-base">Sold Out</span>
+                                ) : (
+                                    <>
+                                        <ShoppingCart size={22} className="group-hover:rotate-12 transition-transform" />
+                                        <span className="text-base">Add to Shopping Bag</span>
+                                    </>
+                                )}
                             </Button>
 
                         </div>

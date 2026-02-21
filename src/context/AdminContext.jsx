@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState } from "react";
 
 const AdminContext = createContext(null);
 
@@ -31,6 +31,7 @@ export function AdminProvider({ children }) {
     );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAdmin = () => {
     const context = useContext(AdminContext);
     if (!context) {

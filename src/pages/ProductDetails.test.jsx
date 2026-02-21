@@ -10,11 +10,16 @@ vi.mock('convex/react', () => ({
 }));
 
 describe('ProductDetails Page', () => {
-    it('renders loading state initially', () => {
+    it('renders "product not found" state when no id is provided', () => {
+        // Without a URL param, id is undefined, isConvexId is false,
+        // product resolves to null → renders "Product not found" state
         renderWithProviders(<ProductDetails />);
-        // It should render some skeletons or loading indicator
-        // Based on ProductDetails.jsx it renders skeletons if !product
-        const skeletons = document.querySelectorAll('.animate-pulse');
-        expect(skeletons.length).toBeGreaterThan(0);
+        expect(screen.getByText(/Product not found/i)).toBeInTheDocument();
+    });
+
+    it('shows a link back to shop when product is not found', () => {
+        renderWithProviders(<ProductDetails />);
+        const returnLink = screen.getByRole('link', { name: /Return to Shop/i });
+        expect(returnLink).toHaveAttribute('href', '/shop');
     });
 });
