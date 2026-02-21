@@ -48,13 +48,17 @@ export default function Checkout() {
 
   const lines = useMemo(
     () =>
-      items.map((it) => ({
-        name: it.name,
-        qty: it.qty,
-        price: it.price,
-        color: it.selectedColor,
-        size: it.selectedSize
-      })),
+      items.map((it) => {
+        const line = {
+          name: it.name,
+          qty: it.qty,
+          price: it.price,
+        };
+        // Convex v.optional(v.string()) rejects null — only omit the field
+        if (it.selectedColor) line.color = it.selectedColor;
+        if (it.selectedSize) line.size = it.selectedSize;
+        return line;
+      }),
     [items]
   );
 
