@@ -58,6 +58,12 @@ export const addProduct = mutation({
             hex: v.string(),
         }))),
         sizes: v.optional(v.array(v.string())),
+        logos: v.optional(v.array(v.object({
+            id: v.string(),
+            name: v.string(),
+            description: v.optional(v.string()),
+        }))),
+        logoImages: v.optional(v.any()),
         description: v.optional(v.string()),
         collection: v.optional(v.string()),
         stock: v.optional(v.number()),
@@ -67,6 +73,7 @@ export const addProduct = mutation({
         return productId;
     },
 });
+
 export const updateProduct = mutation({
     args: {
         id: v.id("products"),
@@ -82,6 +89,12 @@ export const updateProduct = mutation({
             hex: v.string(),
         }))),
         sizes: v.optional(v.array(v.string())),
+        logos: v.optional(v.array(v.object({
+            id: v.string(),
+            name: v.string(),
+            description: v.optional(v.string()),
+        }))),
+        logoImages: v.optional(v.any()),
         description: v.optional(v.string()),
         collection: v.optional(v.string()),
         stock: v.optional(v.number()),

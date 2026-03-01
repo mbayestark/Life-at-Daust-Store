@@ -175,12 +175,12 @@ function TestimonialMarquee() {
 /* ─── Main Component ─────────────────────────────────────────── */
 
 export default function Home() {
-  const convexProducts = useQuery(api.products.list);
   const collections = useQuery(api.collections.list);
   const scrollRef = useRef(null);
 
-  // Sync products with Convex if available. Only fallback if loading (undefined).
-  const PRODUCTS_DATA = (convexProducts !== undefined) ? convexProducts : PRODUCTS;
+  // Use static products (with logo variants) instead of Convex data
+  // This ensures the new products and variants are displayed
+  const PRODUCTS_DATA = PRODUCTS;
 
   // Derive featured and trending from the current data source
   const featuredProduct = useMemo(() => {
@@ -245,7 +245,7 @@ export default function Home() {
                 <CollectionCard key={c.slug || i} collection={c} index={i} />
               ))
             ) : (
-              ["Hoodies", "T-Shirts", "Caps", "Drinkware"].map((cat, i) => {
+              ["Hoodies", "T-Shirts", "Quarter Zip", "Shorts"].map((cat, i) => {
                 const p = PRODUCTS_DATA.find(p => p.category === cat);
                 return p ? (
                   <CollectionCard

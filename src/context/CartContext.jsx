@@ -23,8 +23,14 @@ export function CartProvider({ children }) {
     setItems(prev => {
       const color = product.selectedColor || (product.colors?.[0]?.name) || null;
       const size = product.selectedSize || (product.sizes?.[0]) || null;
+      const logo = product.selectedLogo || (product.logos?.[0]?.name) || null;
 
-      const i = prev.findIndex(p => p.id === product.id && p.selectedColor === color && p.selectedSize === size);
+      const i = prev.findIndex(p => 
+        p.id === product.id && 
+        p.selectedColor === color && 
+        p.selectedSize === size &&
+        p.selectedLogo === logo
+      );
       if (i >= 0) {
         const next = [...prev];
         next[i] = { ...next[i], qty: Math.min(next[i].qty + qty, 99) };
@@ -37,18 +43,21 @@ export function CartProvider({ children }) {
         image: product.image,
         qty: Math.min(qty, 99),
         selectedColor: color,
-        selectedSize: size
+        selectedSize: size,
+        selectedLogo: logo
       }];
     });
   };
 
-  const removeItem = (id, color, size) => {
-    setItems(prev => prev.filter(p => !(p.id === id && p.selectedColor === color && p.selectedSize === size)));
+  const removeItem = (id, color, size, logo) => {
+    setItems(prev => prev.filter(p => 
+      !(p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo)
+    ));
   };
 
-  const setQty = (id, color, size, qty) =>
+  const setQty = (id, color, size, logo, qty) =>
     setItems(prev => prev.map(p =>
-      (p.id === id && p.selectedColor === color && p.selectedSize === size)
+      (p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo)
         ? { ...p, qty: Math.max(1, Math.min(99, qty)) }
         : p
     ));

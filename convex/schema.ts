@@ -15,15 +15,21 @@ export default defineSchema({
             hex: v.string(),
         }))),
         sizes: v.optional(v.array(v.string())),
+        logos: v.optional(v.array(v.object({
+            id: v.string(),
+            name: v.string(),
+            description: v.optional(v.string()),
+        }))),
+        logoImages: v.optional(v.any()),
         description: v.optional(v.string()),
-        collection: v.optional(v.string()), // Collection name
-        stock: v.optional(v.number()), // Product stock
+        collection: v.optional(v.string()),
+        stock: v.optional(v.number()),
     }),
     collections: defineTable({
         name: v.string(),
         slug: v.string(),
         description: v.optional(v.string()),
-        image: v.optional(v.string()), // Storage ID or URL
+        image: v.optional(v.string()),
     }).index("by_slug", ["slug"]),
     categories: defineTable({
         name: v.string(),
@@ -41,14 +47,12 @@ export default defineSchema({
             price: v.number(),
             color: v.optional(v.string()),
             size: v.optional(v.string()),
+            logo: v.optional(v.string()),
         })),
         subtotal: v.number(),
         deliveryFee: v.number(),
         total: v.number(),
-        status: v.string(), // 'Processing', 'Shipped', 'Delivered', 'Cancelled'
+        status: v.string(),
         createdAt: v.number(),
     }),
 });
-
-// Triggering backend re-index for new orders module
-

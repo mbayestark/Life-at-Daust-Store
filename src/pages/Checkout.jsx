@@ -1,4 +1,4 @@
-// src/pages/Checkout.jsx
+// src/pages/ Checkout.jsx
 import React, { useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
@@ -57,6 +57,7 @@ export default function Checkout() {
         // Convex v.optional(v.string()) rejects null — only omit the field
         if (it.selectedColor) line.color = it.selectedColor;
         if (it.selectedSize) line.size = it.selectedSize;
+        if (it.selectedLogo) line.logo = it.selectedLogo;
         return line;
       }),
     [items]
@@ -224,13 +225,17 @@ export default function Checkout() {
               <h2 className="text-xl font-black tracking-tight mb-8">Review Selection</h2>
               <ul className="space-y-6 mb-10 overflow-y-auto max-h-[300px] pr-4 scrollbar-hide">
                 {items.map((it) => (
-                  <li key={`${it.id}-${it.selectedSize}`} className="flex items-center gap-4 group">
+                  <li key={`${it.id}-${it.selectedSize}-${it.selectedLogo}`} className="flex items-center gap-4 group">
                     <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-white/10">
                       <img src={it.image} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-sm truncate">{it.name}</p>
-                      <p className="text-[10px] font-bold text-brand-cream/40 uppercase tracking-widest mt-1">QTY: {it.qty} {it.selectedSize ? `• ${it.selectedSize}` : ""}</p>
+                      <p className="text-[10px] font-bold text-brand-cream/40 uppercase tracking-widest mt-1">
+                        QTY: {it.qty}
+                        {it.selectedLogo ? ` • ${it.selectedLogo}` : ""}
+                        {it.selectedSize ? ` • ${it.selectedSize}` : ""}
+                      </p>
                     </div>
                     <span className="font-black text-sm">{fmt(it.price * it.qty)}</span>
                   </li>

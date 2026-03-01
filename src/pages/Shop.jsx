@@ -26,13 +26,12 @@ export default function Shop() {
     else setSearchQuery("");
   }, [location.search]);
 
-  // Use Convex products if available and not empty, otherwise fallback to static data
-  const PRODUCTS = (convexProducts && convexProducts.length > 0) ? convexProducts : STATIC_PRODUCTS;
-  const isLoading = convexProducts === undefined || collections === undefined;
+  // Use STATIC products (with logo variants) instead of Convex data
+  // This ensures the new products and variants are displayed
+  const PRODUCTS = STATIC_PRODUCTS;
+  const isLoading = false; // No loading since we use static data
 
   const itemsByCollection = useMemo(() => {
-    if (isLoading) return {};
-
     let filtered = PRODUCTS.filter((p) =>
       category === "All Categories" ? true : p.category === category
     );
@@ -57,142 +56,144 @@ export default function Shop() {
     const groups = {};
 
     // Sort collections: Daustian x Uniwear first, then others alphabetically
-    const sortedCollections = [...collections].sort((a, b) => {
-      if (a.name.toLowerCase().includes('daustian')) return -1;
-      if (b.name.toLowerCase().includes('daustian')) return 1;
+    const sortedCollections = collections ? [...collections].sort((a, b) => {
+      const aIsDaustian = a.name.toLowerCase().includes("daustian") || a.name.toLowerCase().includes("uniwear");
+      const bIsDaustian = b.name.toLowerCase().includes("daustian") || b.name.toLowerCase().includes("uniwear");
+      if (aIsDaustian && !bIsDaustian) return -1;
+      if (!aIsDaustian && bIsDaustian) return 1;
       return a.name.localeCompare(b.name);
-    });
+    }) : [];
 
-    // Add collections to groups to maintain order even if empty
-    sortedCollections.forEach(col => {
-      groups[col.name] = [];
-    });
+    // If no collections, create default groups
+    if (!collections || collections.length === 0) {
+      // Group by category instead
+      sorted.forEach(p => {
+        const cat = p.category || "Other";
+        if (!groups[cat]) groups[cat] = [];
+        groups[cat].push(p);
+      });
+      return groups;
+    }
 
-    // Add "Other Items" group for products without collection
-    groups["Other Items"] = [];
-
-    sorted.forEach(p => {
-      const colName = p.collection || "Other Items";
-      if (!groups[colName]) {
-        groups[colName] = [];
+    // Group by collection with proper sorting
+    sortedCollections.forEach(c => {
+      const productsInCollection = sorted.filter(p => p.collection === c.slug);
+      if (productsInCollection.length > 0) {
+        groups[c.name] = productsInCollection;
       }
-      groups[colName].push(p);
     });
 
-    // Remove empty groups except when filtering by category (we might want to show empty sections then too, or not)
-    // Actually, let's remove empty groups for a cleaner look
-    Object.keys(groups).forEach(key => {
-      if (groups[key].length === 0) delete groups[key];
-    });
+    // Also include products without a collection
+    const ungrouped = sorted.filter(p => !p.collection);
+    if (ungrouped.length > 0) {
+      groups["Other Products"] = ungrouped;
+    }
 
     return groups;
-  }, [PRODUCTS, collections, category, sort, isLoading]);
+  }, [PRODUCTS, category, sort, searchQuery, collections]);
 
-  const totalItems = useMemo(() => {
-    return Object.values(itemsByCollection).reduce((acc, curr) => acc + curr.length, 0);
-  }, [itemsByCollection]);
+  const totalItems = Object.values(itemsByCollection).reduce((sum, arr) => sum + arr.length, 0);
 
   return (
-    <main className="bg-gray-50/50 min-h-screen">
-      <Hero
-        title="Global DAUST Collection"
-        subtitle="Discover premium university apparel and essentials designed for the ambitious."
-        cta="New Arrivals"
+    <main className="min-h-screen bg-gray-50/50">
+      <Hero 
+        title="University Merch"
+        subtitle="Rep DAUST with Pride"
         image={shopHero}
-        to="#products"
       />
 
-      {/* Filters & Header */}
-      <section id="products" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-12">
-          <div>
-            <h2 className="text-[var(--text-3xl)] font-black text-brand-navy tracking-tight mb-2">
-              {category === "All Categories" ? "Store Catalog" : category}
-            </h2>
-            <p className="text-gray-500 text-sm font-medium">
-              {isLoading ? "Fetching latest styles..." : `${totalItems} items found across ${Object.keys(itemsByCollection).length} collections`}
-            </p>
+      <section className="max-w-7xl mx-auto px-4 py-16 sm:py-24">
+        {/* Filters Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-12">
+          <div className="flex items-center gap-3">
+            <Filter className="text-brand-navy" size={20} />
+            <span className="font-black text-brand-navy uppercase tracking-widest text-xs">Filter by:</span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
-            {/* Category Pill selection */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
-              {CATEGORIES.slice(0, 4).map((c) => (
-                <button
-                  key={c}
-                  onClick={() => setCategory(c)}
-                  className={`px-5 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-300 ${category === c
-                    ? "bg-brand-navy text-white shadow-lg shadow-brand-navy/20"
-                    : "bg-white text-gray-600 hover:bg-gray-100 border border-gray-100"
-                    }`}
-                >
-                  {c}
-                </button>
-              ))}
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Category Filter */}
+            <div className="relative group">
+              <button className="flex items-center gap-3 px-5 py-3 bg-white rounded-full shadow-sm border border-gray-100 hover:border-brand-orange transition-all font-bold text-sm">
+                {category}
+                <ChevronDown size={16} className="text-gray-400 group-hover:text-brand-orange transition-colors" />
+              </button>
+              
+              <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                <div className="p-2">
+                  {CATEGORIES.map(cat => (
+                    <button
+                      key={cat}
+                      onClick={() => setCategory(cat)}
+                      className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                        category === cat 
+                          ? "bg-brand-navy text-white" 
+                          : "text-gray-600 hover:bg-gray-50 hover:text-brand-orange"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            <div className="h-8 w-[1px] bg-gray-200 hidden md:block" />
-
-            {/* Sort Select */}
+            {/* Sort */}
             <div className="relative group">
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                className="appearance-none bg-white text-gray-900 font-bold text-xs uppercase tracking-widest pl-5 pr-10 py-3 rounded-xl border border-gray-100 focus:outline-none focus:ring-2 focus:ring-brand-orange/20 shadow-sm cursor-pointer"
-              >
-                <option>Featured</option>
-                <option>Price: Low to High</option>
-                <option>Price: High to Low</option>
-                <option>Newest Arrivals</option>
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+              <button className="flex items-center gap-3 px-5 py-3 bg-white rounded-full shadow-sm border border-gray-100 hover:border-brand-orange transition-all font-bold text-sm">
+                {sort}
+                <ChevronDown size={16} className="text-gray-400 group-hover:text-brand-orange transition-colors" />
+              </button>
+              
+              <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                <div className="p-2">
+                  {["Featured", "Price: Low to High", "Price: High to Low", "Newest Arrivals"].map(s => (
+                    <button
+                      key={s}
+                      onClick={() => setSort(s)}
+                      className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                        sort === s 
+                          ? "bg-brand-navy text-white" 
+                          : "text-gray-600 hover:bg-gray-50 hover:text-brand-orange"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-11 pr-4 py-3 bg-white rounded-full shadow-sm border border-gray-100 focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/5 outline-none transition-all w-64 font-bold text-sm"
+              />
+              {searchQuery && (
+                <button 
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-orange"
+                >
+                  <X size={16} />
+                </button>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Active Filters */}
-        {(category !== "All Categories" || searchQuery) && (
-          <div className="flex flex-wrap items-center gap-3 mb-8 animate-in fade-in duration-500">
-            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest mr-2">Filtered by:</span>
-
-            {category !== "All Categories" && (
-              <button
-                onClick={() => setCategory("All Categories")}
-                className="flex items-center gap-2 bg-brand-orange/10 text-brand-orange px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-brand-orange/20 transition-colors"
-              >
-                Category: {category}
-                <X size={14} />
-              </button>
-            )}
-
-            {searchQuery && (
-              <button
-                onClick={() => {
-                  setSearchQuery("");
-                  const params = new URLSearchParams(location.search);
-                  params.delete("q");
-                  window.history.replaceState({}, '', `/shop${params.toString() ? '?' + params.toString() : ''}`);
-                }}
-                className="flex items-center gap-2 bg-brand-navy/5 text-brand-navy px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-brand-navy/10 transition-colors"
-              >
-                Search: "{searchQuery}"
-                <X size={14} />
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Dynamic Collection Sections */}
-        <div className="space-y-24">
+        <div className="space-y-12">
           {isLoading ? (
-            // Skeleton Loading State
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
-              {Array.from({ length: 8 }).map((_, i) => (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-8 sm:gap-x-8 sm:gap-y-12">
+              {[...Array(8)].map((_, i) => (
                 <div key={i} className="space-y-4">
-                  <Skeleton className="aspect-[3/4] w-full rounded-2xl" />
-                  <div className="space-y-2 px-1">
-                    <Skeleton className="h-4 w-2/3" />
-                    <Skeleton className="h-4 w-1/2" />
+                  <Skeleton className="h-80 w-full rounded-3xl" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-6 w-1/3" />
                     <div className="flex justify-between pt-2">
                       <Skeleton className="h-6 w-1/3" />
                       <Skeleton className="h-6 w-6 rounded-lg" />

@@ -42,6 +42,7 @@ export default function ProductDetails() {
     const [mainImage, setMainImage] = useState(null);
     const [selectedColor, setSelectedColor] = useState(null);
     const [selectedSize, setSelectedSize] = useState(null);
+    const [selectedLogo, setSelectedLogo] = useState(null);
     const [quantity, setQuantity] = useState(1);
 
     // Scroll to top when navigating to product details
@@ -55,8 +56,39 @@ export default function ProductDetails() {
             setMainImage(product.image);
             setSelectedColor(product.colors?.[0] || null);
             setSelectedSize(product.sizes?.[0] || null);
+            setSelectedLogo(product.logos?.[0] || null);
         }
     }, [product]);
+
+    // Update main image when logo or color selection changes
+    useEffect(() => {
+        if (product?.logoImages && selectedLogo?.id && selectedColor?.name) {
+            const variantImages = product.logoImages[selectedLogo.id]?.[selectedColor.name];
+            if (variantImages && variantImages.length > 0) {
+                setMainImage(variantImages[0]);
+                return;
+            }
+        }
+        if (selectedLogo?.image) {
+            setMainImage(selectedLogo.image);
+        }
+    }, [selectedLogo, selectedColor, product]);
+
+    // Get variant-specific images based on selected logo + color
+    const getVariantImages = () => {
+        // If product has logoImages mapping, use that for variant-specific images
+        if (product?.logoImages && selectedLogo?.id && selectedColor?.name) {
+            const variantImages = product.logoImages[selectedLogo.id]?.[selectedColor.name];
+            if (variantImages && variantImages.length > 0) {
+                return variantImages;
+            }
+        }
+        // Fallback: if logo has direct image, use it
+        if (product.logos && product.logos.length > 0 && selectedLogo?.image) {
+            return [selectedLogo.image, ...(product.images || [])];
+        }
+        return product.images || [product.image];
+    };
 
     // Show loading spinner while Convex query is loading
     if (isConvexId && convexProduct === undefined) {
@@ -82,10 +114,8 @@ export default function ProductDetails() {
         );
     }
 
-    // Better gallery handling
-    const gallery = (product.images && product.images.length > 0)
-        ? product.images
-        : [product.image];
+    // Better gallery handling - now includes logo variant images
+    const gallery = getVariantImages();
 
     return (
         <div className="bg-white min-h-screen overflow-x-hidden">
@@ -156,6 +186,30 @@ export default function ProductDetails() {
 
                     {/* Variants Section */}
                     <div className="space-y-10 mb-12 animate-in slide-in-from-right-10 duration-700 delay-200">
+                        {/* Logo Variants */}
+                        {product.logos && product.logos.length > 0 && (
+                            <div>
+                                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-5">
+                                    Logo Style · <span className="text-brand-navy">{selectedLogo?.name || "Select"}</span>
+                                </h3>
+                                <div className="flex flex-wrap gap-3">
+                                    {product.logos.map((logo) => (
+                                        <button
+                                            key={logo.id || logo.name}
+                                            onClick={() => setSelectedLogo(logo)}
+                                            className={`px-5 py-3 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${
+                                                selectedLogo?.id === logo.id || selectedLogo?.name === logo.name
+                                                    ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
+                                                    : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
+                                            }`}
+                                        >
+                                            {logo.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Colors */}
                         {product.colors && product.colors.length > 0 && (
                             <div>
@@ -265,11 +319,16 @@ export default function ProductDetails() {
                                         alert('Please select a size');
                                         return;
                                     }
+                                    if (product.logos?.length > 0 && !selectedLogo) {
+                                        alert('Please select a logo style');
+                                        return;
+                                    }
 
                                     addItem({
                                         ...product,
                                         selectedColor: selectedColor?.name,
-                                        selectedSize: selectedSize
+                                        selectedSize: selectedSize,
+                                        selectedLogo: selectedLogo?.name
                                     }, quantity);
                                 }}
                             >

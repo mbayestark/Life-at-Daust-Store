@@ -1,16 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import {
-    X,
-    Upload,
-    Save,
-    Trash2,
-    Image as ImageIcon,
-    AlertCircle,
-    Plus,
-    Minus
-} from "lucide-react";
+import { X, Save, Trash2, Image as ImageIcon, AlertCircle, Plus } from "lucide-react";
 import Button from "../../components/ui/Button";
 import { optimizeImage, createPreviewUrl, revokePreviewUrl } from "../../utils/imageOptimizer";
 
@@ -25,6 +16,8 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
         image: "",
         colors: [],
         sizes: [],
+        logos: [],
+        logoImages: null,
         collection: "",
         stock: "",
     });
@@ -34,12 +27,17 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
+    const [newColorName, setNewColorName] = useState("");
+    const [newColorHex, setNewColorHex] = useState("#000000");
+    const [newLogoName, setNewLogoName] = useState("");
+    const [newLogoId, setNewLogoId] = useState("");
+
     const generateUploadUrl = useMutation(api.products.generateUploadUrl);
     const addProduct = useMutation(api.products.addProduct);
     const updateProduct = useMutation(api.products.updateProduct);
     const collections = useQuery(api.collections.list);
 
-    const categories = ["Clothing", "Accessories", "Footwear", "Bundles", "Limited Edition"];
+    const categories = ["T-Shirts", "Hoodies", "Quarter Zip", "Caps", "Shorts", "Joggers", "Drinkware", "Accessories"];
 
     useEffect(() => {
         if (product) {
@@ -53,15 +51,17 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                 image: product.image || "",
                 colors: product.colors || [],
                 sizes: product.sizes || [],
+                logos: product.logos || [],
+                logoImages: product.logoImages || null,
                 collection: product.collection || "",
                 stock: product.stock?.toString() || "",
             });
             setImagePreview(product.image || "");
         }
     }, [product]);
+
     useEffect(() => {
         return () => {
-            // Cleanup generic preview URL if it's a blob
             if (imagePreview && imagePreview.startsWith("blob:")) {
                 revokePreviewUrl(imagePreview);
             }
@@ -71,7 +71,6 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            // Revoke old preview if it exists
             if (imagePreview && imagePreview.startsWith("blob:")) {
                 revokePreviewUrl(imagePreview);
             }
@@ -82,7 +81,6 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
 
     const handleUpload = async (fileToUpload) => {
         if (!fileToUpload) return formData.image;
-
         const postUrl = await generateUploadUrl();
         const result = await fetch(postUrl, {
             method: "POST",
@@ -90,14 +88,62 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
             body: fileToUpload,
         });
         const { storageId } = await result.json();
-
-        // In a real app, you'd get the public URL from Convex
-        // For now, we'll store the storageId or a placeholder if storageId is not immediately available as a URL
-        // Actually, Convex storageId is just a string. We need ctx.storage.getUrl(storageId) in a query.
-        // For simplicity in this demo, we'll store the storageId and hope the frontend handles it or use the data URI for now.
-        // But better to store a string.
         return storageId;
     };
+
+    const addColor = () => {
+        if (newColorName.trim()) {
+            setFormData({
+                ...formData,
+                colors: [...formData.colors, { name: newColorName.trim(), hex: newColorHex }]
+            });
+            setNewColorName("");
+            setNewColorHex("#000000");
+        }
+    };
+
+    const removeColor = (index) => {
+        setFormData({
+            ...formData,
+            colors: formData.colors.filter((_, i) => i !== index)
+        });
+    };
+
+    const addLogo = () => {
+        if (newLogoName.trim() && newLogoId.trim()) {
+            setFormData({
+                ...formData,
+                logos: [...formData.logos, { id: newLogoId.trim(), name: newLogoName.trim() }]
+            });
+            setNewLogoName("");
+            setNewLogoId("");
+        }
+    };
+
+    const removeLogo = (index) => {
+        setFormData({
+            ...formData,
+            logos: formData.logos.filter((_, i) => i !== index)
+        });
+    };
+
+    const addSize = (size) => {
+        if (size.trim() && !formData.sizes.includes(size.trim())) {
+            setFormData({
+                ...formData,
+                sizes: [...formData.sizes, size.trim()]
+            });
+        }
+    };
+
+    const removeSize = (index) => {
+        setFormData({
+            ...formData,
+            sizes: formData.sizes.filter((_, i) => i !== index)
+        });
+    };
+
+    const defaultSizes = ["XS", "S", "M", "L", "XL", "XXL"];
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -107,10 +153,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
         try {
             let finalImageUrl = formData.image;
             if (imageFile) {
-                // Compress and optimize image before upload
                 const optimizedFile = await optimizeImage(imageFile);
-
-                // Upload the file and get the storage ID
                 const storageId = await handleUpload(optimizedFile);
                 finalImageUrl = storageId;
             }
@@ -139,8 +182,8 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
     };
 
     return (
-        <div className="bg-white rounded-[2rem] border border-gray-100 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
-            <div className="p-8 border-b border-gray-50 flex justify-between items-center">
+        <div className="bg-white rounded-[2rem] border border-gray-100 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300 max-h-[90vh] overflow-y-auto">
+            <div className="p-8 border-b border-gray-50 flex justify-between items-center sticky top-0 bg-white z-10">
                 <div>
                     <h2 className="text-xl font-black text-brand-navy">{product ? "Edit Product" : "Add New Product"}</h2>
                     <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">{product ? `Editing ID: ${product._id}` : "Enter product details"}</p>
@@ -152,7 +195,6 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
 
             <form onSubmit={handleSubmit} className="p-8 space-y-8">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                    {/* Left Side: Basic Info */}
                     <div className="space-y-6">
                         <div>
                             <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Product Name</label>
@@ -178,15 +220,15 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Price ($)</label>
+                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Price (XOF)</label>
                                 <input
                                     type="number"
-                                    step="0.01"
+                                    step="100"
                                     required
                                     value={formData.price}
                                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                                     className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-brand-navy font-bold focus:ring-2 focus:ring-brand-orange/20 transition-all"
-                                    placeholder="0.00"
+                                    placeholder="7500"
                                 />
                             </div>
                         </div>
@@ -204,7 +246,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Initial Rating</label>
+                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Rating</label>
                                 <input
                                     type="number"
                                     step="0.1"
@@ -216,47 +258,23 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                 />
                             </div>
                             <div>
-                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Badge (Optional)</label>
+                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Badge</label>
                                 <input
                                     type="text"
                                     value={formData.badge}
                                     onChange={(e) => setFormData({ ...formData, badge: e.target.value })}
                                     className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-brand-navy font-bold focus:ring-2 focus:ring-brand-orange/20 transition-all"
-                                    placeholder="New Arrival, Popular, etc."
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Collection (Optional)</label>
-                                <select
-                                    value={formData.collection}
-                                    onChange={(e) => setFormData({ ...formData, collection: e.target.value })}
-                                    className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-brand-navy font-bold focus:ring-2 focus:ring-brand-orange/20 transition-all appearance-none"
-                                >
-                                    <option value="">None</option>
-                                    {collections?.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Stock Quantity</label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    value={formData.stock}
-                                    onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
-                                    className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-brand-navy font-bold focus:ring-2 focus:ring-brand-orange/20 transition-all"
-                                    placeholder="0"
+                                    placeholder="New, Popular, etc."
                                 />
                             </div>
                         </div>
                     </div>
 
-                    {/* Right Side: Media & Settings */}
                     <div className="space-y-6">
                         <div>
                             <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Product Image</label>
                             <div
-                                className={`relative aspect-[3/4] rounded-3xl overflow-hidden border-2 border-dashed transition-all flex flex-col items-center justify-center p-4 bg-gray-50 ${imagePreview ? "border-transparent" : "border-gray-200 hover:border-brand-orange/40"
-                                    }`}
+                                className={`relative aspect-[3/4] rounded-3xl overflow-hidden border-2 border-dashed transition-all flex flex-col items-center justify-center p-4 bg-gray-50 ${imagePreview ? "border-transparent" : "border-gray-200 hover:border-brand-orange/40"}`}
                             >
                                 {imagePreview ? (
                                     <>
@@ -286,6 +304,144 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                 />
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <div className="bg-gray-50 rounded-3xl p-8">
+                    <h3 className="font-black text-brand-navy mb-4">Colors</h3>
+                    <div className="flex flex-wrap gap-3 mb-4">
+                        {formData.colors.map((color, index) => (
+                            <div key={index} className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl shadow-sm">
+                                <span className="w-5 h-5 rounded-full border border-gray-200" style={{ backgroundColor: color.hex }} />
+                                <span className="text-sm font-bold text-brand-navy">{color.name}</span>
+                                <button type="button" onClick={() => removeColor(index)} className="text-gray-400 hover:text-red-500">
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex gap-3 items-end">
+                        <div className="flex-1">
+                            <input
+                                type="text"
+                                value={newColorName}
+                                onChange={(e) => setNewColorName(e.target.value)}
+                                placeholder="Color name"
+                                className="w-full bg-white border-none rounded-xl px-4 py-3 text-sm font-bold"
+                            />
+                        </div>
+                        <div>
+                            <input
+                                type="color"
+                                value={newColorHex}
+                                onChange={(e) => setNewColorHex(e.target.value)}
+                                className="w-12 h-12 rounded-xl cursor-pointer border-none"
+                            />
+                        </div>
+                        <button
+                            type="button"
+                            onClick={addColor}
+                            className="bg-brand-navy text-white px-4 py-3 rounded-xl font-bold text-sm hover:bg-brand-navy/90"
+                        >
+                            <Plus size={20} />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="bg-gray-50 rounded-3xl p-8">
+                    <h3 className="font-black text-brand-navy mb-4">Logo Types</h3>
+                    <div className="flex flex-wrap gap-3 mb-4">
+                        {formData.logos.map((logo, index) => (
+                            <div key={index} className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl shadow-sm">
+                                <span className="text-sm font-bold text-brand-navy">{logo.name}</span>
+                                <button type="button" onClick={() => removeLogo(index)} className="text-gray-400 hover:text-red-500">
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex gap-3 items-end">
+                        <div className="flex-1">
+                            <input
+                                type="text"
+                                value={newLogoId}
+                                onChange={(e) => setNewLogoId(e.target.value)}
+                                placeholder="Logo ID"
+                                className="w-full bg-white border-none rounded-xl px-4 py-3 text-sm font-bold mb-2"
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <input
+                                type="text"
+                                value={newLogoName}
+                                onChange={(e) => setNewLogoName(e.target.value)}
+                                placeholder="Display name"
+                                className="w-full bg-white border-none rounded-xl px-4 py-3 text-sm font-bold"
+                            />
+                        </div>
+                        <button
+                            type="button"
+                            onClick={addLogo}
+                            className="bg-brand-navy text-white px-4 py-3 rounded-xl font-bold text-sm hover:bg-brand-navy/90"
+                        >
+                            <Plus size={20} />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="bg-gray-50 rounded-3xl p-8">
+                    <h3 className="font-black text-brand-navy mb-4">Sizes</h3>
+                    <div className="flex flex-wrap gap-3 mb-4">
+                        {formData.sizes.map((size, index) => (
+                            <div key={index} className="flex items-center gap-2 bg-white px-3 py-2 rounded-xl shadow-sm">
+                                <span className="text-sm font-bold text-brand-navy">{size}</span>
+                                <button type="button" onClick={() => removeSize(index)} className="text-gray-400 hover:text-red-500">
+                                    <X size={14} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {defaultSizes.map(size => (
+                            <button
+                                key={size}
+                                type="button"
+                                onClick={() => addSize(size)}
+                                disabled={formData.sizes.includes(size)}
+                                className={`px-4 py-2 rounded-xl font-bold text-sm ${
+                                    formData.sizes.includes(size)
+                                        ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                        : "bg-white text-brand-navy hover:bg-brand-navy hover:text-white"
+                                }`}
+                            >
+                                + {size}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Collection</label>
+                        <select
+                            value={formData.collection}
+                            onChange={(e) => setFormData({ ...formData, collection: e.target.value })}
+                            className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-brand-navy font-bold focus:ring-2 focus:ring-brand-orange/20 transition-all appearance-none"
+                        >
+                            <option value="">None</option>
+                            {collections?.map(c => <option key={c._id} value={c.name}>{c.name}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Stock Quantity</label>
+                        <input
+                            type="number"
+                            min="0"
+                            value={formData.stock}
+                            onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                            className="w-full bg-gray-50 border-none rounded-2xl px-5 py-4 text-brand-navy font-bold focus:ring-2 focus:ring-brand-orange/20 transition-all"
+                            placeholder="0"
+                        />
                     </div>
                 </div>
 
