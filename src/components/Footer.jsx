@@ -72,7 +72,7 @@ export default function Footer() {
         </div>
 
         {/* Links grid */}
-        <div className="py-10 grid grid-cols-2 sm:grid-cols-4 gap-8">
+        <div className="py-8 sm:py-10 grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
           <FooterColumn title="Shop" links={SHOP_LINKS} />
           <FooterColumn title="Information" links={COMPANY_LINKS} />
           <FooterColumn title="Support" links={SUPPORT_LINKS} />

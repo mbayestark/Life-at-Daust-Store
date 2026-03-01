@@ -49,9 +49,9 @@ export default function Hero({
       <div className="absolute top-16 right-[35%] w-[300px] h-[300px] bg-brand-orange/8 rounded-full blur-[100px] animate-pulse-glow delay-500 pointer-events-none z-0" />
 
       {/* ── Content ── */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-28 lg:py-36 w-full">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-28 w-full">
         <div
-          className={`flex flex-col gap-6 ${isCenter ? "items-center text-center max-w-3xl mx-auto" : "items-start text-left max-w-[50%] min-w-[320px]"
+          className={`flex flex-col gap-4 sm:gap-6 ${isCenter ? "items-center text-center max-w-3xl mx-auto" : "items-start text-left w-full sm:max-w-[50%] sm:min-w-[320px]"
             }`}
         >
           {/* Badge Removed per user request */}
@@ -61,7 +61,7 @@ export default function Hero({
             <h1
               className="font-[900] tracking-[-0.04em] text-white leading-[0.95] animate-font-swap"
               style={{
-                fontSize: "clamp(3.2rem, 9vw, 6rem)",
+                fontSize: "clamp(2.2rem, 8vw, 6rem)",
               }}
             >
               {title}
@@ -71,7 +71,7 @@ export default function Hero({
           {/* Subtitle */}
           {subtitle && (
             <p
-              className="text-base sm:text-lg text-white/55 leading-relaxed max-w-md animate-fade-in-up delay-200"
+              className="text-sm sm:text-base lg:text-lg text-white/55 leading-relaxed max-w-full sm:max-w-md animate-fade-in-up delay-200"
               style={{ animationFillMode: "both" }}
             >
               {subtitle}
@@ -81,7 +81,7 @@ export default function Hero({
           {/* CTA group */}
           {cta && (
             <div
-              className="flex flex-wrap items-center gap-3 mt-2 animate-fade-in-up delay-300"
+              className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mt-2 animate-fade-in-up delay-300 w-full sm:w-auto"
               style={{ animationFillMode: "both" }}
             >
               <Link to={to}>

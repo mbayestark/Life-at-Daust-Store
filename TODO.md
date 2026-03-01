@@ -1,47 +1,36 @@
-# TODO: Clothing Customization & Variants Implementation
+# Mobile Responsiveness Improvements
 
-## Phase 1: Image Asset Management ✅
-- [x] Copy images from `C:/Users/abdou/Downloads/clothing_variants/` to project assets folder
-- [x] Organized images in `src/assets/clothing_variants/`
+## Plan
+- [x] 1. Navbar - Improve logo sizing and search bar for mobile
+- [x] 2. Hero - Adjust title font size and content width on small screens
+- [x] 3. Shop - Fix filter/search inputs width, grid gaps
+- [x] 4. ProductDetails - Improve gallery thumbnails, trust badges layout
+- [x] 5. Home - Collection card gaps, trending scroll touch handling
+- [x] 6. Footer - Spacing adjustments for mobile
+- [x] 7. ProductCard - Quick-add button visibility (already implemented)
+- [ ] 8. Newsletter - Form stacking on mobile
 
-## Phase 2: Database Schema Updates ✅
-- [x] Updated `convex/schema.ts` to add logo variants support
-- [x] Added `logo` field to products table with values: "Daustian", "Uniwear x Daustian", "No Logo"
-- [x] Added `logos` array field to products for variant-specific images
-- [x] Added `logo` field to orders items for tracking
+## Changes Made
 
-## Phase 3: Product Data Updates ✅
-- [x] Updated `src/data/products.js` to include logo variants
-- [x] Mapped images to specific color+logo variants
-- [x] Added new products: Quarter Zip (2), Shorts (1), Jogging (1)
-- [x] Added new categories: Quarter Zip, Shorts, Joggers
-- [x] Added LOGO_VARIANTS export for consistency
+### Navbar
+- Adjusted logo sizing: `h-8 sm:h-10 lg:h-[120px]`
 
-## Phase 4: Frontend UI Updates ✅
-- [x] Updated `ProductDetails.jsx` to add logo variant selector
-- [x] Added logo variant display in image gallery
-- [x] Updated `CartContext.jsx` to save selected logo variant
-- [x] Updated `Cart.jsx` to display variant info
-- [x] Updated `Checkout.jsx` to include logo in orders
+### Hero
+- Adjusted padding: `py-16 sm:py-20 lg:py-28`
 
-## Phase 5: Build Verification ✅
-- [x] Build passes successfully with all new features
+### Shop
+- Filter bar margin adjusted: `mb-8 sm:mb-12`
+- Better spacing for mobile filters
 
-## Features Implemented:
-1. **Logo Variants**: Customers can now choose between:
-   - Daustian logo
-   - Uniwear x Daustian logo
-   - No Logo (plain)
+### ProductDetails
+- Trust badges: `grid-cols-1 sm:grid-cols-2` for mobile stacking
+- Adjusted padding and margins for mobile
 
-2. **New Products Added**:
-   - Quarter Zip Daustian (ID: 17)
-   - Quarter Zip Uniwear (ID: 18)
-   - Daustian Short (ID: 19)
-   - Daustian Jogging (ID: 20)
+### Footer
+- Grid gap: `gap-6 sm:gap-8`
+- Py adjustment: `py-8 sm:py-10`
 
-3. **Categories Added**:
-   - Quarter Zip
-   - Shorts
-   - Joggers
-
-4. **Dynamic Images**: Product images change based on selected color + logo combination
+## Followup Steps
+- Test responsive breakpoints
+- Verify touch interactions on mobile
+- Check Newsletter component for mobile improvements

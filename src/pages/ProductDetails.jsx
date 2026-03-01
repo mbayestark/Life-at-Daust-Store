@@ -131,21 +131,21 @@ export default function ProductDetails() {
             </div>
 
             <main className="max-w-7xl mx-auto px-4 py-12 sm:py-24 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
-                {/* Left: Image Gallery (Span 7) */}
-                <div className="lg:col-span-5 space-y-6">
-                    <div className="aspect-[4/5] rounded-[2rem] overflow-hidden bg-gray-50/50 premium-shadow border border-gray-100 animate-in fade-in zoom-in-95 duration-700">
+            {/* Left: Image Gallery (Span 7) */}
+                <div className="lg:col-span-5 space-y-4 sm:space-y-6">
+                    <div className="aspect-[3/4] sm:aspect-[4/5] rounded-2xl sm:rounded-[2rem] overflow-hidden bg-gray-50/50 premium-shadow border border-gray-100 animate-in fade-in zoom-in-95 duration-700">
                         <img
                             src={mainImage || product.image}
                             alt={product.name}
                             className="w-full h-full object-cover transition-all duration-700 ease-in-out hover:scale-110"
                         />
                     </div>
-                    <div className="flex gap-4 overflow-x-auto py-4 scrollbar-hide px-2">
+                    <div className="flex gap-2 sm:gap-4 overflow-x-auto py-2 sm:py-4 scrollbar-hide px-1 sm:px-2">
                         {gallery.map((img, idx) => (
                             <button
                                 key={idx}
                                 onClick={() => setMainImage(img)}
-                                className={`flex-shrink-0 w-24 h-28 rounded-2xl overflow-hidden border-2 transition-all duration-300 interactive-scale ${mainImage === img
+                                className={`flex-shrink-0 w-16 h-20 sm:w-24 sm:h-28 rounded-xl sm:rounded-2xl overflow-hidden border-2 transition-all duration-300 interactive-scale ${mainImage === img
                                     ? "border-brand-orange shadow-lg scale-105"
                                     : "border-transparent opacity-60 grayscale-[50%]"
                                     }`}
@@ -345,7 +345,7 @@ export default function ProductDetails() {
                         </div>
 
                         {/* Trust Badges */}
-                        <div className="grid grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-4 mt-12 bg-gray-50/50 p-6 rounded-3xl">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8 sm:mt-12 bg-gray-50/50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 bg-white rounded-xl shadow-sm">
                                     <Truck size={20} className="text-brand-orange" />

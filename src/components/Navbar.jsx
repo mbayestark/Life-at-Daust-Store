@@ -95,7 +95,7 @@ export default function Navbar() {
               <img
                 src={logo}
                 alt="Life at DAUST"
-                className="h-12 sm:h-14 lg:h-[120px] w-auto transition-transform duration-700 group-hover:scale-105"
+                className="h-8 sm:h-10 lg:h-[120px] w-auto transition-transform duration-700 group-hover:scale-105"
               />
             </Link>
 
@@ -108,7 +108,7 @@ export default function Navbar() {
                   const q = e.target.q.value.trim();
                   if (q) navigate(`/shop?q=${encodeURIComponent(q)}`);
                 }}
-                className="hidden xl:flex items-center bg-gray-50/50 border border-gray-100 rounded-full px-5 py-2.5 w-64 focus-within:ring-4 focus-within:ring-brand-orange/5 focus-within:border-brand-orange/40 transition-all duration-500"
+                className="hidden lg:flex items-center bg-gray-50/50 border border-gray-100 rounded-full px-4 py-2 w-48 lg:w-64 focus-within:ring-4 focus-within:ring-brand-orange/5 focus-within:border-brand-orange/40 transition-all duration-500"
               >
                 <Search size={16} className="text-gray-400 mr-3" />
                 <input

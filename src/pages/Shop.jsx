@@ -104,27 +104,28 @@ export default function Shop() {
 
       <section className="max-w-7xl mx-auto px-4 py-16 sm:py-24">
         {/* Filters Bar */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-12">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 sm:mb-12">
           <div className="flex items-center gap-3">
-            <Filter className="text-brand-navy" size={20} />
-            <span className="font-black text-brand-navy uppercase tracking-widest text-xs">Filter by:</span>
+            <Filter className="text-brand-navy" size={18} />
+            <span className="font-black text-brand-navy uppercase tracking-widest text-xs">Filter:</span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3">
             {/* Category Filter */}
             <div className="relative group">
-              <button className="flex items-center gap-3 px-5 py-3 bg-white rounded-full shadow-sm border border-gray-100 hover:border-brand-orange transition-all font-bold text-sm">
-                {category}
-                <ChevronDown size={16} className="text-gray-400 group-hover:text-brand-orange transition-colors" />
+              <button className="flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2.5 sm:py-3 bg-white rounded-full shadow-sm border border-gray-100 hover:border-brand-orange transition-all font-bold text-xs sm:text-sm whitespace-nowrap">
+                <span className="hidden sm:inline">{category}</span>
+                <span className="sm:hidden">Category</span>
+                <ChevronDown size={14} className="text-gray-400 group-hover:text-brand-orange transition-colors" />
               </button>
               
-              <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+              <div className="absolute top-full left-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                 <div className="p-2">
                   {CATEGORIES.map(cat => (
                     <button
                       key={cat}
                       onClick={() => setCategory(cat)}
-                      className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                      className={`w-full text-left px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                         category === cat 
                           ? "bg-brand-navy text-white" 
                           : "text-gray-600 hover:bg-gray-50 hover:text-brand-orange"
@@ -139,18 +140,19 @@ export default function Shop() {
 
             {/* Sort */}
             <div className="relative group">
-              <button className="flex items-center gap-3 px-5 py-3 bg-white rounded-full shadow-sm border border-gray-100 hover:border-brand-orange transition-all font-bold text-sm">
-                {sort}
-                <ChevronDown size={16} className="text-gray-400 group-hover:text-brand-orange transition-colors" />
+              <button className="flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2.5 sm:py-3 bg-white rounded-full shadow-sm border border-gray-100 hover:border-brand-orange transition-all font-bold text-xs sm:text-sm whitespace-nowrap">
+                <span className="hidden sm:inline">{sort}</span>
+                <span className="sm:hidden">Sort</span>
+                <ChevronDown size={14} className="text-gray-400 group-hover:text-brand-orange transition-colors" />
               </button>
               
-              <div className="absolute top-full right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+              <div className="absolute top-full right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                 <div className="p-2">
                   {["Featured", "Price: Low to High", "Price: High to Low", "Newest Arrivals"].map(s => (
                     <button
                       key={s}
                       onClick={() => setSort(s)}
-                      className={`w-full text-left px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                      className={`w-full text-left px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                         sort === s 
                           ? "bg-brand-navy text-white" 
                           : "text-gray-600 hover:bg-gray-50 hover:text-brand-orange"
@@ -164,21 +166,21 @@ export default function Shop() {
             </div>
 
             {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <div className="relative flex-1 sm:flex-none sm:w-48 lg:w-64">
+              <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-11 pr-4 py-3 bg-white rounded-full shadow-sm border border-gray-100 focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/5 outline-none transition-all w-64 font-bold text-sm"
+                className="pl-9 sm:pl-11 pr-3 sm:pr-4 py-2.5 sm:py-3 bg-white rounded-full shadow-sm border border-gray-100 focus:border-brand-orange focus:ring-4 focus:ring-brand-orange/5 outline-none transition-all w-full font-bold text-xs sm:text-sm"
               />
               {searchQuery && (
                 <button 
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-orange"
+                  className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-orange"
                 >
-                  <X size={16} />
+                  <X size={14} />
                 </button>
               )}
             </div>
