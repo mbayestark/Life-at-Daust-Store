@@ -36,6 +36,7 @@ export const addOrder = mutation({
       price: v.number(),
       color: v.optional(v.string()),
       size: v.optional(v.string()),
+      logo: v.optional(v.string()),
     })),
     subtotal: v.number(),
     deliveryFee: v.number(),
