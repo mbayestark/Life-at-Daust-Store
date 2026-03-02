@@ -15,7 +15,7 @@ export function AdminProvider({ children }) {
     const login = (password) => {
         // Basic password check - User can change this later
         // Defaulting to "daust_admin_2024" for now
-        if (password === "daust_admin_2024") {
+        if (password === "daust") {
             setIsAdmin(true);
             setAdminToken(password);
             sessionStorage.setItem("is_admin", "true");
