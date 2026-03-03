@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import {
     Package,
@@ -27,6 +27,8 @@ export default function AdminOrders() {
     const getStatusColor = (status) => {
         switch (status) {
             case "Pending Verification": return "bg-purple-50 text-purple-600";
+            case "Pending Payment": return "bg-yellow-50 text-yellow-600";
+            case "Paid": return "bg-green-50 text-green-600 font-bold";
             case "Processing": return "bg-brand-orange/10 text-brand-orange";
             case "Shipped": return "bg-blue-50 text-blue-600";
             case "Delivered": return "bg-green-50 text-green-600";
@@ -35,8 +37,35 @@ export default function AdminOrders() {
         }
     };
 
+    const checkNabooStatus = useAction(api.naboopay.getTransaction);
+
+    const handleCheckStatus = async (naboopayId) => {
+        try {
+            const result = await checkNabooStatus({ orderId: naboopayId });
+            // The result will have transaction_status
+            if (result && result.transaction_status) {
+                // We could call a mutation here to update our DB if it changed
+                // For now, let's just alert or refresh
+                alert(`NabooPay Status: ${result.transaction_status}`);
+            }
+        } catch (err) {
+            console.error("Failed to check NabooPay status", err);
+            alert("Failed to check status. Make sure the NabooPay ID is valid.");
+        }
+    };
+
+    const deleteNabooTransaction = useAction(api.naboopay.deleteTransaction);
+
     const handleStatusUpdate = async (id, newStatus) => {
         try {
+            if (newStatus === "Cancelled" && selectedOrder.naboopayOrderId) {
+                try {
+                    await deleteNabooTransaction({ orderId: selectedOrder.naboopayOrderId });
+                } catch (err) {
+                    console.error("Failed to delete NabooPay transaction", err);
+                    // We continue anyway, as it might already be deleted or expired
+                }
+            }
             await updateStatus({ id, status: newStatus, adminToken });
             if (selectedOrder && selectedOrder._id === id) {
                 setSelectedOrder({ ...selectedOrder, status: newStatus });
@@ -151,6 +180,13 @@ export default function AdminOrders() {
                                     <CheckCircle2 size={16} /> Delivered
                                 </button>
                                 <button
+                                    onClick={() => handleStatusUpdate(selectedOrder._id, "Paid")}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${selectedOrder.status === "Paid" ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" : "bg-emerald-50 text-emerald-600 hover:bg-emerald-100"
+                                        }`}
+                                >
+                                    <CheckCircle2 size={16} /> Paid
+                                </button>
+                                <button
                                     onClick={() => handleStatusUpdate(selectedOrder._id, "Cancelled")}
                                     className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${selectedOrder.status === "Cancelled" ? "bg-red-600 text-white shadow-lg shadow-red-600/20" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                                         }`}
@@ -164,7 +200,38 @@ export default function AdminOrders() {
                                 >
                                     <AlertCircle size={16} /> Pending Verification
                                 </button>
+                                <button
+                                    onClick={() => handleStatusUpdate(selectedOrder._id, "Pending Payment")}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${selectedOrder.status === "Pending Payment" ? "bg-yellow-500 text-white shadow-lg shadow-yellow-500/20" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                        }`}
+                                >
+                                    <Clock size={16} /> Pending Payment
+                                </button>
                             </div>
+
+                            {selectedOrder.naboopayOrderId && (
+                                <div className="p-6 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-blue-600">NabooPay Transaction</h3>
+                                        <button
+                                            onClick={() => handleCheckStatus(selectedOrder.naboopayOrderId)}
+                                            className="px-3 py-1 bg-white border border-blue-200 rounded-lg text-[10px] font-black text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                        >
+                                            REFRESH STATUS
+                                        </button>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-[10px] font-black uppercase text-blue-400">Order ID</p>
+                                            <p className="font-bold text-blue-900 break-all">{selectedOrder.naboopayOrderId}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[10px] font-black uppercase text-blue-400">Checkout Link</p>
+                                            <a href={selectedOrder.naboopayCheckoutUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-blue-600 underline">Open Link</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {selectedOrder.proofOfPaymentUrl && (
                                 <div className="space-y-4">

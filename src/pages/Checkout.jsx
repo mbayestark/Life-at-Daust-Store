@@ -6,7 +6,7 @@ import { Shield, ChevronLeft, Lock, Info, AlertCircle } from "lucide-react";
 import { formatPrice } from "../utils/format.js";
 import Button from "../components/ui/Button";
 
-import { useMutation } from "convex/react";
+import { useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 const fmt = (n) => formatPrice(n);
@@ -29,12 +29,15 @@ export default function Checkout() {
   const [orderId] = useState(makeOrderId());
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", location: "" });
+  const [paymentMethod, setPaymentMethod] = useState("naboopay"); // Default to NabooPay
   const [paymentFile, setPaymentFile] = useState(null);
   const [error, setError] = useState("");
   const nav = useNavigate();
 
   const addOrder = useMutation(api.orders.addOrder);
+  const updateNabooPayDetails = useMutation(api.orders.updateNabooPayDetails);
   const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+  const createNabooPayTransaction = useAction(api.naboopay.createTransaction);
 
   const deliveryFee = useMemo(() => {
     const loc = locations.find(l => l.name === form.location);
@@ -81,23 +84,28 @@ export default function Checkout() {
       return;
     }
 
-    if (!paymentFile) {
+    if (paymentMethod === "manual" && !paymentFile) {
       setError("Please upload your proof of payment screenshot to confirm the order.");
       return;
     }
 
     setLoading(true);
     try {
-      // Post file to Convex storage
-      const postUrl = await generateUploadUrl();
-      const result = await fetch(postUrl, {
-        method: "POST",
-        headers: { "Content-Type": paymentFile.type },
-        body: paymentFile,
-      });
-      const { storageId } = await result.json();
+      let storageId = undefined;
+      
+      if (paymentMethod === "manual") {
+        // Post file to Convex storage
+        const postUrl = await generateUploadUrl();
+        const result = await fetch(postUrl, {
+          method: "POST",
+          headers: { "Content-Type": paymentFile.type },
+          body: paymentFile,
+        });
+        const uploadResult = await result.json();
+        storageId = uploadResult.storageId;
+      }
 
-      // Save order to Convex (includes automatic Google Sheets backup)
+      // Save order to Convex
       await addOrder({
         orderId,
         customer: {
@@ -109,8 +117,42 @@ export default function Checkout() {
         subtotal,
         deliveryFee,
         total,
+        paymentMethod,
         paymentStorageId: storageId,
       });
+
+      if (paymentMethod === "naboopay") {
+        // Create NabooPay transaction
+        const nabooResponse = await createNabooPayTransaction({
+          orderId,
+          customer: {
+            name: form.name,
+            phone: form.phone.startsWith("+") ? form.phone : `+221${form.phone.replace(/\s/g, "")}`, // Assuming Senegal if no plus
+          },
+          items: lines.map(it => ({
+            name: it.name,
+            qty: it.qty,
+            price: it.price,
+          })),
+          successUrl: `https://shop.daustgov.com/order/success/${orderId}`,
+          errorUrl: `https://shop.daustgov.com/checkout?error=payment_failed`,
+        });
+
+        if (nabooResponse && nabooResponse.checkout_url) {
+          // Update order with NabooPay ID and redirect
+          await updateNabooPayDetails({
+            orderId,
+            naboopayOrderId: nabooResponse.order_id,
+            naboopayCheckoutUrl: nabooResponse.checkout_url,
+          });
+
+          // Redirect to NabooPay
+          window.location.href = nabooResponse.checkout_url;
+          return;
+        } else {
+          throw new Error("Failed to get checkout URL from NabooPay");
+        }
+      }
 
       clear();
       nav(`/order/success/${orderId}`, { state: { orderId } });
@@ -208,37 +250,70 @@ export default function Checkout() {
             </div>
 
             <div className="border border-gray-200 rounded-2xl p-6 space-y-6">
-              <h3 className="text-lg font-black text-brand-navy tracking-tight">Payment Details</h3>
-              <p className="text-sm text-gray-500 font-medium">To complete your order, please send the total amount (<span className="text-brand-orange font-bold font-black">{fmt(total)}</span>) via Wave or Orange Money, then upload a screenshot of your transaction below.</p>
-
+              <h3 className="text-lg font-black text-brand-navy tracking-tight">Payment Method</h3>
+              
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-blue-500/20 bg-blue-50/50">
-                  <span className="font-bold text-blue-700 mb-2">Wave Payment</span>
-                  <img src="/wave.png" alt="Wave QR Code" className="w-[200px] h-[200px] object-contain rounded-lg shadow-sm bg-white p-2" />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("naboopay")}
+                  className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all ${paymentMethod === "naboopay" ? "border-brand-orange bg-brand-orange/5" : "border-gray-100 bg-white"}`}
+                >
+                  <Shield size={24} className={paymentMethod === "naboopay" ? "text-brand-orange" : "text-gray-400"} />
+                  <span className={`font-bold mt-2 ${paymentMethod === "naboopay" ? "text-brand-navy" : "text-gray-500"}`}>Online Payment</span>
+                  <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">Wave, Orange Money</p>
+                </button>
 
-                <div className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-orange-500/20 bg-orange-50/50">
-                  <span className="font-bold text-orange-600 mb-2">Orange Money</span>
-                  <img src="/orangemoney.png" alt="Orange Money QR Code" className="w-[200px] h-[200px] object-contain rounded-lg shadow-sm bg-white p-2" />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setPaymentMethod("manual")}
+                  className={`flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all ${paymentMethod === "manual" ? "border-brand-orange bg-brand-orange/5" : "border-gray-100 bg-white"}`}
+                >
+                  <AlertCircle size={24} className={paymentMethod === "manual" ? "text-brand-orange" : "text-gray-400"} />
+                  <span className={`font-bold mt-2 ${paymentMethod === "manual" ? "text-brand-navy" : "text-gray-500"}`}>Manual Proof</span>
+                  <p className="text-[10px] text-gray-500 mt-1 uppercase tracking-widest">Upload Screenshot</p>
+                </button>
               </div>
 
-              <div className="space-y-3 pt-4 border-t border-gray-100">
-                <label htmlFor="proof" className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
-                  <span className="text-red-500">*</span> Proof of Payment
-                </label>
-                <div className="relative">
-                  <input
-                    id="proof"
-                    type="file"
-                    accept="image/*"
-                    required
-                    onChange={(e) => setPaymentFile(e.target.files[0])}
-                    className="w-full h-16 bg-white border border-gray-100 rounded-2xl px-6 text-brand-navy font-bold focus:ring-4 focus:ring-brand-orange/5 focus:border-brand-orange outline-none transition-all shadow-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-orange/10 file:text-brand-orange hover:file:bg-brand-orange/20 file:transition-colors pt-[18px]"
-                  />
+              {paymentMethod === "naboopay" && (
+                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex gap-3">
+                  <Info size={18} className="text-blue-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-blue-700 leading-relaxed font-medium">
+                    You will be redirected to NabooPay's secure portal to complete your payment using Wave or Orange Money.
+                  </p>
                 </div>
-                <p className="text-[10px] text-gray-500 ml-1 italic font-medium">Please upload a clear screenshot showing the successful transaction.</p>
-              </div>
+              )}
+
+              {paymentMethod === "manual" && (
+                <div className="space-y-6 animate-in slide-in-from-top-2 duration-300">
+                  <p className="text-sm text-gray-500 font-medium">Please send the total amount (<span className="text-brand-orange font-bold font-black">{fmt(total)}</span>) via Wave or Orange Money, then upload a screenshot.</p>
+                  
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-blue-500/20 bg-blue-50/50">
+                      <span className="font-bold text-blue-700 mb-2">Wave Payment</span>
+                      <img src="/wave.png" alt="Wave QR Code" className="w-[120px] h-[120px] object-contain rounded-lg shadow-sm bg-white p-2" />
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-orange-500/20 bg-orange-50/50">
+                      <span className="font-bold text-orange-600 mb-2">Orange Money</span>
+                      <img src="/orangemoney.png" alt="Orange Money QR Code" className="w-[120px] h-[120px] object-contain rounded-lg shadow-sm bg-white p-2" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 pt-4 border-t border-gray-100">
+                    <label htmlFor="proof" className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
+                      <span className="text-red-500">*</span> Proof of Payment
+                    </label>
+                    <input
+                      id="proof"
+                      type="file"
+                      accept="image/*"
+                      required={paymentMethod === "manual"}
+                      onChange={(e) => setPaymentFile(e.target.files[0])}
+                      className="w-full h-16 bg-white border border-gray-100 rounded-2xl px-6 text-brand-navy font-bold focus:ring-4 focus:ring-brand-orange/5 focus:border-brand-orange outline-none transition-all shadow-sm file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand-orange/10 file:text-brand-orange hover:file:bg-brand-orange/20 file:transition-colors pt-[18px]"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm mt-12 space-y-6">
@@ -256,7 +331,7 @@ export default function Checkout() {
               loading={loading}
               className="w-full h-20 rounded-[1.5rem] !text-lg shadow-2xl shadow-brand-orange/20 mt-8"
             >
-              Confirm Order
+              {paymentMethod === "naboopay" ? "Proceed to Payment" : "Confirm Order"}
             </Button>
           </form>
         </div>

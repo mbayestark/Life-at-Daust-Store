@@ -36,6 +36,7 @@ export default defineSchema({
     }),
     orders: defineTable({
         orderId: v.string(),
+        naboopayOrderId: v.optional(v.string()),
         customer: v.object({
             name: v.string(),
             phone: v.string(),
@@ -53,8 +54,10 @@ export default defineSchema({
         deliveryFee: v.number(),
         total: v.number(),
         status: v.string(),
+        paymentMethod: v.optional(v.string()), // "naboopay" or "manual"
         paymentStorageId: v.optional(v.id("_storage")),
         proofOfPaymentUrl: v.optional(v.string()),
+        naboopayCheckoutUrl: v.optional(v.string()),
         createdAt: v.number(),
     }),
 });

@@ -41,14 +41,17 @@ export const addOrder = mutation({
     subtotal: v.number(),
     deliveryFee: v.number(),
     total: v.number(),
+    paymentMethod: v.optional(v.string()),
     paymentStorageId: v.optional(v.id("_storage")),
+    naboopayOrderId: v.optional(v.string()),
+    naboopayCheckoutUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     // Save to Convex database
     const proofOfPaymentUrl = args.paymentStorageId ? (await ctx.storage.getUrl(args.paymentStorageId)) ?? undefined : undefined;
     const orderId = await ctx.db.insert("orders", {
       ...args,
-      status: "Pending Verification",
+      status: args.paymentMethod === "naboopay" ? "Pending Payment" : "Pending Verification",
       proofOfPaymentUrl,
       createdAt: Date.now(),
     });
@@ -66,6 +69,57 @@ export const addOrder = mutation({
     });
 
     return orderId;
+  },
+});
+
+export const updateNabooPayDetails = mutation({
+  args: {
+    orderId: v.string(), // This is our custom orderId
+    naboopayOrderId: v.string(),
+    naboopayCheckoutUrl: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const order = await ctx.db
+      .query("orders")
+      .filter((q) => q.eq(q.field("orderId"), args.orderId))
+      .first();
+
+    if (!order) {
+      throw new Error("Order not found");
+    }
+
+    await ctx.db.patch(order._id, {
+      naboopayOrderId: args.naboopayOrderId,
+      naboopayCheckoutUrl: args.naboopayCheckoutUrl,
+      paymentMethod: "naboopay",
+    });
+  },
+});
+
+export const updateByNabooPayId = internalMutation({
+  args: {
+    naboopayOrderId: v.string(),
+    status: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const order = await ctx.db
+      .query("orders")
+      .filter((q) => q.eq(q.field("naboopayOrderId"), args.naboopayOrderId))
+      .first();
+
+    if (!order) {
+      console.error(`Order with NabooPay ID ${args.naboopayOrderId} not found`);
+      return;
+    }
+
+    let status = "Pending Payment";
+    if (args.status === "paid" || args.status === "paid_and_blocked") {
+      status = "Paid";
+    } else if (args.status === "cancelled") {
+      status = "Cancelled";
+    }
+
+    await ctx.db.patch(order._id, { status });
   },
 });
 
