@@ -1,6 +1,11 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
+// Convex exposes process.env at runtime. We declare it as an ambient variable
+// here to avoid requiring @types/node, since Convex is not a Node.js environment.
+declare const process: { env: Record<string, string | undefined> };
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "daust";
+
 export const list = query({
     args: {},
     handler: async (ctx) => {
@@ -56,7 +61,7 @@ export const addCollection = mutation({
         adminToken: v.string(),
     },
     handler: async (ctx, args) => {
-        if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust_admin_2024")) {
+        if (args.adminToken !== ADMIN_PASSWORD) {
             throw new Error("Unauthorized");
         }
         const { adminToken: _adminToken, ...collectionArgs } = args;
@@ -79,7 +84,7 @@ export const updateCollection = mutation({
         adminToken: v.string(),
     },
     handler: async (ctx, args) => {
-        if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust_admin_2024")) {
+        if (args.adminToken !== ADMIN_PASSWORD) {
             throw new Error("Unauthorized");
         }
         const { id, adminToken: _adminToken, ...fields } = args;
@@ -90,7 +95,7 @@ export const updateCollection = mutation({
 export const removeCollection = mutation({
     args: { id: v.id("collections"), adminToken: v.string() },
     handler: async (ctx, args) => {
-        if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust_admin_2024")) {
+        if (args.adminToken !== ADMIN_PASSWORD) {
             throw new Error("Unauthorized");
         }
         // Remove collection reference from all products first

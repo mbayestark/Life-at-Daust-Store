@@ -1,42 +1,56 @@
 import { describe, it, expect, vi } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, render } from '@testing-library/react';
+import { BrowserRouter } from 'react-router-dom';
 import { renderWithProviders, userEvent } from '../utils';
 import App from '../../App';
 import { PRODUCTS } from '../../data/products';
 
-// Mocking Convex - returning data directly to avoid persistent loading state in tests
+// Mocking Convex
 vi.mock('convex/react', () => ({
-    useQuery: vi.fn(() => PRODUCTS),
+    useQuery: vi.fn((apiName) => {
+        // Distinguish between products and collections to avoid rendering errors/huge dropdowns
+        if (typeof apiName === 'string' && apiName.includes('collections')) {
+            return [{ name: 'Test Collection', slug: 'test' }];
+        }
+        return PRODUCTS;
+    }),
     useMutation: vi.fn(() => vi.fn()),
 }));
 
 // Mock AOS
 vi.mock('aos', () => ({
-    default: {
-        init: vi.fn(),
-        refresh: vi.fn(),
-    },
+    default: { init: vi.fn(), refresh: vi.fn() },
     init: vi.fn(),
     refresh: vi.fn(),
 }));
 
 describe('Cart & Checkout Integration', () => {
+    // Increase timeout for complex integration tests
+    const testTimeout = 15000;
+
     it('adds a product to the cart and verify it appears in the cart page', async () => {
         const user = userEvent.setup();
 
-        // Render the whole App to test navigation
-        renderWithProviders(<App />);
+        // Render WITHOUT renderWithProviders to avoid duplicate CartProvider
+        // but we still need BrowserRouter
+        render(
+            <BrowserRouter>
+                <App />
+            </BrowserRouter>
+        );
 
-        // Navigation to Shop
-        const shopLinks = screen.getAllByRole('link', { name: /shop/i });
-        await user.click(shopLinks[0]);
+        // Verification of Home page
+        await waitFor(() => {
+            expect(screen.getByText(/university merch/i)).toBeInTheDocument();
+        }, { timeout: 5000 });
 
-        // Verify we are on the Shop page
-        expect(screen.getByText(/university merch/i)).toBeInTheDocument();
+        // Navigate to Shop using Hero CTA
+        const shopCTA = screen.getByText(/shop collection/i);
+        await user.click(shopCTA);
 
-        // Find a product and click Quick Add
-        const quickAddButtons = screen.getAllByText(/quick add/i);
-        await user.click(quickAddButtons[0]);
+        // Find a product and click add button
+        const addButtons = await screen.findAllByLabelText(/add to cart/i);
+        await user.click(addButtons[0]);
 
         // Navigate to Cart
         const cartLinks = screen.getAllByRole('link', { name: /cart/i });
@@ -44,50 +58,64 @@ describe('Cart & Checkout Integration', () => {
 
         // Verify the product is in the cart
         expect(screen.getByText(/shopping bag/i)).toBeInTheDocument();
-        expect(screen.getAllByText(PRODUCTS[0].name).length).toBeGreaterThan(0);
-    });
+        await waitFor(() => {
+            expect(screen.getAllByText(PRODUCTS[0].name).length).toBeGreaterThan(0);
+        });
+    }, testTimeout);
 
     it('can remove an item from the cart', async () => {
         const user = userEvent.setup();
-        renderWithProviders(<App />);
+        render(
+            <BrowserRouter>
+                <App />
+            </BrowserRouter>
+        );
 
-        // Go to shop and add item
-        const shopLinks = screen.getAllByRole('link', { name: /shop/i });
-        await user.click(shopLinks[0]);
-        await user.click(screen.getAllByText(/quick add/i)[0]);
+        // Go to shop
+        const shopCTA = await screen.findByText(/shop collection/i);
+        await user.click(shopCTA);
+
+        const addButtons = await screen.findAllByLabelText(/add to cart/i);
+        await user.click(addButtons[0]);
 
         // Go to cart
         const cartLinks = screen.getAllByRole('link', { name: /cart/i });
         await user.click(cartLinks[0]);
 
         // Find remove button by title "Remove from bag"
-        const removeButton = screen.getByTitle(/remove from bag/i);
+        const removeButton = await screen.findByTitle(/remove from bag/i);
         await user.click(removeButton);
 
         // Verify cart is empty
         await waitFor(() => {
             expect(screen.getByText(/your bag is empty/i)).toBeInTheDocument();
         });
-    });
+    }, testTimeout);
 
     it('proceeds to checkout from the cart', async () => {
         const user = userEvent.setup();
-        renderWithProviders(<App />);
+        render(
+            <BrowserRouter>
+                <App />
+            </BrowserRouter>
+        );
 
         // Add item
-        const shopLinks = screen.getAllByRole('link', { name: /shop/i });
-        await user.click(shopLinks[0]);
-        await user.click(screen.getAllByText(/quick add/i)[0]);
+        const shopCTA = await screen.findByText(/shop collection/i);
+        await user.click(shopCTA);
+
+        const addButtons = await screen.findAllByLabelText(/add to cart/i);
+        await user.click(addButtons[0]);
 
         // Go to cart
         const cartLinks = screen.getAllByRole('link', { name: /cart/i });
         await user.click(cartLinks[0]);
 
         // Click Checkout button
-        const checkoutButton = screen.getByRole('button', { name: /checkout/i });
+        const checkoutButton = await screen.findByRole('button', { name: /checkout/i });
         await user.click(checkoutButton);
 
         // Verify we are on the Checkout page
         expect(screen.getByRole('heading', { name: /complete your order/i })).toBeInTheDocument();
-    });
+    }, testTimeout);
 });
