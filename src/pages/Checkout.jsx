@@ -1,8 +1,7 @@
-// src/pages/ Checkout.jsx
 import React, { useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
-import { Shield, ChevronLeft, Lock, Info, AlertCircle } from "lucide-react";
+import { Shield, ChevronLeft, Lock, Info, AlertCircle, Package, Tag } from "lucide-react";
 import { formatPrice } from "../utils/format.js";
 import Button from "../components/ui/Button";
 
@@ -12,24 +11,22 @@ import { api } from "../../convex/_generated/api";
 const fmt = (n) => formatPrice(n);
 
 function makeOrderId() {
-  // More secure: timestamp + random string
   const timestamp = Date.now().toString(36).toUpperCase();
   const random = Math.random().toString(36).substring(2, 6).toUpperCase();
   return `ORD-${timestamp}-${random}`;
 }
 
-// Delivery Locations in Senegal
 const locations = [
   { name: "DAUST Campus", fee: 0 },
   { name: "Other Location (Calculated on arrival)", fee: 0 },
 ];
 
 export default function Checkout() {
-  const { items, subtotal, tax, clear } = useCart();
+  const { items, subtotal, tax, clear, totalSavings } = useCart();
   const [orderId] = useState(makeOrderId());
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", location: "" });
-  const [paymentMethod, setPaymentMethod] = useState("naboopay"); // Default to NabooPay
+  const [paymentMethod, setPaymentMethod] = useState("naboopay");
   const [paymentFile, setPaymentFile] = useState(null);
   const [error, setError] = useState("");
   const nav = useNavigate();
@@ -46,6 +43,10 @@ export default function Checkout() {
 
   const total = subtotal + tax + deliveryFee;
 
+  // Separate product sets and regular items
+  const productSetItems = items.filter(item => item.isProductSet);
+  const regularItems = items.filter(item => !item.isProductSet);
+
   const lines = useMemo(
     () =>
       items.map((it) => {
@@ -54,10 +55,13 @@ export default function Checkout() {
           qty: it.qty,
           price: it.price,
         };
-        // Convex v.optional(v.string()) rejects null — only omit the field
         if (it.selectedColor) line.color = it.selectedColor;
         if (it.selectedSize) line.size = it.selectedSize;
         if (it.selectedLogo) line.logo = it.selectedLogo;
+        if (it.isProductSet) {
+          line.isProductSet = true;
+          line.productSetName = it.productSetName;
+        }
         return line;
       }),
     [items]
@@ -94,7 +98,6 @@ export default function Checkout() {
       let storageId = undefined;
       
       if (paymentMethod === "manual") {
-        // Post file to Convex storage
         const postUrl = await generateUploadUrl();
         const result = await fetch(postUrl, {
           method: "POST",
@@ -105,7 +108,6 @@ export default function Checkout() {
         storageId = uploadResult.storageId;
       }
 
-      // Save order to Convex
       await addOrder({
         orderId,
         customer: {
@@ -122,12 +124,11 @@ export default function Checkout() {
       });
 
       if (paymentMethod === "naboopay") {
-        // Create NabooPay transaction
         const nabooResponse = await createNabooPayTransaction({
           orderId,
           customer: {
             name: form.name,
-            phone: form.phone.startsWith("+") ? form.phone : `+221${form.phone.replace(/\s/g, "")}`, // Assuming Senegal if no plus
+            phone: form.phone.startsWith("+") ? form.phone : `+221${form.phone.replace(/\s/g, "")}`,
           },
           items: lines.map(it => ({
             name: it.name,
@@ -139,14 +140,11 @@ export default function Checkout() {
         });
 
         if (nabooResponse && nabooResponse.checkout_url) {
-          // Update order with NabooPay ID and redirect
           await updateNabooPayDetails({
             orderId,
             naboopayOrderId: nabooResponse.order_id,
             naboopayCheckoutUrl: nabooResponse.checkout_url,
           });
-
-          // Redirect to NabooPay
           window.location.href = nabooResponse.checkout_url;
           return;
         } else {
@@ -163,10 +161,8 @@ export default function Checkout() {
     }
   };
 
-
   return (
     <div className="bg-gray-50/50 min-h-screen pb-24 sm:pb-32 overflow-x-hidden">
-      {/* Mini Header */}
       <div className="bg-white border-b border-gray-100 mb-12 sm:mb-20">
         <div className="max-w-7xl mx-auto px-4 py-6 flex justify-between items-center">
           <Link to="/cart" className="flex items-center gap-2 text-gray-400 hover:text-brand-orange text-[10px] font-black uppercase tracking-[0.2em] transition-colors">
@@ -179,7 +175,6 @@ export default function Checkout() {
       </div>
 
       <main className="max-w-7xl mx-auto px-4 grid gap-16 lg:grid-cols-12 items-start">
-        {/* Left: Input (Span 7) */}
         <div className="lg:col-span-7 animate-in slide-in-from-left-5 duration-700">
           <h1 className="text-[var(--text-4xl)] font-black text-brand-navy tracking-tighter mb-4">Complete Your Order</h1>
           <p className="text-gray-500 mb-12 text-lg">Enter your details to finalize your university essentials.</p>
@@ -285,38 +280,94 @@ export default function Checkout() {
           </form>
         </div>
 
-        {/* Right: Summary (Span 5) */}
         <aside className="lg:col-span-5 h-fit animate-in slide-in-from-right-5 duration-700 delay-100">
           <div className="bg-brand-navy rounded-[2.5rem] p-10 text-white shadow-2xl shadow-brand-navy/40 relative overflow-hidden">
-            {/* Decorative Pattern Overlay */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -mr-32 -mt-32" />
 
             <div className="relative z-10">
               <h2 className="text-xl font-black tracking-tight mb-8">Review Selection</h2>
-              <ul className="space-y-6 mb-10 overflow-y-auto max-h-[300px] pr-4 scrollbar-hide">
-                {items.map((it) => (
-                  <li key={`${it.id}-${it.selectedSize}-${it.selectedLogo}`} className="flex items-center gap-4 group">
-                    <div className="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 bg-white/10">
-                      <img src={it.image} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-sm truncate">{it.name}</p>
-                      <p className="text-[10px] font-bold text-brand-cream/40 uppercase tracking-widest mt-1">
-                        QTY: {it.qty}
-                        {it.selectedLogo ? ` • ${it.selectedLogo}` : ""}
-                        {it.selectedSize ? ` • ${it.selectedSize}` : ""}
-                      </p>
-                    </div>
-                    <span className="font-black text-sm">{fmt(it.price * it.qty)}</span>
-                  </li>
-                ))}
-              </ul>
+              
+              {/* Product Sets Section */}
+              {productSetItems.length > 0 && (
+                <div className="mb-6 pb-6 border-b border-white/10">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Package size={16} className="text-brand-orange" />
+                    <span className="text-xs font-black uppercase tracking-widest text-brand-orange">Special Bundles</span>
+                  </div>
+                  <ul className="space-y-4">
+                    {productSetItems.map((it) => (
+                      <li key={`${it.id}-${it.productSetId}`} className="flex items-center gap-3 group">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-white/10">
+                          {it.image ? (
+                            <img src={it.image} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full grid grid-cols-2 gap-0.5 p-1">
+                              {it.products?.slice(0, 4).map((p, idx) => (
+                                <div key={idx} className="rounded bg-white/20">
+                                  {p.productImage && <img src={p.productImage} alt="" className="w-full h-full object-cover" />}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-xs truncate">{it.name}</p>
+                          <p className="text-[10px] font-bold text-brand-cream/40 uppercase tracking-widest mt-0.5">
+                            QTY: {it.qty}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className="font-black text-xs">{fmt(it.price * it.qty)}</span>
+                          {it.savings > 0 && (
+                            <p className="text-[8px] text-green-400 font-bold">Save {fmt(it.savings)}</p>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-              <div className="space-y-4 text-sm font-medium border-t border-white/10 pt-8 mb-10">
+              {/* Regular Items Section */}
+              {regularItems.length > 0 && (
+                <div className={productSetItems.length > 0 ? "pt-2" : ""}>
+                  {productSetItems.length > 0 && (
+                    <div className="flex items-center gap-2 mb-4">
+                      <span className="text-xs font-black uppercase tracking-widest text-gray-400">Individual Items</span>
+                    </div>
+                  )}
+                  <ul className="space-y-4 max-h-[200px] overflow-y-auto pr-2">
+                    {regularItems.map((it) => (
+                      <li key={`${it.id}-${it.selectedSize}-${it.selectedLogo}`} className="flex items-center gap-3 group">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-white/10">
+                          <img src={it.image} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-xs truncate">{it.name}</p>
+                          <p className="text-[10px] font-bold text-brand-cream/40 uppercase tracking-widest mt-0.5">
+                            QTY: {it.qty}
+                            {it.selectedLogo ? ` • ${it.selectedLogo}` : ""}
+                            {it.selectedSize ? ` • ${it.selectedSize}` : ""}
+                          </p>
+                        </div>
+                        <span className="font-black text-xs">{fmt(it.price * it.qty)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="space-y-4 text-sm font-medium border-t border-white/10 pt-6 mt-6">
                 <div className="flex justify-between items-center text-brand-cream/60">
                   <span>Subtotal</span>
                   <span>{fmt(subtotal)}</span>
                 </div>
+                {totalSavings > 0 && (
+                  <div className="flex justify-between items-center text-green-400">
+                    <span>Bundle Savings</span>
+                    <span>-{fmt(totalSavings)}</span>
+                  </div>
+                )}
                 <div className="flex justify-between items-center text-brand-cream/60">
                   <span>Shipping</span>
                   <span className="text-brand-orange uppercase text-xs font-black tracking-widest">Complimentary</span>
@@ -333,7 +384,7 @@ export default function Checkout() {
                 </div>
               </div>
 
-              <div className="bg-white/5 rounded-2xl p-6 flex flex-col items-center gap-4 border border-white/5">
+              <div className="bg-white/5 rounded-2xl p-6 flex flex-col items-center gap-4 border border-white/5 mt-8">
                 <div className="flex items-center gap-2 text-brand-cream/40 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest">
                   <Lock size={12} /> Encrypted Transaction
                 </div>

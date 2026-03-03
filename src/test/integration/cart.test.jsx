@@ -1,9 +1,32 @@
 import { describe, it, expect, vi } from 'vitest';
 import { screen, waitFor, render } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
-import { renderWithProviders, userEvent } from '../utils';
+import { userEvent } from '../utils';
 import App from '../../App';
-import { PRODUCTS } from '../../data/products';
+
+// Mock product data - using sample data since products come from Convex
+const MOCK_PRODUCTS = [
+    {
+        _id: 'test-1',
+        id: 'test-1',
+        name: 'Test T-Shirt',
+        price: 5000,
+        category: 'T-Shirts',
+        image: '/test-image.jpg',
+        colors: [{ name: 'Black', hex: '#000000' }],
+        sizes: ['S', 'M', 'L'],
+    },
+    {
+        _id: 'test-2',
+        id: 'test-2',
+        name: 'Test Hoodie',
+        price: 8000,
+        category: 'Hoodies',
+        image: '/test-hoodie.jpg',
+        colors: [{ name: 'Navy', hex: '#000080' }],
+        sizes: ['S', 'M', 'L', 'XL'],
+    },
+];
 
 // Mocking Convex
 vi.mock('convex/react', () => ({
@@ -12,9 +35,10 @@ vi.mock('convex/react', () => ({
         if (typeof apiName === 'string' && apiName.includes('collections')) {
             return [{ name: 'Test Collection', slug: 'test' }];
         }
-        return PRODUCTS;
+        return MOCK_PRODUCTS;
     }),
     useMutation: vi.fn(() => vi.fn()),
+    useAction: vi.fn(() => vi.fn()),
 }));
 
 // Mock AOS
@@ -41,7 +65,7 @@ describe('Cart & Checkout Integration', () => {
 
         // Verification of Home page
         await waitFor(() => {
-            expect(screen.getByText(/university merch/i)).toBeInTheDocument();
+            expect(screen.getByText(/Life At Daust Store/i)).toBeInTheDocument();
         }, { timeout: 5000 });
 
         // Navigate to Shop using Hero CTA
@@ -59,7 +83,7 @@ describe('Cart & Checkout Integration', () => {
         // Verify the product is in the cart
         expect(screen.getByText(/shopping bag/i)).toBeInTheDocument();
         await waitFor(() => {
-            expect(screen.getAllByText(PRODUCTS[0].name).length).toBeGreaterThan(0);
+            expect(screen.getAllByText(MOCK_PRODUCTS[0].name).length).toBeGreaterThan(0);
         });
     }, testTimeout);
 

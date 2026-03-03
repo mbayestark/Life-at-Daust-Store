@@ -8,7 +8,8 @@ import {
     LogOut,
     Menu,
     ExternalLink,
-    Layers
+    Layers,
+    Tag
 } from "lucide-react";
 import logo from "../../assets/logo.png";
 
@@ -24,13 +25,13 @@ export default function AdminLayout() {
     const menuItems = [
         { icon: LayoutDashboard, label: "Dashboard", path: "/admin" },
         { icon: Package, label: "Products", path: "/admin/products" },
+        { icon: Tag, label: "Bundles", path: "/admin/product-sets" },
         { icon: Layers, label: "Collections", path: "/admin/collections" },
         { icon: ShoppingBag, label: "Orders", path: "/admin/orders" },
     ];
 
     return (
         <div className="flex h-screen bg-white overflow-hidden">
-            {/* Mobile Overlay */}
             {isSidebarOpen && (
                 <div
                     className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -38,7 +39,6 @@ export default function AdminLayout() {
                 />
             )}
 
-            {/* Sidebar */}
             <aside
                 className={`
                     fixed lg:relative z-50 h-full
@@ -47,7 +47,6 @@ export default function AdminLayout() {
                     shadow-xl lg:shadow-none
                 `}
             >
-                {/* Logo area */}
                 <div className={`h-16 lg:h-20 border-b border-white/5 flex items-center ${isSidebarOpen ? "px-6 justify-between" : "justify-center px-0"}`}>
                     <Link to="/" className="flex items-center gap-3 overflow-hidden group">
                         <img
@@ -64,7 +63,6 @@ export default function AdminLayout() {
                     </Link>
                 </div>
 
-                {/* Navigation */}
                 <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto custom-scrollbar">
                     {isSidebarOpen && (
                         <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em] mb-4 ml-4 animate-in fade-in duration-500">
@@ -103,7 +101,6 @@ export default function AdminLayout() {
                     })}
                 </nav>
 
-                {/* Bottom actions */}
                 <div className="p-3 border-t border-white/5 space-y-2">
                     <Link
                         to="/shop"
@@ -134,11 +131,9 @@ export default function AdminLayout() {
                 </div>
             </aside>
 
-            {/* Main Content */}
             <main className="flex-1 flex flex-col overflow-hidden relative w-full">
                 <div className="absolute inset-0 bg-brand-cream/20 pointer-events-none" />
 
-                {/* Top Bar */}
                 <header className="h-16 lg:h-20 bg-white/80 backdrop-blur-md border-b border-gray-100 flex items-center justify-between px-4 lg:px-10 z-50">
                     <div className="flex items-center gap-3 lg:gap-6">
                         <button
@@ -164,7 +159,6 @@ export default function AdminLayout() {
                     </div>
                 </header>
 
-                {/* Page Content */}
                 <div className="flex-1 overflow-y-auto p-4 lg:p-10 relative">
                     <Outlet />
                 </div>

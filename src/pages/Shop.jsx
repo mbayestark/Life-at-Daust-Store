@@ -3,11 +3,12 @@ import { useQuery } from "convex/react";
 import { useLocation } from "react-router-dom";
 import { api } from "../../convex/_generated/api";
 import ProductCard from "../components/ProductCard.jsx";
+import ProductSetCard from "../components/ProductSetCard.jsx";
 import Newsletter from "../components/Newsletter.jsx";
 import Hero from "../components/Hero.jsx";
 import Skeleton from "../components/ui/Skeleton.jsx";
 const CATEGORIES = ["All Categories", "T-Shirts", "Hoodies", "Quarter Zip", "Caps", "Shorts", "Joggers", "Drinkware", "Accessories"];
-import { Filter, ChevronDown, X, LayoutGrid, Search } from "lucide-react";
+import { Filter, ChevronDown, X, LayoutGrid, Search, Package } from "lucide-react";
 import shopHero from "../assets/shop-hero.jpg";
 
 export default function Shop() {
@@ -28,6 +29,11 @@ export default function Shop() {
   const convexProducts = useQuery(api.products.list);
   const PRODUCTS = convexProducts || [];
   const isLoading = convexProducts === undefined;
+  
+  // Fetch product sets
+  const convexProductSets = useQuery(api.products.listProductSets);
+  const productSets = convexProductSets || [];
+  const isLoadingSets = convexProductSets === undefined;
 
   const itemsByCollection = useMemo(() => {
     let filtered = PRODUCTS.filter((p) =>
@@ -184,6 +190,31 @@ export default function Shop() {
         </div>
 
         <div className="space-y-12">
+          {/* Product Sets Section */}
+          {productSets.length > 0 && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+              <div className="flex items-center justify-between mb-8 border-b border-gray-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-brand-orange/10 rounded-xl flex items-center justify-center">
+                    <Package className="text-brand-orange" size={20} />
+                  </div>
+                  <h3 className="text-2xl font-black text-brand-navy tracking-tight uppercase">
+                    Special Bundles
+                  </h3>
+                </div>
+                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                  {productSets.length} Sets
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {productSets.map((set) => (
+                  <ProductSetCard key={set._id} productSet={set} />
+                ))}
+              </div>
+            </div>
+          )}
+
           {isLoading ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-8 sm:gap-x-8 sm:gap-y-12">
               {[...Array(8)].map((_, i) => (

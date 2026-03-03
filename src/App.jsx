@@ -22,6 +22,7 @@ import AdminLayout from "./components/admin/AdminLayout";
 import AdminLogin from "./pages/admin/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
 import AdminProducts from "./pages/admin/Products";
+import AdminProductSets from "./pages/admin/ProductSets";
 import AdminCollections from "./pages/admin/Collections";
 import AdminOrders from "./pages/admin/Orders";
 
@@ -52,6 +53,7 @@ export default function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="products" element={<AdminProducts />} />
+            <Route path="product-sets" element={<AdminProductSets />} />
             <Route path="collections" element={<AdminCollections />} />
             <Route path="orders" element={<AdminOrders />} />
           </Route>

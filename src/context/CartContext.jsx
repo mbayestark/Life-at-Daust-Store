@@ -2,7 +2,6 @@ import React, { createContext, useContext, useEffect, useMemo, useState } from "
 
 const STORAGE_KEY = "lifeAtDaust.cart.v1";
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
@@ -29,7 +28,8 @@ export function CartProvider({ children }) {
         p.id === product.id && 
         p.selectedColor === color && 
         p.selectedSize === size &&
-        p.selectedLogo === logo
+        p.selectedLogo === logo &&
+        !p.isProductSet
       );
       if (i >= 0) {
         const next = [...prev];
@@ -44,20 +44,52 @@ export function CartProvider({ children }) {
         qty: Math.min(qty, 99),
         selectedColor: color,
         selectedSize: size,
-        selectedLogo: logo
+        selectedLogo: logo,
+        isProductSet: false,
       }];
     });
   };
 
-  const removeItem = (id, color, size, logo) => {
+  const addProductSet = (productSet, qty = 1) => {
+    setItems(prev => {
+      // Check if this exact product set is already in cart
+      const i = prev.findIndex(p => 
+        p.isProductSet && 
+        p.productSetId === productSet._id
+      );
+      if (i >= 0) {
+        const next = [...prev];
+        next[i] = { ...next[i], qty: Math.min(next[i].qty + qty, 99) };
+        return next;
+      }
+      return [...prev, {
+        id: `set-${productSet._id}`,
+        productSetId: productSet._id,
+        name: productSet.name,
+        price: productSet.specialPrice,
+        image: productSet.image,
+        qty: Math.min(qty, 99),
+        isProductSet: true,
+        productSetName: productSet.name,
+        products: productSet.products,
+        originalPrice: productSet.originalPrice,
+        savings: productSet.savings,
+        selectedColor: null,
+        selectedSize: null,
+        selectedLogo: null,
+      }];
+    });
+  };
+
+  const removeItem = (id, color, size, logo, isProductSet = false) => {
     setItems(prev => prev.filter(p => 
-      !(p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo)
+      !(p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo && p.isProductSet === isProductSet)
     ));
   };
 
-  const setQty = (id, color, size, logo, qty) =>
+  const setQty = (id, color, size, logo, qty, isProductSet = false) =>
     setItems(prev => prev.map(p =>
-      (p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo)
+      (p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo && p.isProductSet === isProductSet)
         ? { ...p, qty: Math.max(1, Math.min(99, qty)) }
         : p
     ));
@@ -67,19 +99,26 @@ export function CartProvider({ children }) {
   const count = useMemo(() => items.reduce((n, p) => n + p.qty, 0), [items]);
   const subtotal = useMemo(() => items.reduce((s, p) => s + p.price * p.qty, 0), [items]);
 
-  // New calculations for Checkout
-  const shipping = subtotal > 0 ? 0 : 0; // Complimentary as per design
-  const tax = subtotal * 0.05; // 5% example tax
+  // Calculate savings from product sets
+  const totalSavings = useMemo(() => 
+    items.filter(p => p.isProductSet).reduce((s, p) => s + (p.savings || 0) * p.qty, 0),
+    [items]
+  );
+
+  const shipping = subtotal > 0 ? 0 : 0;
+  const tax = subtotal * 0.05;
   const total = subtotal + shipping + tax;
 
   const value = {
     items,
     addItem,
+    addProductSet,
     removeItem,
     setQty,
     clear,
     count,
     subtotal,
+    totalSavings,
     shipping,
     tax,
     total
@@ -88,7 +127,6 @@ export function CartProvider({ children }) {
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useCart = () => {
   const context = useContext(CartContext);
   if (!context) {

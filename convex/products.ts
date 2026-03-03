@@ -1,11 +1,8 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
-// Convex exposes process.env at runtime. We declare it as an ambient variable
-// here to avoid requiring @types/node, since Convex is not a Node.js environment.
 declare const process: { env: Record<string, string | undefined> };
 
-// Helper: resolve all storage IDs inside a logoImages object to URLs
 async function resolveLogoImages(ctx: any, logoImages: any): Promise<any> {
     if (!logoImages || typeof logoImages !== "object") return logoImages;
     const resolved: any = {};
@@ -33,17 +30,11 @@ export const list = query({
     args: {},
     handler: async (ctx) => {
         const products = await ctx.db.query("products").collect();
-
-        // Convert storage IDs to URLs for images
         return await Promise.all(products.map(async (product) => {
             let imageUrl = product.image;
-
-            // Check if the image is a storage ID (starts with "kg" which is Convex's storage ID prefix)
             if (imageUrl && imageUrl.startsWith("kg")) {
                 imageUrl = await ctx.storage.getUrl(imageUrl) || product.image;
             }
-
-            // Resolve logo image storage IDs to URLs
             let logos = product.logos;
             if (logos && logos.length > 0) {
                 logos = await Promise.all(logos.map(async (logo) => {
@@ -54,9 +45,7 @@ export const list = query({
                     return logo;
                 }));
             }
-
             const logoImages = await resolveLogoImages(ctx, product.logoImages);
-
             return {
                 ...product,
                 image: imageUrl,
@@ -67,21 +56,15 @@ export const list = query({
     },
 });
 
-
 export const getById = query({
     args: { id: v.id("products") },
     handler: async (ctx, args) => {
         const product = await ctx.db.get(args.id);
         if (!product) return null;
-
         let imageUrl = product.image;
-
-        // Check if the image is a storage ID
         if (imageUrl && imageUrl.startsWith("kg")) {
             imageUrl = await ctx.storage.getUrl(imageUrl) || product.image;
         }
-
-        // Resolve logo image storage IDs to URLs
         let logos = product.logos;
         if (logos && logos.length > 0) {
             logos = await Promise.all(logos.map(async (logo) => {
@@ -92,14 +75,96 @@ export const getById = query({
                 return logo;
             }));
         }
-
         const logoImages = await resolveLogoImages(ctx, product.logoImages);
-
         return {
             ...product,
             image: imageUrl,
             logos,
             logoImages,
+        };
+    },
+});
+
+export const listProductSets = query({
+    args: {},
+    handler: async (ctx) => {
+        const productSets = await ctx.db.query("productSets").collect();
+        return await Promise.all(productSets.map(async (set) => {
+            let imageUrl = set.image;
+            if (imageUrl && imageUrl.startsWith("kg")) {
+                imageUrl = await ctx.storage.getUrl(imageUrl) || set.image;
+            }
+            // Resolve product details for each item in the set
+            const resolvedProducts = await Promise.all(
+                set.products.map(async (item) => {
+                    const product = await ctx.db.get(item.productId);
+                    if (!product) return null;
+                    let productImage = product.image;
+                    if (productImage && productImage.startsWith("kg")) {
+                        productImage = await ctx.storage.getUrl(productImage) || product.image;
+                    }
+                    return {
+                        ...item,
+                        productName: product.name,
+                        productImage,
+                        productPrice: product.price,
+                    };
+                })
+            );
+            // Filter out null products (deleted products)
+            const validProducts = resolvedProducts.filter(p => p !== null);
+            // Calculate original price (sum of individual product prices)
+            const originalPrice = validProducts.reduce(
+                (sum, item) => sum + (item?.productPrice || 0) * (item?.quantity || 1),
+                0
+            );
+            return {
+                ...set,
+                image: imageUrl,
+                products: validProducts,
+                originalPrice,
+                savings: originalPrice - set.specialPrice,
+            };
+        }));
+    },
+});
+
+export const getProductSetById = query({
+    args: { id: v.id("productSets") },
+    handler: async (ctx, args) => {
+        const productSet = await ctx.db.get(args.id);
+        if (!productSet) return null;
+        let imageUrl = productSet.image;
+        if (imageUrl && imageUrl.startsWith("kg")) {
+            imageUrl = await ctx.storage.getUrl(imageUrl) || productSet.image;
+        }
+        const resolvedProducts = await Promise.all(
+            productSet.products.map(async (item) => {
+                const product = await ctx.db.get(item.productId);
+                if (!product) return null;
+                let productImage = product.image;
+                if (productImage && productImage.startsWith("kg")) {
+                    productImage = await ctx.storage.getUrl(productImage) || product.image;
+                }
+                return {
+                    ...item,
+                    productName: product.name,
+                    productImage,
+                    productPrice: product.price,
+                };
+            })
+        );
+        const validProducts = resolvedProducts.filter(p => p !== null);
+        const originalPrice = validProducts.reduce(
+            (sum, item) => sum + (item?.productPrice || 0) * (item?.quantity || 1),
+            0
+        );
+        return {
+            ...productSet,
+            image: imageUrl,
+            products: validProducts,
+            originalPrice,
+            savings: originalPrice - productSet.specialPrice,
         };
     },
 });
@@ -140,6 +205,33 @@ export const addProduct = mutation({
     },
 });
 
+export const addProductSet = mutation({
+    args: {
+        name: v.string(),
+        description: v.optional(v.string()),
+        products: v.array(v.object({
+            productId: v.id("products"),
+            quantity: v.number(),
+            selectedColor: v.optional(v.string()),
+            selectedSize: v.optional(v.string()),
+            selectedLogo: v.optional(v.string()),
+        })),
+        specialPrice: v.number(),
+        image: v.optional(v.string()),
+        badge: v.optional(v.string()),
+        isActive: v.optional(v.boolean()),
+        adminToken: v.string(),
+    },
+    handler: async (ctx, args) => {
+        if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust")) {
+            throw new Error("Unauthorized");
+        }
+        const { adminToken, ...setArgs } = args;
+        const setId = await ctx.db.insert("productSets", setArgs);
+        return setId;
+    },
+});
+
 export const updateProduct = mutation({
     args: {
         id: v.id("products"),
@@ -176,8 +268,45 @@ export const updateProduct = mutation({
     },
 });
 
+export const updateProductSet = mutation({
+    args: {
+        id: v.id("productSets"),
+        name: v.optional(v.string()),
+        description: v.optional(v.string()),
+        products: v.optional(v.array(v.object({
+            productId: v.id("products"),
+            quantity: v.number(),
+            selectedColor: v.optional(v.string()),
+            selectedSize: v.optional(v.string()),
+            selectedLogo: v.optional(v.string()),
+        }))),
+        specialPrice: v.optional(v.number()),
+        image: v.optional(v.string()),
+        badge: v.optional(v.string()),
+        isActive: v.optional(v.boolean()),
+        adminToken: v.string(),
+    },
+    handler: async (ctx, args) => {
+        if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust")) {
+            throw new Error("Unauthorized");
+        }
+        const { id, adminToken, ...fields } = args;
+        await ctx.db.patch(id, fields);
+    },
+});
+
 export const removeProduct = mutation({
     args: { id: v.id("products"), adminToken: v.string() },
+    handler: async (ctx, args) => {
+        if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust")) {
+            throw new Error("Unauthorized");
+        }
+        await ctx.db.delete(args.id);
+    },
+});
+
+export const removeProductSet = mutation({
+    args: { id: v.id("productSets"), adminToken: v.string() },
     handler: async (ctx, args) => {
         if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust")) {
             throw new Error("Unauthorized");
