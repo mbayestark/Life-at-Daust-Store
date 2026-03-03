@@ -19,29 +19,31 @@ import { useAdmin } from "../../context/AdminContext";
 export default function AdminDashboard() {
     const { adminToken } = useAdmin();
     const products = useQuery(api.products.list);
-    const orders = useQuery(api.orders.list, { adminToken });
+    const orders = useQuery(api.orders.list, adminToken ? { adminToken } : "skip");
 
-    const isLoading = products === undefined || orders === undefined;
+    const isLoading = products === undefined || (adminToken ? orders === undefined : false);
+    // If no admin token (or orders query was skipped), treat as empty 
+    const ordersData = orders ?? [];
 
     const stats = useMemo(() => {
-        if (!products || !orders) return [];
+        if (!products) return [];
 
-        const totalRevenue = orders.reduce((sum, order) => sum + (order?.total || 0), 0);
-        const activeOrders = orders.filter(o => o.status === "Processing" || o.status === "Shipped").length;
+        const totalRevenue = ordersData.reduce((sum, order) => sum + (order?.total || 0), 0);
+        const activeOrders = ordersData.filter(o => o.status === "Processing" || o.status === "Shipped").length;
         const totalProducts = products.length;
-        const completedOrders = orders.filter(o => o.status === "Delivered").length;
+        const completedOrders = ordersData.filter(o => o.status === "Delivered").length;
 
         return [
             { label: "Total Revenue", value: formatPrice(totalRevenue), icon: DollarSign, color: "bg-green-50 text-green-600" },
             { label: "Active Orders", value: activeOrders.toString(), icon: ShoppingBag, color: "bg-brand-orange/10 text-brand-orange" },
             { label: "Catalog Size", value: totalProducts.toString(), icon: Package, color: "bg-blue-50 text-blue-600" },
-            { label: "Fulfillment Rate", value: orders.length > 0 ? `${Math.round((completedOrders / orders.length) * 100)}%` : "0%", icon: CheckCircle2, color: "bg-purple-50 text-purple-600" },
+            { label: "Fulfillment Rate", value: ordersData.length > 0 ? `${Math.round((completedOrders / ordersData.length) * 100)}%` : "0%", icon: CheckCircle2, color: "bg-purple-50 text-purple-600" },
         ];
-    }, [products, orders]);
+    }, [products, ordersData]);
 
     const recentOrders = useMemo(() => {
-        return orders?.slice(0, 5) || [];
-    }, [orders]);
+        return ordersData.slice(0, 5);
+    }, [ordersData]);
 
     const topCategories = useMemo(() => {
         if (!products) return [];

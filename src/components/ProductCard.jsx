@@ -58,6 +58,7 @@ export default function ProductCard({ product }) {
             <Button
               variant="ghost"
               size="sm"
+              aria-label="Add to Cart"
               className="w-full glass-morphism border-none text-brand-navy font-black transition-all duration-300 shadow-lg"
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = '#0a2342';

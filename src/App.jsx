@@ -13,6 +13,7 @@ import Contact from "./pages/Contact.jsx";
 import Cart from "./pages/Cart.jsx";
 import Checkout from "./pages/Checkout.jsx";
 import ProductDetails from "./pages/ProductDetails.jsx";
+import OrderSuccess from "./pages/OrderSuccess.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
 // Admin Imports
@@ -42,6 +43,7 @@ export default function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order/success/:orderId" element={<OrderSuccess />} />
             <Route path="/product/:id" element={<ProductDetails />} />
           </Route>
 

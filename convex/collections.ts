@@ -1,15 +1,20 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
+// Convex exposes process.env at runtime. We declare it as an ambient variable
+// here to avoid requiring @types/node, since Convex is not a Node.js environment.
+declare const process: { env: Record<string, string | undefined> };
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "daust";
+
 export const list = query({
     args: {},
     handler: async (ctx) => {
         const collections = await ctx.db.query("collections").collect();
 
         return await Promise.all(collections.map(async (collection) => {
-            let imageUrl = collection.image;
+            let imageUrl: string | undefined = collection.image;
             if (imageUrl && imageUrl.startsWith("kg")) {
-                imageUrl = await ctx.storage.getUrl(imageUrl) || collection.image;
+                imageUrl = (await ctx.storage.getUrl(imageUrl)) ?? undefined;
             }
             return { ...collection, image: imageUrl };
         }));
@@ -29,9 +34,9 @@ export const getById = query({
         const collection = await ctx.db.get(args.id);
         if (!collection) return null;
 
-        let imageUrl = collection.image;
+        let imageUrl: string | undefined = collection.image;
         if (imageUrl && imageUrl.startsWith("kg")) {
-            imageUrl = await ctx.storage.getUrl(imageUrl) || collection.image;
+            imageUrl = (await ctx.storage.getUrl(imageUrl)) ?? undefined;
         }
         return { ...collection, image: imageUrl };
     },
@@ -56,10 +61,10 @@ export const addCollection = mutation({
         adminToken: v.string(),
     },
     handler: async (ctx, args) => {
-        if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust_admin_2024")) {
+        if (args.adminToken !== ADMIN_PASSWORD) {
             throw new Error("Unauthorized");
         }
-        const { adminToken, ...collectionArgs } = args;
+        const { adminToken: _adminToken, ...collectionArgs } = args;
         const collectionId = await ctx.db.insert("collections", collectionArgs);
         return collectionId;
     },
@@ -79,10 +84,10 @@ export const updateCollection = mutation({
         adminToken: v.string(),
     },
     handler: async (ctx, args) => {
-        if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust_admin_2024")) {
+        if (args.adminToken !== ADMIN_PASSWORD) {
             throw new Error("Unauthorized");
         }
-        const { id, adminToken, ...fields } = args;
+        const { id, adminToken: _adminToken, ...fields } = args;
         await ctx.db.patch(id, fields);
     },
 });
@@ -90,10 +95,10 @@ export const updateCollection = mutation({
 export const removeCollection = mutation({
     args: { id: v.id("collections"), adminToken: v.string() },
     handler: async (ctx, args) => {
-        if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust_admin_2024")) {
+        if (args.adminToken !== ADMIN_PASSWORD) {
             throw new Error("Unauthorized");
         }
-        // Remove collection from all products first
+        // Remove collection reference from all products first
         const products = await ctx.db.query("products").collect();
         const collection = await ctx.db.get(args.id);
 

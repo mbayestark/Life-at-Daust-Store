@@ -2,10 +2,14 @@ import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 
+// Convex exposes process.env at runtime. We declare it as an ambient variable
+// here to avoid requiring @types/node, since Convex is not a Node.js environment.
+declare const process: { env: Record<string, string | undefined> };
+
 export const list = query({
   args: { adminToken: v.string() },
   handler: async (ctx, args) => {
-    if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust_admin_2024")) {
+    if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust")) {
       throw new Error("Unauthorized");
     }
     return await ctx.db.query("orders").order("desc").collect();
@@ -15,7 +19,7 @@ export const list = query({
 export const getById = query({
   args: { id: v.id("orders"), adminToken: v.string() },
   handler: async (ctx, args) => {
-    if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust_admin_2024")) {
+    if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust")) {
       throw new Error("Unauthorized");
     }
     return await ctx.db.get(args.id);
@@ -130,7 +134,7 @@ export const updateStatus = mutation({
     adminToken: v.string(),
   },
   handler: async (ctx, args) => {
-    if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust_admin_2024")) {
+    if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust")) {
       throw new Error("Unauthorized");
     }
     await ctx.db.patch(args.id, { status: args.status });
