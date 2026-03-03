@@ -9,7 +9,6 @@ import Newsletter from "../components/Newsletter.jsx";
 import ProductCard from "../components/ProductCard.jsx";
 import Skeleton from "../components/ui/Skeleton.jsx";
 import Button from "../components/ui/Button.jsx";
-import { PRODUCTS } from "../data/products.js";
 
 /* ─── Data ─────────────────────────────────────────────────── */
 
@@ -178,20 +177,19 @@ export default function Home() {
   const collections = useQuery(api.collections.list);
   const scrollRef = useRef(null);
 
-  // Use static products (with logo variants) instead of Convex data
-  // This ensures the new products and variants are displayed
-  const PRODUCTS_DATA = PRODUCTS;
+  const products = useQuery(api.products.list);
 
-  // Derive featured and trending from the current data source
   const featuredProduct = useMemo(() => {
-    return PRODUCTS_DATA.find(p => p.category === "Hoodies" && p.rating >= 4.8) ||
-      PRODUCTS_DATA.find(p => p.category === "Hoodies") ||
-      PRODUCTS_DATA[0];
-  }, [PRODUCTS_DATA]);
+    if (!products) return null;
+    return products.find(p => p.category === "Hoodies" && p.rating >= 4.8) ||
+      products.find(p => p.category === "Hoodies") ||
+      products[0] || null;
+  }, [products]);
 
   const trendingProducts = useMemo(() => {
-    return [...PRODUCTS_DATA].sort((a, b) => b.rating - a.rating).slice(0, 8);
-  }, [PRODUCTS_DATA]);
+    if (!products) return [];
+    return [...products].sort((a, b) => b.rating - a.rating).slice(0, 8);
+  }, [products]);
 
   const collectionsRef = useReveal(0.08);
   const spotlightRef = useReveal(0.1);
@@ -244,9 +242,9 @@ export default function Home() {
               collections.slice(0, 4).map((c, i) => (
                 <CollectionCard key={c.slug || i} collection={c} index={i} />
               ))
-            ) : (
+            ) : products && products.length > 0 ? (
               ["Hoodies", "T-Shirts", "Quarter Zip", "Shorts"].map((cat, i) => {
-                const p = PRODUCTS_DATA.find(p => p.category === cat);
+                const p = products.find(p => p.category === cat);
                 return p ? (
                   <CollectionCard
                     key={cat}
@@ -255,6 +253,8 @@ export default function Home() {
                   />
                 ) : null;
               })
+            ) : (
+              Array.from({ length: 4 }).map((_, i) => <CollectionSkeleton key={i} />)
             )}
           </div>
         </div>

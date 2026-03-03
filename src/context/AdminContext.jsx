@@ -13,9 +13,9 @@ export function AdminProvider({ children }) {
     });
 
     const login = (password) => {
-        // Basic password check - User can change this later
-        const defaultPassword = import.meta.env.VITE_ADMIN_PASSWORD || "daust";
-        if (password === defaultPassword) {
+        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
+        if (!adminPassword || !password) return false;
+        if (password === adminPassword) {
             setIsAdmin(true);
             setAdminToken(password);
             sessionStorage.setItem("is_admin", "true");

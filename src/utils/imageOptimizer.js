@@ -58,7 +58,6 @@ export const optimizeImage = (file, maxWidth = 1200, maxHeight = 1200, quality =
                         lastModified: Date.now(),
                     });
 
-                    console.log(`Optimized image: ${(file.size / 1024).toFixed(2)}KB -> ${(optimizedFile.size / 1024).toFixed(2)}KB`);
                     resolve(optimizedFile);
                 },
                 'image/jpeg',

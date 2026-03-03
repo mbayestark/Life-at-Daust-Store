@@ -32,7 +32,6 @@ export default function AdminCollections() {
             try {
                 await removeCollection({ id, adminToken });
             } catch (error) {
-                console.error("Failed to delete collection:", error);
                 alert("Failed to delete collection. Please try again.");
             }
         }

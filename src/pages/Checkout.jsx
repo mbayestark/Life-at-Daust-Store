@@ -157,7 +157,6 @@ export default function Checkout() {
       clear();
       nav(`/order/success/${orderId}`, { state: { orderId } });
     } catch (err) {
-      console.error(err);
       setError("Could not secure the transaction. Check your internet or try again.");
     } finally {
       setLoading(false);

@@ -20,6 +20,8 @@ export default function AdminOrders() {
     const { adminToken } = useAdmin();
     const orders = useQuery(api.orders.list, adminToken ? { adminToken } : "skip");
     const updateStatus = useMutation(api.orders.updateStatus);
+    const checkNabooStatus = useAction(api.naboopay.getTransaction);
+    const deleteNabooTransaction = useAction(api.naboopay.deleteTransaction);
     const [selectedOrder, setSelectedOrder] = useState(null);
 
     const isLoading = orders === undefined;
@@ -37,24 +39,16 @@ export default function AdminOrders() {
         }
     };
 
-    const checkNabooStatus = useAction(api.naboopay.getTransaction);
-
     const handleCheckStatus = async (naboopayId) => {
         try {
             const result = await checkNabooStatus({ orderId: naboopayId });
-            // The result will have transaction_status
             if (result && result.transaction_status) {
-                // We could call a mutation here to update our DB if it changed
-                // For now, let's just alert or refresh
                 alert(`NabooPay Status: ${result.transaction_status}`);
             }
         } catch (err) {
-            console.error("Failed to check NabooPay status", err);
             alert("Failed to check status. Make sure the NabooPay ID is valid.");
         }
     };
-
-    const deleteNabooTransaction = useAction(api.naboopay.deleteTransaction);
 
     const handleStatusUpdate = async (id, newStatus) => {
         try {
@@ -62,8 +56,7 @@ export default function AdminOrders() {
                 try {
                     await deleteNabooTransaction({ orderId: selectedOrder.naboopayOrderId });
                 } catch (err) {
-                    console.error("Failed to delete NabooPay transaction", err);
-                    // We continue anyway, as it might already be deleted or expired
+                    // Continue anyway — transaction may already be deleted or expired
                 }
             }
             await updateStatus({ id, status: newStatus, adminToken });
@@ -71,7 +64,7 @@ export default function AdminOrders() {
                 setSelectedOrder({ ...selectedOrder, status: newStatus });
             }
         } catch (err) {
-            console.error("Failed to update status", err);
+            alert("Failed to update order status. Please try again.");
         }
     };
 

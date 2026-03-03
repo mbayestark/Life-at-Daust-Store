@@ -6,7 +6,7 @@ import ProductCard from "../components/ProductCard.jsx";
 import Newsletter from "../components/Newsletter.jsx";
 import Hero from "../components/Hero.jsx";
 import Skeleton from "../components/ui/Skeleton.jsx";
-import { PRODUCTS as STATIC_PRODUCTS, CATEGORIES } from "../data/products.js";
+const CATEGORIES = ["All Categories", "T-Shirts", "Hoodies", "Quarter Zip", "Caps", "Shorts", "Joggers", "Drinkware", "Accessories"];
 import { Filter, ChevronDown, X, LayoutGrid, Search } from "lucide-react";
 import shopHero from "../assets/shop-hero.jpg";
 
@@ -25,10 +25,9 @@ export default function Shop() {
     else setSearchQuery("");
   }, [location.search]);
 
-  // Use STATIC products (with logo variants) instead of Convex data
-  // This ensures the new products and variants are displayed
-  const PRODUCTS = STATIC_PRODUCTS;
-  const isLoading = false; // No loading since we use static data
+  const convexProducts = useQuery(api.products.list);
+  const PRODUCTS = convexProducts || [];
+  const isLoading = convexProducts === undefined;
 
   const itemsByCollection = useMemo(() => {
     let filtered = PRODUCTS.filter((p) =>

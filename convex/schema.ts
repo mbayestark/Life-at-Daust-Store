@@ -18,6 +18,7 @@ export default defineSchema({
         logos: v.optional(v.array(v.object({
             id: v.string(),
             name: v.string(),
+            image: v.optional(v.string()),
             description: v.optional(v.string()),
         }))),
         logoImages: v.optional(v.any()),

@@ -44,7 +44,6 @@ export default function AdminProducts() {
             try {
                 await removeProduct({ id, adminToken });
             } catch (err) {
-                console.error("Failed to delete product", err);
                 alert("Failed to delete product. Please try again.");
             }
         }

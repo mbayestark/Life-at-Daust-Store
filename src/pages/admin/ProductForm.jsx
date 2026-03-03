@@ -32,7 +32,9 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
     const [newColorName, setNewColorName] = useState("");
     const [newColorHex, setNewColorHex] = useState("#000000");
     const [newLogoName, setNewLogoName] = useState("");
-    const [newLogoId, setNewLogoId] = useState("");
+    const [newLogoFile, setNewLogoFile] = useState(null);
+    const [newLogoPreview, setNewLogoPreview] = useState("");
+    const [logoUploading, setLogoUploading] = useState(false);
 
     const generateUploadUrl = useMutation(api.products.generateUploadUrl);
     const addProduct = useMutation(api.products.addProduct);
@@ -111,14 +113,37 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
         });
     };
 
-    const addLogo = () => {
-        if (newLogoName.trim() && newLogoId.trim()) {
+    const addLogo = async () => {
+        if (!newLogoName.trim()) return;
+        setLogoUploading(true);
+        try {
+            let imageStorageId = undefined;
+            if (newLogoFile) {
+                const optimizedFile = await optimizeImage(newLogoFile);
+                const postUrl = await generateUploadUrl();
+                const result = await fetch(postUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": optimizedFile.type },
+                    body: optimizedFile,
+                });
+                const { storageId } = await result.json();
+                imageStorageId = storageId;
+            }
+            const logoId = `logo-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
             setFormData({
                 ...formData,
-                logos: [...formData.logos, { id: newLogoId.trim(), name: newLogoName.trim() }]
+                logos: [...formData.logos, { id: logoId, name: newLogoName.trim(), ...(imageStorageId ? { image: imageStorageId } : {}) }]
             });
             setNewLogoName("");
-            setNewLogoId("");
+            setNewLogoFile(null);
+            if (newLogoPreview) {
+                revokePreviewUrl(newLogoPreview);
+                setNewLogoPreview("");
+            }
+        } catch {
+            setError("Failed to upload logo image. Please try again.");
+        } finally {
+            setLogoUploading(false);
         }
     };
 
@@ -176,7 +201,6 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
 
             onSave();
         } catch (err) {
-            console.error("Failed to save product", err);
             setError("An error occurred while saving the product. Please try again.");
         } finally {
             setLoading(false);
@@ -355,9 +379,12 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                     <div className="flex flex-wrap gap-2 md:gap-3 mb-3 md:mb-4">
                         {formData.logos.map((logo, index) => (
                             <div key={index} className="flex items-center gap-2 bg-white px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl shadow-sm">
+                                {logo.image && (
+                                    <img src={logo.image.startsWith("kg") ? "" : logo.image} alt={logo.name} className="w-8 h-8 rounded-lg object-cover bg-gray-100" />
+                                )}
                                 <span className="text-xs md:text-sm font-bold text-brand-navy">{logo.name}</span>
                                 <button type="button" onClick={() => removeLogo(index)} className="text-gray-400 hover:text-red-500">
-                                    <X size={12} md:size={14} />
+                                    <X size={12} />
                                 </button>
                             </div>
                         ))}
@@ -366,27 +393,37 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                         <div className="flex-1">
                             <input
                                 type="text"
-                                value={newLogoId}
-                                onChange={(e) => setNewLogoId(e.target.value)}
-                                placeholder="Logo ID"
-                                className="w-full bg-white border-none rounded-xl px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm font-bold mb-1 md:mb-2"
-                            />
-                        </div>
-                        <div className="flex-1">
-                            <input
-                                type="text"
                                 value={newLogoName}
                                 onChange={(e) => setNewLogoName(e.target.value)}
-                                placeholder="Display name"
+                                placeholder="Logo display name"
                                 className="w-full bg-white border-none rounded-xl px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm font-bold"
                             />
+                        </div>
+                        <div className="relative flex-shrink-0">
+                            {newLogoPreview ? (
+                                <div className="relative w-11 h-11 md:w-12 md:h-12 rounded-xl overflow-hidden border border-gray-200">
+                                    <img src={newLogoPreview} alt="Logo preview" className="w-full h-full object-cover" />
+                                    <button type="button" onClick={() => { setNewLogoFile(null); revokePreviewUrl(newLogoPreview); setNewLogoPreview(""); }} className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5">
+                                        <X size={10} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <label className="flex items-center justify-center w-11 h-11 md:w-12 md:h-12 bg-white rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-dashed border-gray-300">
+                                    <ImageIcon size={18} className="text-gray-400" />
+                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                        const f = e.target.files[0];
+                                        if (f) { setNewLogoFile(f); setNewLogoPreview(createPreviewUrl(f)); }
+                                    }} />
+                                </label>
+                            )}
                         </div>
                         <button
                             type="button"
                             onClick={addLogo}
-                            className="bg-brand-navy text-white px-3 md:px-4 py-2.5 md:py-3 rounded-lg md:rounded-xl font-bold text-xs md:text-sm hover:bg-brand-navy/90"
+                            disabled={logoUploading || !newLogoName.trim()}
+                            className="bg-brand-navy text-white px-3 md:px-4 py-2.5 md:py-3 rounded-lg md:rounded-xl font-bold text-xs md:text-sm hover:bg-brand-navy/90 disabled:opacity-50"
                         >
-                            <Plus size={18} md:size={20} />
+                            {logoUploading ? "..." : <Plus size={18} />}
                         </button>
                     </div>
                 </div>
@@ -420,6 +457,84 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                         ))}
                     </div>
                 </div>
+
+                {/* Variant Images Section */}
+                {formData.colors.length > 0 && (
+                    <div className="bg-gray-50 rounded-2xl md:rounded-3xl p-4 md:p-8">
+                        <h3 className="font-black text-brand-navy mb-1 text-sm md:text-base">Variant Images</h3>
+                        <p className="text-[10px] text-gray-400 font-bold mb-4">Upload images for each color{formData.logos.length > 0 ? " and logo combination" : ""}. These show when a customer selects that variant.</p>
+                        <div className="space-y-4">
+                            {(formData.logos.length > 0 ? formData.logos : [{ id: "_default", name: null }]).map((logo) => (
+                                <div key={logo.id}>
+                                    {logo.name && (
+                                        <p className="text-xs font-black text-brand-navy mb-2 uppercase tracking-widest">{logo.name}</p>
+                                    )}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {formData.colors.map((color) => {
+                                            const images = formData.logoImages?.[logo.id]?.[color.name] || [];
+                                            return (
+                                                <div key={`${logo.id}-${color.name}`} className="bg-white rounded-xl p-3 border border-gray-100">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <span className="w-4 h-4 rounded-full border border-gray-200" style={{ backgroundColor: color.hex }} />
+                                                        <span className="text-xs font-bold text-brand-navy">{color.name}</span>
+                                                        <span className="text-[10px] text-gray-400 ml-auto">{images.length} image{images.length !== 1 ? "s" : ""}</span>
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-1.5 mb-2">
+                                                        {images.map((img, idx) => (
+                                                            <div key={idx} className="relative w-14 h-14 rounded-lg overflow-hidden bg-gray-100 group">
+                                                                <img src={typeof img === "string" && !img.startsWith("kg") ? img : ""} alt="" className="w-full h-full object-cover" />
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => {
+                                                                        const updated = { ...formData.logoImages };
+                                                                        updated[logo.id][color.name] = updated[logo.id][color.name].filter((_, i) => i !== idx);
+                                                                        setFormData({ ...formData, logoImages: updated });
+                                                                    }}
+                                                                    className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+                                                                >
+                                                                    <X size={14} className="text-white" />
+                                                                </button>
+                                                            </div>
+                                                        ))}
+                                                        <label className="w-14 h-14 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-brand-orange/40 transition-colors bg-gray-50">
+                                                            <Plus size={16} className="text-gray-400" />
+                                                            <input
+                                                                type="file"
+                                                                accept="image/*"
+                                                                multiple
+                                                                className="hidden"
+                                                                onChange={async (e) => {
+                                                                    const files = Array.from(e.target.files || []);
+                                                                    if (files.length === 0) return;
+                                                                    const updated = { ...(formData.logoImages || {}) };
+                                                                    if (!updated[logo.id]) updated[logo.id] = {};
+                                                                    if (!updated[logo.id][color.name]) updated[logo.id][color.name] = [];
+                                                                    for (const file of files) {
+                                                                        const optimized = await optimizeImage(file);
+                                                                        const postUrl = await generateUploadUrl();
+                                                                        const result = await fetch(postUrl, {
+                                                                            method: "POST",
+                                                                            headers: { "Content-Type": optimized.type },
+                                                                            body: optimized,
+                                                                        });
+                                                                        const { storageId } = await result.json();
+                                                                        updated[logo.id][color.name] = [...updated[logo.id][color.name], storageId];
+                                                                    }
+                                                                    setFormData(prev => ({ ...prev, logoImages: { ...updated } }));
+                                                                    e.target.value = "";
+                                                                }}
+                                                            />
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                     <div>

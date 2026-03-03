@@ -5,6 +5,30 @@ import { v } from "convex/values";
 // here to avoid requiring @types/node, since Convex is not a Node.js environment.
 declare const process: { env: Record<string, string | undefined> };
 
+// Helper: resolve all storage IDs inside a logoImages object to URLs
+async function resolveLogoImages(ctx: any, logoImages: any): Promise<any> {
+    if (!logoImages || typeof logoImages !== "object") return logoImages;
+    const resolved: any = {};
+    for (const [logoKey, colorMap] of Object.entries(logoImages)) {
+        resolved[logoKey] = {};
+        if (colorMap && typeof colorMap === "object") {
+            for (const [colorName, images] of Object.entries(colorMap as any)) {
+                if (Array.isArray(images)) {
+                    resolved[logoKey][colorName] = await Promise.all(
+                        images.map(async (img: string) => {
+                            if (typeof img === "string" && img.startsWith("kg")) {
+                                return (await ctx.storage.getUrl(img)) || img;
+                            }
+                            return img;
+                        })
+                    );
+                }
+            }
+        }
+    }
+    return resolved;
+}
+
 export const list = query({
     args: {},
     handler: async (ctx) => {
@@ -19,9 +43,25 @@ export const list = query({
                 imageUrl = await ctx.storage.getUrl(imageUrl) || product.image;
             }
 
+            // Resolve logo image storage IDs to URLs
+            let logos = product.logos;
+            if (logos && logos.length > 0) {
+                logos = await Promise.all(logos.map(async (logo) => {
+                    if (logo.image && logo.image.startsWith("kg")) {
+                        const logoUrl = await ctx.storage.getUrl(logo.image);
+                        return { ...logo, image: logoUrl || logo.image };
+                    }
+                    return logo;
+                }));
+            }
+
+            const logoImages = await resolveLogoImages(ctx, product.logoImages);
+
             return {
                 ...product,
                 image: imageUrl,
+                logos,
+                logoImages,
             };
         }));
     },
@@ -41,9 +81,25 @@ export const getById = query({
             imageUrl = await ctx.storage.getUrl(imageUrl) || product.image;
         }
 
+        // Resolve logo image storage IDs to URLs
+        let logos = product.logos;
+        if (logos && logos.length > 0) {
+            logos = await Promise.all(logos.map(async (logo) => {
+                if (logo.image && logo.image.startsWith("kg")) {
+                    const logoUrl = await ctx.storage.getUrl(logo.image);
+                    return { ...logo, image: logoUrl || logo.image };
+                }
+                return logo;
+            }));
+        }
+
+        const logoImages = await resolveLogoImages(ctx, product.logoImages);
+
         return {
             ...product,
             image: imageUrl,
+            logos,
+            logoImages,
         };
     },
 });
@@ -65,6 +121,7 @@ export const addProduct = mutation({
         logos: v.optional(v.array(v.object({
             id: v.string(),
             name: v.string(),
+            image: v.optional(v.string()),
             description: v.optional(v.string()),
         }))),
         logoImages: v.optional(v.any()),
@@ -101,6 +158,7 @@ export const updateProduct = mutation({
         logos: v.optional(v.array(v.object({
             id: v.string(),
             name: v.string(),
+            image: v.optional(v.string()),
             description: v.optional(v.string()),
         }))),
         logoImages: v.optional(v.any()),

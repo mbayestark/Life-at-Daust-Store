@@ -51,7 +51,6 @@ export const addOrder = mutation({
     naboopayCheckoutUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // Save to Convex database
     const proofOfPaymentUrl = args.paymentStorageId ? (await ctx.storage.getUrl(args.paymentStorageId)) ?? undefined : undefined;
     const orderId = await ctx.db.insert("orders", {
       ...args,
@@ -60,7 +59,6 @@ export const addOrder = mutation({
       createdAt: Date.now(),
     });
 
-    // Schedule Google Sheets backup via Action (to avoid side-effect error in mutation)
     await ctx.scheduler.runAfter(0, internal.actions.syncToSheets, {
       orderId: args.orderId,
       name: args.customer.name,
@@ -78,7 +76,7 @@ export const addOrder = mutation({
 
 export const updateNabooPayDetails = mutation({
   args: {
-    orderId: v.string(), // This is our custom orderId
+    orderId: v.string(),
     naboopayOrderId: v.string(),
     naboopayCheckoutUrl: v.string(),
   },
@@ -87,11 +85,9 @@ export const updateNabooPayDetails = mutation({
       .query("orders")
       .filter((q) => q.eq(q.field("orderId"), args.orderId))
       .first();
-
     if (!order) {
       throw new Error("Order not found");
     }
-
     await ctx.db.patch(order._id, {
       naboopayOrderId: args.naboopayOrderId,
       naboopayCheckoutUrl: args.naboopayCheckoutUrl,
@@ -110,19 +106,15 @@ export const updateByNabooPayId = internalMutation({
       .query("orders")
       .filter((q) => q.eq(q.field("naboopayOrderId"), args.naboopayOrderId))
       .first();
-
     if (!order) {
-      console.error(`Order with NabooPay ID ${args.naboopayOrderId} not found`);
       return;
     }
-
     let status = "Pending Payment";
     if (args.status === "paid" || args.status === "paid_and_blocked") {
       status = "Paid";
     } else if (args.status === "cancelled") {
       status = "Cancelled";
     }
-
     await ctx.db.patch(order._id, { status });
   },
 });

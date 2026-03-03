@@ -3,7 +3,6 @@ import { useParams, Link } from "react-router-dom";
 import { ChevronRight, ShoppingCart, Star, Info, Shield, Truck } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { PRODUCTS } from "../data/products";
 import { useCart } from "../context/CartContext.jsx";
 import { formatPrice } from "../utils/format.js";
 import Button from "../components/ui/Button";
@@ -13,31 +12,7 @@ export default function ProductDetails() {
     const { id } = useParams();
     const { addItem } = useCart();
 
-    // Determine if this looks like a Convex ID (longer strings or specific format)
-    const isConvexId = typeof id === "string" && (id.length > 20 || id.includes(":"));
-
-    // Only query Convex if ID looks like a Convex ID
-    const convexProduct = useQuery(
-        api.products.getById,
-        isConvexId ? { id: id } : "skip"
-    );
-
-    // Try to find the product in either Convex or Static DATA
-    const product = useMemo(() => {
-        if (convexProduct) return convexProduct;
-
-        // Don't fall back to static data if we are still waiting for a valid Convex query
-        if (isConvexId && convexProduct === undefined) return null;
-
-        // Handle numeric IDs for static products
-        const numericId = parseInt(id);
-        if (!isNaN(numericId)) {
-            return PRODUCTS.find(p => p.id === numericId);
-        }
-
-        // Also check if id is a string matching static product (if any)
-        return PRODUCTS.find(p => p.id === id) || null;
-    }, [id, convexProduct, isConvexId]);
+    const product = useQuery(api.products.getById, id ? { id } : "skip");
 
     const [mainImage, setMainImage] = useState(null);
     const [selectedColor, setSelectedColor] = useState(null);
@@ -62,8 +37,9 @@ export default function ProductDetails() {
 
     // Update main image when logo or color selection changes
     useEffect(() => {
-        if (product?.logoImages && selectedLogo?.id && selectedColor?.name) {
-            const variantImages = product.logoImages[selectedLogo.id]?.[selectedColor.name];
+        if (product?.logoImages && selectedColor?.name) {
+            const logoKey = selectedLogo?.id || "_default";
+            const variantImages = product.logoImages[logoKey]?.[selectedColor.name];
             if (variantImages && variantImages.length > 0) {
                 setMainImage(variantImages[0]);
                 return;
@@ -76,14 +52,13 @@ export default function ProductDetails() {
 
     // Get variant-specific images based on selected logo + color
     const getVariantImages = () => {
-        // If product has logoImages mapping, use that for variant-specific images
-        if (product?.logoImages && selectedLogo?.id && selectedColor?.name) {
-            const variantImages = product.logoImages[selectedLogo.id]?.[selectedColor.name];
+        if (product?.logoImages && selectedColor?.name) {
+            const logoKey = selectedLogo?.id || "_default";
+            const variantImages = product.logoImages[logoKey]?.[selectedColor.name];
             if (variantImages && variantImages.length > 0) {
                 return variantImages;
             }
         }
-        // Fallback: if logo has direct image, use it
         if (product.logos && product.logos.length > 0 && selectedLogo?.image) {
             return [selectedLogo.image, ...(product.images || [])];
         }
@@ -91,7 +66,7 @@ export default function ProductDetails() {
     };
 
     // Show loading spinner while Convex query is loading
-    if (isConvexId && convexProduct === undefined) {
+    if (product === undefined) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <LoadingSpinner size="lg" />
@@ -197,12 +172,15 @@ export default function ProductDetails() {
                                         <button
                                             key={logo.id || logo.name}
                                             onClick={() => setSelectedLogo(logo)}
-                                            className={`px-5 py-3 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${
+                                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${
                                                 selectedLogo?.id === logo.id || selectedLogo?.name === logo.name
                                                     ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
                                                     : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
                                             }`}
                                         >
+                                            {logo.image && (
+                                                <img src={logo.image} alt={logo.name} className="w-7 h-7 rounded-lg object-cover" />
+                                            )}
                                             {logo.name}
                                         </button>
                                     ))}
