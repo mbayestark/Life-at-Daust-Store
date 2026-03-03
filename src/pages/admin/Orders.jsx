@@ -18,7 +18,7 @@ import { useAdmin } from "../../context/AdminContext";
 
 export default function AdminOrders() {
     const { adminToken } = useAdmin();
-    const orders = useQuery(api.orders.list, { adminToken });
+    const orders = useQuery(api.orders.list, adminToken ? { adminToken } : "skip");
     const updateStatus = useMutation(api.orders.updateStatus);
     const [selectedOrder, setSelectedOrder] = useState(null);
 
