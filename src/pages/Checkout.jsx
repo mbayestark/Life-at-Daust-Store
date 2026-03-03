@@ -123,32 +123,47 @@ export default function Checkout() {
         paymentStorageId: storageId,
       });
 
+      // Only attempt online payment if payment method is naboopay
       if (paymentMethod === "naboopay") {
-        const nabooResponse = await createNabooPayTransaction({
-          orderId,
-          customer: {
-            name: form.name,
-            phone: form.phone.startsWith("+") ? form.phone : `+221${form.phone.replace(/\s/g, "")}`,
-          },
-          items: lines.map(it => ({
-            name: it.name,
-            qty: it.qty,
-            price: it.price,
-          })),
-          successUrl: `https://shop.daustgov.com/order/success/${orderId}`,
-          errorUrl: `https://shop.daustgov.com/checkout?error=payment_failed`,
-        });
-
-        if (nabooResponse && nabooResponse.checkout_url) {
-          await updateNabooPayDetails({
+        try {
+          const nabooResponse = await createNabooPayTransaction({
             orderId,
-            naboopayOrderId: nabooResponse.order_id,
-            naboopayCheckoutUrl: nabooResponse.checkout_url,
+            customer: {
+              name: form.name,
+              phone: form.phone.startsWith("+") ? form.phone : `+221${form.phone.replace(/\s/g, "")}`,
+            },
+            items: lines.map(it => ({
+              name: it.name,
+              qty: it.qty,
+              price: it.price,
+            })),
+            successUrl: `https://shop.daustgov.com/order/success/${orderId}`,
+            errorUrl: `https://shop.daustgov.com/checkout?error=payment_failed`,
           });
-          window.location.href = nabooResponse.checkout_url;
-          return;
-        } else {
-          throw new Error("Failed to get checkout URL from NabooPay");
+
+          if (nabooResponse && nabooResponse.checkout_url) {
+            await updateNabooPayDetails({
+              orderId,
+              naboopayOrderId: nabooResponse.order_id,
+              naboopayCheckoutUrl: nabooResponse.checkout_url,
+            });
+            window.location.href = nabooResponse.checkout_url;
+            return;
+          } else {
+            throw new Error("Failed to get checkout URL from NabooPay");
+          }
+        } catch (nabooErr) {
+          // Handle payment service errors gracefully - don't expose internal errors to users
+          const errorMessage = nabooErr.message || "";
+          if (errorMessage.includes("NABOOPAY_TOKEN") || 
+              errorMessage.includes("not set") ||
+              errorMessage.includes("environment") ||
+              errorMessage.includes("API")) {
+            setError("Online payment is temporarily unavailable. Please use manual payment method instead.");
+            setLoading(false);
+            return;
+          }
+          throw nabooErr;
         }
       }
 

@@ -304,6 +304,7 @@ export default function ProductDetails() {
 
                                     addItem({
                                         ...product,
+                                        image: mainImage || product.image,
                                         selectedColor: selectedColor?.name,
                                         selectedSize: selectedSize,
                                         selectedLogo: selectedLogo?.name
