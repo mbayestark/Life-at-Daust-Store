@@ -1,6 +1,5 @@
 import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
-import { internal } from "./_generated/api";
 
 // Convex exposes process.env at runtime. We declare it as an ambient variable
 // here to avoid requiring @types/node, since Convex is not a Node.js environment.
@@ -57,17 +56,6 @@ export const addOrder = mutation({
       status: args.paymentMethod === "naboopay" ? "Pending Payment" : "Pending Verification",
       proofOfPaymentUrl,
       createdAt: Date.now(),
-    });
-
-    await ctx.scheduler.runAfter(0, internal.actions.syncToSheets, {
-      orderId: args.orderId,
-      name: args.customer.name,
-      phone: args.customer.phone,
-      location: args.customer.location,
-      items: args.items.map(item =>
-        `${item.name} (x${item.qty})${item.color ? ` - ${item.color}` : ""}${item.size ? ` - ${item.size}` : ""}`
-      ).join(", "),
-      total: args.total,
     });
 
     return orderId;

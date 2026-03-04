@@ -96,7 +96,7 @@ export default function Checkout() {
     setLoading(true);
     try {
       let storageId = undefined;
-      
+
       if (paymentMethod === "manual") {
         const postUrl = await generateUploadUrl();
         const result = await fetch(postUrl, {
@@ -155,10 +155,10 @@ export default function Checkout() {
         } catch (nabooErr) {
           // Handle payment service errors gracefully - don't expose internal errors to users
           const errorMessage = nabooErr.message || "";
-          if (errorMessage.includes("NABOOPAY_TOKEN") || 
-              errorMessage.includes("not set") ||
-              errorMessage.includes("environment") ||
-              errorMessage.includes("API")) {
+          if (errorMessage.includes("NABOOPAY_TOKEN") ||
+            errorMessage.includes("not set") ||
+            errorMessage.includes("environment") ||
+            errorMessage.includes("API")) {
             setError("Online payment is temporarily unavailable. Please use manual payment method instead.");
             setLoading(false);
             return;
@@ -301,7 +301,7 @@ export default function Checkout() {
 
             <div className="relative z-10">
               <h2 className="text-xl font-black tracking-tight mb-8">Review Selection</h2>
-              
+
               {/* Product Sets Section */}
               {productSetItems.length > 0 && (
                 <div className="mb-6 pb-6 border-b border-white/10">
@@ -330,6 +330,20 @@ export default function Checkout() {
                           <p className="text-[10px] font-bold text-brand-cream/40 uppercase tracking-widest mt-0.5">
                             QTY: {it.qty}
                           </p>
+                          <div className="mt-1 space-y-0.5">
+                            {it.products?.map((p, idx) => {
+                              const sel = it.variantSelections?.[p.productId];
+                              const color = sel?.color || p.selectedColor;
+                              const size = sel?.size || p.selectedSize;
+                              return (
+                                <p key={idx} className="text-[9px] font-bold text-brand-cream/60 tracking-widest leading-tight">
+                                  {p.quantity}x {p.productName}
+                                  {color ? ` · ${color}` : ""}
+                                  {size ? ` · ${size}` : ""}
+                                </p>
+                              );
+                            })}
+                          </div>
                         </div>
                         <div className="text-right">
                           <span className="font-black text-xs">{fmt(it.price * it.qty)}</span>

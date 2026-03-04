@@ -25,7 +25,7 @@ export default function ProductSetForm({ productSet, onSave, onCancel }) {
     const generateUploadUrl = useMutation(api.products.generateUploadUrl);
     const addProductSet = useMutation(api.products.addProductSet);
     const updateProductSet = useMutation(api.products.updateProductSet);
-    
+
     // Fetch all products for selection
     const products = useQuery(api.products.list) || [];
 
@@ -79,7 +79,7 @@ export default function ProductSetForm({ productSet, onSave, onCancel }) {
         if (!productId) return;
         const product = products.find(p => p._id === productId);
         if (!product) return;
-        
+
         // Check if product already exists in set
         const exists = formData.products.find(p => p.productId === productId);
         if (exists) {
@@ -149,8 +149,20 @@ export default function ProductSetForm({ productSet, onSave, onCancel }) {
                 finalImageUrl = await handleUpload(imageFile);
             }
 
+            const payloadProducts = formData.products.map(p => {
+                const item = {
+                    productId: p.productId,
+                    quantity: p.quantity,
+                };
+                if (p.selectedColor) item.selectedColor = p.selectedColor;
+                if (p.selectedSize) item.selectedSize = p.selectedSize;
+                if (p.selectedLogo) item.selectedLogo = p.selectedLogo;
+                return item;
+            });
+
             const payload = {
                 ...formData,
+                products: payloadProducts,
                 specialPrice: parseFloat(formData.specialPrice),
                 image: finalImageUrl,
             };
@@ -310,7 +322,7 @@ export default function ProductSetForm({ productSet, onSave, onCancel }) {
                 {/* Products Selection */}
                 <div className="bg-gray-50 rounded-2xl md:rounded-3xl p-4 md:p-8">
                     <h3 className="font-black text-brand-navy mb-3 md:mb-4 text-sm md:text-base">Products in Bundle</h3>
-                    
+
                     {/* Add Product */}
                     <div className="flex gap-2 md:gap-3 mb-4 md:mb-6">
                         <select

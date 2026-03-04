@@ -49,8 +49,6 @@ npm install
 Create a `.env` file in the root directory:
 ```env
 VITE_CONVEX_URL=your_convex_deployment_url
-VITE_SHEETS_WEBAPP_URL=your_legacy_sheets_url (Optional)
-VITE_SHEETS_SECRET=your_secret
 ```
 
 ### 4. Running the Project

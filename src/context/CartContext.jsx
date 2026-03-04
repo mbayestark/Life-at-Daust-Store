@@ -50,12 +50,15 @@ export function CartProvider({ children }) {
     });
   };
 
-  const addProductSet = (productSet, qty = 1) => {
+  const addProductSet = (productSet, variantSelections = {}, qty = 1) => {
+    // variantSelections is { [productId]: { color, size } }
+    const selectionKey = JSON.stringify(variantSelections);
     setItems(prev => {
-      // Check if this exact product set is already in cart
-      const i = prev.findIndex(p => 
-        p.isProductSet && 
-        p.productSetId === productSet._id
+      // Check if this exact product set with same variant selections is already in cart
+      const i = prev.findIndex(p =>
+        p.isProductSet &&
+        p.productSetId === productSet._id &&
+        JSON.stringify(p.variantSelections || {}) === selectionKey
       );
       if (i >= 0) {
         const next = [...prev];
@@ -63,7 +66,7 @@ export function CartProvider({ children }) {
         return next;
       }
       return [...prev, {
-        id: `set-${productSet._id}`,
+        id: `set-${productSet._id}-${Date.now()}`,
         productSetId: productSet._id,
         name: productSet.name,
         price: productSet.specialPrice,
@@ -74,6 +77,7 @@ export function CartProvider({ children }) {
         products: productSet.products,
         originalPrice: productSet.originalPrice,
         savings: productSet.savings,
+        variantSelections,
         selectedColor: null,
         selectedSize: null,
         selectedLogo: null,

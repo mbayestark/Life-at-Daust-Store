@@ -108,6 +108,8 @@ export const listProductSets = query({
                         productName: product.name,
                         productImage,
                         productPrice: product.price,
+                        colors: product.colors || [],
+                        sizes: product.sizes || [],
                     };
                 })
             );
@@ -151,6 +153,8 @@ export const getProductSetById = query({
                     productName: product.name,
                     productImage,
                     productPrice: product.price,
+                    colors: product.colors || [],
+                    sizes: product.sizes || [],
                 };
             })
         );

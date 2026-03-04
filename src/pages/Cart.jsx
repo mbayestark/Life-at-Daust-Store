@@ -53,7 +53,7 @@ export default function Cart() {
                 </div>
                 <h2 className="text-xl font-black text-brand-navy">Special Bundles</h2>
               </div>
-              
+
               <div className="space-y-4">
                 {productSetItems.map((item) => (
                   <div key={`${item.id}-${item.productSetId}`} className="bg-white rounded-2xl premium-shadow p-4 sm:p-6 flex flex-col sm:flex-row items-center gap-6 border border-gray-50 group transition-all duration-300">
@@ -81,13 +81,23 @@ export default function Cart() {
                           </span>
                         )}
                       </div>
-                      
+
                       <div className="flex flex-wrap gap-2 mb-4">
-                        {item.products?.map((p, idx) => (
-                          <span key={idx} className="text-xs font-bold text-gray-500 bg-gray-50 px-2 py-1 rounded-lg">
-                            {p.quantity}x {p.productName}
-                          </span>
-                        ))}
+                        {item.products?.map((p, idx) => {
+                          const sel = item.variantSelections?.[p.productId];
+                          const color = sel?.color || p.selectedColor;
+                          const size = sel?.size || p.selectedSize;
+                          const logo = sel?.logo || p.selectedLogo;
+
+                          return (
+                            <span key={idx} className="text-xs font-bold text-gray-500 bg-gray-50 px-2 py-1 rounded-lg">
+                              {p.quantity}x {p.productName}
+                              {color ? ` · ${color}` : ""}
+                              {size ? ` · ${size}` : ""}
+                              {logo ? ` · ${logo}` : ""}
+                            </span>
+                          );
+                        })}
                       </div>
 
                       <div className="flex items-center justify-between">
@@ -141,7 +151,7 @@ export default function Cart() {
                   <h2 className="text-xl font-black text-brand-navy">Individual Items</h2>
                 </div>
               )}
-              
+
               {regularItems.map((item) => (
                 <div key={`${item.id}-${item.selectedColor}-${item.selectedSize}-${item.selectedLogo}`} className="bg-white rounded-3xl premium-shadow p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-8 border border-gray-50 group transition-all duration-300 mb-4">
                   <div className="relative w-full sm:w-32 aspect-[3/4] rounded-2xl overflow-hidden bg-gray-50 flex-shrink-0">

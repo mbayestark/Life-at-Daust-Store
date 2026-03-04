@@ -55,6 +55,7 @@ describe('Cart & Checkout Integration', () => {
     it('adds a product to the cart and verify it appears in the cart page', async () => {
         const user = userEvent.setup();
 
+        window.history.pushState({}, '', '/');
         // Render WITHOUT renderWithProviders to avoid duplicate CartProvider
         // but we still need BrowserRouter
         render(
@@ -64,6 +65,7 @@ describe('Cart & Checkout Integration', () => {
         );
 
         // Verification of Home page
+        console.log("MAIN CONTENT: ", document.querySelector('main')?.innerHTML);
         await waitFor(() => {
             expect(screen.getByText(/Life At Daust Store/i)).toBeInTheDocument();
         }, { timeout: 5000 });
@@ -89,6 +91,7 @@ describe('Cart & Checkout Integration', () => {
 
     it('can remove an item from the cart', async () => {
         const user = userEvent.setup();
+        window.history.pushState({}, '', '/');
         render(
             <BrowserRouter>
                 <App />
@@ -118,6 +121,7 @@ describe('Cart & Checkout Integration', () => {
 
     it('proceeds to checkout from the cart', async () => {
         const user = userEvent.setup();
+        window.history.pushState({}, '', '/');
         render(
             <BrowserRouter>
                 <App />
