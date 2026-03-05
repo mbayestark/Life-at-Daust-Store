@@ -167,6 +167,9 @@ export default function Cart() {
                       <h3 className="text-lg font-black text-brand-navy group-hover:text-brand-orange transition-colors duration-300">{item.name}</h3>
                     </div>
                     <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs font-bold uppercase tracking-widest text-gray-400 mb-6">
+                      {item.type && (
+                        <span className="flex items-center gap-2">Type: <span className="text-brand-navy">{item.type}</span></span>
+                      )}
                       {item.selectedLogo && (
                         <span className="flex items-center gap-2">Logo: <span className="text-brand-navy">{item.selectedLogo}</span></span>
                       )}

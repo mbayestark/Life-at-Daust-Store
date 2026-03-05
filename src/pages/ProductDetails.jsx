@@ -109,7 +109,7 @@ export default function ProductDetails() {
             </div>
 
             <main className="max-w-7xl mx-auto px-4 py-12 sm:py-24 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
-            {/* Left: Image Gallery (Span 7) */}
+                {/* Left: Image Gallery (Span 7) */}
                 <div className="lg:col-span-5 space-y-4 sm:space-y-6">
                     <div className="relative aspect-[3/4] sm:aspect-[4/5] rounded-2xl sm:rounded-[2rem] overflow-hidden bg-gray-50/50 premium-shadow border border-gray-100 animate-in fade-in zoom-in-95 duration-700">
                         <img
@@ -154,9 +154,14 @@ export default function ProductDetails() {
                                 {product.badge}
                             </span>
                         )}
-                        <h1 className="text-[var(--text-4xl)] font-black text-brand-navy leading-tight tracking-tighter mb-6">
+                        <h1 className="text-[var(--text-4xl)] font-black text-brand-navy leading-tight tracking-tighter mb-2">
                             {product.name}
                         </h1>
+                        {product.type && (
+                            <p className="text-sm font-bold text-brand-orange uppercase tracking-widest mb-6">
+                                {product.type} Edition
+                            </p>
+                        )}
                         <div className="flex items-center gap-6">
                             <span className="text-3xl font-black text-brand-orange tracking-tight">
                                 {formatPrice(product.price)}
@@ -193,11 +198,10 @@ export default function ProductDetails() {
                                                     setTimeout(() => setLogoPreview(null), 2500);
                                                 }
                                             }}
-                                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${
-                                                selectedLogo?.id === logo.id || selectedLogo?.name === logo.name
+                                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${selectedLogo?.id === logo.id || selectedLogo?.name === logo.name
                                                     ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
                                                     : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
-                                            }`}
+                                                }`}
                                         >
                                             {logo.image && (
                                                 <img src={logo.image} alt={logo.name} className="w-7 h-7 rounded-lg object-cover" />

@@ -197,6 +197,7 @@ export const addProduct = mutation({
         description: v.optional(v.string()),
         collection: v.optional(v.string()),
         stock: v.optional(v.number()),
+        type: v.optional(v.string()),
         adminToken: v.string(),
     },
     handler: async (ctx, args) => {
@@ -261,6 +262,7 @@ export const updateProduct = mutation({
         description: v.optional(v.string()),
         collection: v.optional(v.string()),
         stock: v.optional(v.number()),
+        type: v.optional(v.string()),
         adminToken: v.string(),
     },
     handler: async (ctx, args) => {

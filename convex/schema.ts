@@ -25,6 +25,7 @@ export default defineSchema({
         description: v.optional(v.string()),
         collection: v.optional(v.string()),
         stock: v.optional(v.number()),
+        type: v.optional(v.string()),
     }),
     productSets: defineTable({
         name: v.string(),
@@ -32,9 +33,9 @@ export default defineSchema({
         products: v.array(v.object({
             productId: v.id("products"),
             quantity: v.number(),
-            selectedColor: v.optional(v.string()),
-            selectedSize: v.optional(v.string()),
-            selectedLogo: v.optional(v.string()),
+            selectedColor: v.optional(v.union(v.string(), v.null())),
+            selectedSize: v.optional(v.union(v.string(), v.null())),
+            selectedLogo: v.optional(v.union(v.string(), v.null())),
         })),
         specialPrice: v.number(),
         image: v.optional(v.string()),

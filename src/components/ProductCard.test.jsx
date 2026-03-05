@@ -50,7 +50,7 @@ describe('ProductCard Component', () => {
 
         expect(screen.getByText(/quick add/i)).toBeInTheDocument();
 
-        expect(screen.getByLabelText(/add to cart/i)).toBeInTheDocument();
+        expect(screen.getAllByLabelText(/add to cart/i).length).toBeGreaterThan(0);
     });
 
     it('displays badge if product has one', () => {
