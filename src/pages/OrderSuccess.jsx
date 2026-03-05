@@ -1,24 +1,43 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useParams, useLocation, useNavigate } from "react-router-dom";
 import { CheckCircle2, ShoppingBag, ArrowRight, Home } from "lucide-react";
 import Button from "../components/ui/Button";
+import { useCart } from "../context/CartContext.jsx";
 
 export default function OrderSuccess() {
     const { orderId } = useParams();
     const location = useLocation();
     const navigate = useNavigate();
+    const { clear } = useCart();
     const stateOrderId = location.state?.orderId;
+    const [countdown, setCountdown] = useState(5);
 
     // Final ID to show
     const displayId = orderId || stateOrderId || "UNKNOWN";
 
     useEffect(() => {
-        // If we land here without an ID, maybe redirect away?
+        // If we land here without an ID, redirect to shop
         if (displayId === "UNKNOWN") {
             const timer = setTimeout(() => navigate("/shop"), 5000);
             return () => clearTimeout(timer);
         }
-    }, [displayId, navigate]);
+        
+        // Clear the cart when arriving on payment success page
+        clear();
+        
+        // Auto-redirect to homepage after 5 seconds
+        const timer = setTimeout(() => navigate("/"), 5000);
+        
+        // Countdown interval
+        const countdownInterval = setInterval(() => {
+            setCountdown(prev => Math.max(0, prev - 1));
+        }, 1000);
+        
+        return () => {
+            clearTimeout(timer);
+            clearInterval(countdownInterval);
+        };
+    }, [displayId, navigate, clear]);
 
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4 py-20 overflow-hidden">
@@ -34,9 +53,9 @@ export default function OrderSuccess() {
                     <CheckCircle2 size={48} className="text-green-500 animate-in bounce-in duration-700" />
                 </div>
 
-                <h1 className="text-4xl sm:text-5xl font-[900] text-brand-navy tracking-tight mb-4">Order Received!</h1>
+                <h1 className="text-4xl sm:text-5xl font-[900] text-brand-navy tracking-tight mb-4">Payment Successful!</h1>
                 <p className="text-gray-500 text-lg mb-10 font-medium">
-                    Thank you for choosing the University Shop. We've received your order and payment proof.
+                    Thank you for your payment. Your order has been confirmed and is being processed.
                 </p>
 
                 {/* Order Card */}
@@ -54,6 +73,11 @@ export default function OrderSuccess() {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+                    {displayId !== "UNKNOWN" && (
+                        <p className="text-sm text-gray-400 mb-4">
+                            Redirecting to homepage in <span className="font-bold text-brand-orange">{countdown}</span> seconds...
+                        </p>
+                    )}
                     <Link to="/" className="w-full sm:w-auto">
                         <Button variant="outline" className="w-full sm:px-10 h-16 rounded-2xl flex items-center gap-2 group">
                             <Home size={18} className="group-hover:-translate-y-0.5 transition-transform" /> Back Home
