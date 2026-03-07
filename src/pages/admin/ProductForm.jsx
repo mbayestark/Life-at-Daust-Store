@@ -371,6 +371,42 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                 />
                             </div>
                         </div>
+
+                        {/* Logo Preview Section - Show near top for visibility */}
+                        {formData.logos.length > 0 && (
+                            <div className="bg-gray-50 rounded-2xl md:rounded-3xl p-4 md:p-6 border border-gray-100">
+                                <h4 className="font-black text-brand-navy mb-3 text-xs md:text-sm flex items-center gap-2">
+                                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                    Logo Preview
+                                </h4>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                    {formData.logos.map((logo, index) => (
+                                        <div key={index} className="relative bg-white rounded-xl p-3 shadow-sm border border-gray-100">
+                                            {logo.image ? (
+                                                <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 mb-2">
+                                                    <img 
+                                                        src={logo.image.startsWith("kg") ? "" : logo.image} 
+                                                        alt={logo.name} 
+                                                        className="w-full h-full object-contain" 
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="aspect-square rounded-lg bg-gray-100 flex items-center justify-center mb-2">
+                                                    <ImageIcon size={24} className="text-gray-300" />
+                                                </div>
+                                            )}
+                                            <p className="text-xs font-bold text-brand-navy truncate">{logo.name}</p>
+                                            {logo.positions && logo.positions.length > 0 && (
+                                                <p className="text-[9px] text-gray-400 font-bold capitalize">{logo.positions.join(" & ")}</p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                                <p className="text-[10px] text-gray-400 mt-3 font-medium">
+                                    {formData.logos.length} logo{formData.logos.length !== 1 ? 's' : ''} added. These will be applied to your products.
+                                </p>
+                            </div>
+                        )}
                     </div>
                 </div>
 
