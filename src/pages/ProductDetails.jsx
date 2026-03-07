@@ -18,6 +18,7 @@ export default function ProductDetails() {
     const [selectedColor, setSelectedColor] = useState(null);
     const [selectedSize, setSelectedSize] = useState(null);
     const [selectedLogo, setSelectedLogo] = useState(null);
+    const [selectedLogoPosition, setSelectedLogoPosition] = useState(null);
     const [quantity, setQuantity] = useState(1);
     const [logoPreview, setLogoPreview] = useState(null);
 
@@ -32,7 +33,9 @@ export default function ProductDetails() {
             setMainImage(product.image);
             setSelectedColor(product.colors?.[0] || null);
             setSelectedSize(product.sizes?.[0] || null);
-            setSelectedLogo(product.logos?.[0] || null);
+            const firstLogo = product.logos?.[0] || null;
+            setSelectedLogo(firstLogo);
+            setSelectedLogoPosition(firstLogo?.positions?.[0] || null);
         }
     }, [product]);
 
@@ -183,33 +186,59 @@ export default function ProductDetails() {
                     <div className="space-y-10 mb-12 animate-in slide-in-from-right-10 duration-700 delay-200">
                         {/* Logo Variants - click to preview */}
                         {product.logos && product.logos.length > 0 && (
-                            <div>
-                                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-5">
-                                    Logo Style · <span className="text-brand-navy">{selectedLogo?.name || "Select"}</span>
-                                </h3>
-                                <div className="flex flex-wrap gap-3">
-                                    {product.logos.map((logo) => (
-                                        <button
-                                            key={logo.id || logo.name}
-                                            onClick={() => {
-                                                setSelectedLogo(logo);
-                                                if (logo.image) {
-                                                    setLogoPreview(logo.image);
-                                                    setTimeout(() => setLogoPreview(null), 2500);
-                                                }
-                                            }}
-                                            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${selectedLogo?.id === logo.id || selectedLogo?.name === logo.name
-                                                    ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
-                                                    : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
-                                                }`}
-                                        >
-                                            {logo.image && (
-                                                <img src={logo.image} alt={logo.name} className="w-7 h-7 rounded-lg object-cover" />
-                                            )}
-                                            {logo.name}
-                                        </button>
-                                    ))}
+                            <div className="space-y-5">
+                                <div>
+                                    <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-5">
+                                        Logo Style · <span className="text-brand-navy">{selectedLogo?.name || "Select"}</span>
+                                    </h3>
+                                    <div className="flex flex-wrap gap-3">
+                                        {product.logos.map((logo) => (
+                                            <button
+                                                key={logo.id || logo.name}
+                                                onClick={() => {
+                                                    setSelectedLogo(logo);
+                                                    setSelectedLogoPosition(logo.positions?.[0] || null);
+                                                    if (logo.image) {
+                                                        setLogoPreview(logo.image);
+                                                        setTimeout(() => setLogoPreview(null), 2500);
+                                                    }
+                                                }}
+                                                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${selectedLogo?.id === logo.id || selectedLogo?.name === logo.name
+                                                        ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
+                                                        : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
+                                                    }`}
+                                            >
+                                                {logo.image && (
+                                                    <img src={logo.image} alt={logo.name} className="w-7 h-7 rounded-lg object-cover" />
+                                                )}
+                                                {logo.name}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
+
+                                {/* Logo Position selector - only when a logo with positions is selected */}
+                                {selectedLogo?.positions && selectedLogo.positions.length > 1 && (
+                                    <div>
+                                        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">
+                                            Logo Position · <span className="text-brand-navy capitalize">{selectedLogoPosition || "Select"}</span>
+                                        </h3>
+                                        <div className="flex gap-3">
+                                            {selectedLogo.positions.map((pos) => (
+                                                <button
+                                                    key={pos}
+                                                    onClick={() => setSelectedLogoPosition(pos)}
+                                                    className={`px-6 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale capitalize ${selectedLogoPosition === pos
+                                                        ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
+                                                        : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
+                                                    }`}
+                                                >
+                                                    {pos}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
@@ -326,13 +355,18 @@ export default function ProductDetails() {
                                         alert('Please select a logo style');
                                         return;
                                     }
+                                    if (selectedLogo?.positions?.length > 1 && !selectedLogoPosition) {
+                                        alert('Please select a logo position (Front or Back)');
+                                        return;
+                                    }
 
                                     addItem({
                                         ...product,
                                         image: mainImage || product.image,
                                         selectedColor: selectedColor?.name,
                                         selectedSize: selectedSize,
-                                        selectedLogo: selectedLogo?.name
+                                        selectedLogo: selectedLogo?.name,
+                                        selectedLogoPosition: selectedLogoPosition,
                                     }, quantity);
                                 }}
                             >

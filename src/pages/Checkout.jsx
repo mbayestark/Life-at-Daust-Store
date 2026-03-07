@@ -58,6 +58,7 @@ export default function Checkout() {
         if (it.selectedColor) line.color = it.selectedColor;
         if (it.selectedSize) line.size = it.selectedSize;
         if (it.selectedLogo) line.logo = it.selectedLogo;
+        if (it.selectedLogoPosition) line.logoPosition = it.selectedLogoPosition;
         if (it.isProductSet) {
           line.isProductSet = true;
           line.productSetName = it.productSetName;
@@ -375,7 +376,7 @@ export default function Checkout() {
                           <p className="font-bold text-xs truncate">{it.name}</p>
                           <p className="text-[10px] font-bold text-brand-cream/40 uppercase tracking-widest mt-0.5">
                             QTY: {it.qty}
-                            {it.selectedLogo ? ` • ${it.selectedLogo}` : ""}
+                            {it.selectedLogo ? ` • ${it.selectedLogo}${it.selectedLogoPosition ? ` (${it.selectedLogoPosition})` : ""}` : ""}
                             {it.selectedSize ? ` • ${it.selectedSize}` : ""}
                           </p>
                         </div>

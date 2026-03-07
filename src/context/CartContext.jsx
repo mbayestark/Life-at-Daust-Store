@@ -23,12 +23,14 @@ export function CartProvider({ children }) {
       const color = product.selectedColor || (product.colors?.[0]?.name) || null;
       const size = product.selectedSize || (product.sizes?.[0]) || null;
       const logo = product.selectedLogo || (product.logos?.[0]?.name) || null;
+      const logoPosition = product.selectedLogoPosition || null;
 
-      const i = prev.findIndex(p => 
-        p.id === product.id && 
-        p.selectedColor === color && 
+      const i = prev.findIndex(p =>
+        p.id === product.id &&
+        p.selectedColor === color &&
         p.selectedSize === size &&
         p.selectedLogo === logo &&
+        p.selectedLogoPosition === logoPosition &&
         !p.isProductSet
       );
       if (i >= 0) {
@@ -45,6 +47,7 @@ export function CartProvider({ children }) {
         selectedColor: color,
         selectedSize: size,
         selectedLogo: logo,
+        selectedLogoPosition: logoPosition,
         isProductSet: false,
       }];
     });
@@ -85,15 +88,15 @@ export function CartProvider({ children }) {
     });
   };
 
-  const removeItem = (id, color, size, logo, isProductSet = false) => {
-    setItems(prev => prev.filter(p => 
-      !(p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo && p.isProductSet === isProductSet)
+  const removeItem = (id, color, size, logo, isProductSet = false, logoPosition = null) => {
+    setItems(prev => prev.filter(p =>
+      !(p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo && p.selectedLogoPosition === logoPosition && p.isProductSet === isProductSet)
     ));
   };
 
-  const setQty = (id, color, size, logo, qty, isProductSet = false) =>
+  const setQty = (id, color, size, logo, qty, isProductSet = false, logoPosition = null) =>
     setItems(prev => prev.map(p =>
-      (p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo && p.isProductSet === isProductSet)
+      (p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo && p.selectedLogoPosition === logoPosition && p.isProductSet === isProductSet)
         ? { ...p, qty: Math.max(1, Math.min(99, qty)) }
         : p
     ));
