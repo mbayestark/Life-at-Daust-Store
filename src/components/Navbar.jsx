@@ -174,7 +174,7 @@ export default function Navbar() {
           {/* Top bar */}
           <div className="flex justify-between items-center px-6 h-[72px] border-b border-white/5">
             <Link to="/" className="flex items-center gap-2.5">
-              <img src={logo} alt="Life at DAUST" className="h-10 w-auto" />
+              <img src="/assets/logo.png" alt="Life at DAUST" className="h-10 w-auto" />
             </Link>
             <button
               onClick={() => setMobileOpen(false)}

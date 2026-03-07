@@ -84,22 +84,34 @@ export function CartProvider({ children }) {
         selectedColor: null,
         selectedSize: null,
         selectedLogo: null,
+        selectedLogoPosition: null,
       }];
     });
   };
 
   const removeItem = (id, color, size, logo, isProductSet = false, logoPosition = null) => {
-    setItems(prev => prev.filter(p =>
-      !(p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo && p.selectedLogoPosition === logoPosition && p.isProductSet === isProductSet)
-    ));
+    setItems(prev => prev.filter(p => {
+      // For product sets, match by productSetId
+      if (p.isProductSet && isProductSet) {
+        return p.productSetId !== id;
+      }
+      return !(p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo && p.selectedLogoPosition === logoPosition && p.isProductSet === isProductSet);
+    }));
   };
 
   const setQty = (id, color, size, logo, qty, isProductSet = false, logoPosition = null) =>
-    setItems(prev => prev.map(p =>
-      (p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo && p.selectedLogoPosition === logoPosition && p.isProductSet === isProductSet)
+    setItems(prev => prev.map(p => {
+      // For product sets, match by productSetId
+      if (p.isProductSet && isProductSet) {
+        if (p.productSetId === id) {
+          return { ...p, qty: Math.max(1, Math.min(99, qty)) };
+        }
+        return p;
+      }
+      return (p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo && p.selectedLogoPosition === logoPosition && p.isProductSet === isProductSet)
         ? { ...p, qty: Math.max(1, Math.min(99, qty)) }
-        : p
-    ));
+        : p;
+    }));
 
   const clear = () => setItems([]);
 
