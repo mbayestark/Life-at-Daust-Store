@@ -393,7 +393,7 @@ export default function ProductDetails() {
                                 <div className="flex items-center gap-2">
                                     <div className={`w-2 h-2 rounded-full ${product.stock === 0 ? "bg-red-500" : product.stock <= 5 ? "bg-orange-500" : "bg-green-500"}`} />
                                     <span className={`text-[10px] font-black uppercase tracking-widest ${product.stock === 0 ? "text-red-500" : product.stock <= 5 ? "text-orange-500" : "text-green-500"}`}>
-                                        {product.stock === 0 ? "Currently Out of Stock" : product.stock <= 5 ? `Low Stock: Only ${product.stock} Left` : "In Stock & Ready to Ship"}
+                                        {product.stock === 0 ? "Currently Out of Stock" : product.stock <= 5 ? `Low Stock: Only ${product.stock} Left` : "Available on pre-order · Ships in 10–15 days"}
                                     </span>
                                 </div>
                             </div>
