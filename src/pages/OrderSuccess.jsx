@@ -10,10 +10,21 @@ export default function OrderSuccess() {
     const navigate = useNavigate();
     const { clear } = useCart();
     const stateOrderId = location.state?.orderId;
+    const statePaymentMethod = location.state?.paymentMethod;
     const [countdown, setCountdown] = useState(5);
 
     // Final ID to show
     const displayId = orderId || stateOrderId || "UNKNOWN";
+
+    // Determine the order status based on payment method
+    // For manual payments: state is passed, shows "Pending Verification"
+    // For naboopay: no state passed (direct URL return), but we can infer it's paid since they're on success page
+    // The order status will be updated to "Paid" in the backend via webhook
+    const isManualPayment = statePaymentMethod === "manual";
+    const orderStatus = isManualPayment ? "Pending Verification" : "Paid";
+    const statusColor = isManualPayment 
+        ? "bg-brand-orange/5 text-brand-orange border-brand-orange/10" 
+        : "bg-green-50 text-green-600 border-green-100";
 
     useEffect(() => {
         // If we land here without an ID, redirect to shop
@@ -62,14 +73,20 @@ export default function OrderSuccess() {
                 <div className="bg-gray-50/80 rounded-[2rem] p-8 border border-gray-100 mb-12 transform hover:scale-[1.02] transition-transform duration-500">
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2">Transaction ID</p>
                     <p className="text-2xl font-black text-brand-navy tracking-tighter">{displayId}</p>
-                    <div className="mt-6 flex items-center justify-center gap-2 text-xs font-bold text-brand-orange bg-brand-orange/5 py-3 px-6 rounded-full inline-flex border border-brand-orange/10">
-                        <ShoppingBag size={14} /> Status: Pending Verification
+                    <div className={`mt-6 flex items-center justify-center gap-2 text-xs font-bold py-3 px-6 rounded-full inline-flex border ${statusColor}`}>
+                        <ShoppingBag size={14} /> Status: {orderStatus}
                     </div>
                 </div>
 
                 <div className="text-sm text-gray-400 mb-12 space-y-2 font-medium italic">
-                    <p>Next Steps: Our dedicated team will verify your payment screenshot.</p>
-                    <p>Once confirmed, your items will be prepared for delivery/pickup.</p>
+                    {isManualPayment ? (
+                        <>
+                            <p>Next Steps: Our dedicated team will verify your payment screenshot.</p>
+                            <p>Once confirmed, your items will be prepared for delivery/pickup.</p>
+                        </>
+                    ) : (
+                        <p>Your payment has been confirmed. Your items will be prepared for delivery/pickup.</p>
+                    )}
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
