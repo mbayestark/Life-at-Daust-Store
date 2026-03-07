@@ -35,6 +35,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
     const [newLogoName, setNewLogoName] = useState("");
     const [newLogoFile, setNewLogoFile] = useState(null);
     const [newLogoPreview, setNewLogoPreview] = useState("");
+    const [newLogoPositions, setNewLogoPositions] = useState(["front", "back"]);
     const [logoUploading, setLogoUploading] = useState(false);
 
     const generateUploadUrl = useMutation(api.products.generateUploadUrl);
@@ -134,10 +135,16 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
             const logoId = `logo-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
             setFormData({
                 ...formData,
-                logos: [...formData.logos, { id: logoId, name: newLogoName.trim(), ...(imageStorageId ? { image: imageStorageId } : {}) }]
+                logos: [...formData.logos, {
+                    id: logoId,
+                    name: newLogoName.trim(),
+                    ...(imageStorageId ? { image: imageStorageId } : {}),
+                    ...(newLogoPositions.length > 0 ? { positions: newLogoPositions } : {}),
+                }]
             });
             setNewLogoName("");
             setNewLogoFile(null);
+            setNewLogoPositions(["front", "back"]);
             if (newLogoPreview) {
                 revokePreviewUrl(newLogoPreview);
                 setNewLogoPreview("");
@@ -414,10 +421,32 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                     <img src={logo.image.startsWith("kg") ? "" : logo.image} alt={logo.name} className="w-8 h-8 rounded-lg object-cover bg-gray-100" />
                                 )}
                                 <span className="text-xs md:text-sm font-bold text-brand-navy">{logo.name}</span>
+                                {logo.positions && logo.positions.length > 0 && (
+                                    <span className="text-[10px] text-gray-400 font-bold capitalize">{logo.positions.join(" & ")}</span>
+                                )}
                                 <button type="button" onClick={() => removeLogo(index)} className="text-gray-400 hover:text-red-500">
                                     <X size={12} />
                                 </button>
                             </div>
+                        ))}
+                    </div>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                        {["front", "back"].map(pos => (
+                            <label key={pos} className="flex items-center gap-2 cursor-pointer select-none">
+                                <input
+                                    type="checkbox"
+                                    checked={newLogoPositions.includes(pos)}
+                                    onChange={(e) => {
+                                        if (e.target.checked) {
+                                            setNewLogoPositions(prev => [...prev, pos]);
+                                        } else {
+                                            setNewLogoPositions(prev => prev.filter(p => p !== pos));
+                                        }
+                                    }}
+                                    className="w-4 h-4 accent-brand-navy rounded"
+                                />
+                                <span className="text-xs font-bold text-brand-navy capitalize">{pos}</span>
+                            </label>
                         ))}
                     </div>
                     <div className="flex gap-2 md:gap-3 items-end">
