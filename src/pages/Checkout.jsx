@@ -22,7 +22,7 @@ const locations = [
 ];
 
 export default function Checkout() {
-  const { items, subtotal, tax, clear, totalSavings } = useCart();
+  const { items, subtotal, clear, totalSavings } = useCart();
   const [orderId] = useState(makeOrderId());
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", location: "" });
@@ -41,7 +41,7 @@ export default function Checkout() {
     return loc ? loc.fee : 0;
   }, [form.location]);
 
-  const total = subtotal + tax + deliveryFee;
+  const total = subtotal + deliveryFee;
 
   // Separate product sets and regular items
   const productSetItems = items.filter(item => item.isProductSet);
@@ -402,13 +402,7 @@ export default function Checkout() {
                   <span>Shipping</span>
                   <span className="text-brand-orange uppercase text-xs font-black tracking-widest">Complimentary</span>
                 </div>
-                {tax > 0 && (
-                  <div className="flex justify-between items-center text-brand-cream/60">
-                    <span>Estimated Tax</span>
-                    <span>{fmt(tax)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between items-center text-xl font-black pt-4">
+<div className="flex justify-between items-center text-xl font-black pt-4">
                   <span>Final Total</span>
                   <span className="text-brand-orange">{fmt(total)}</span>
                 </div>

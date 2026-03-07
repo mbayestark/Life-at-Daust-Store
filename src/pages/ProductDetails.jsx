@@ -390,7 +390,7 @@ export default function ProductDetails() {
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-black uppercase text-gray-900 leading-none">Fast Delivery</p>
-                                    <p className="text-[10px] text-gray-500 mt-1">2-4 days campus ship</p>
+                                    <p className="text-[10px] text-gray-500 mt-1">{product.shippingTimeline || "2-4 days campus ship"}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3">

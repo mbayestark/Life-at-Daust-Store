@@ -27,6 +27,7 @@ export default defineSchema({
         collection: v.optional(v.string()),
         stock: v.optional(v.number()),
         type: v.optional(v.string()),
+        shippingTimeline: v.optional(v.string()),
     }),
     productSets: defineTable({
         name: v.string(),

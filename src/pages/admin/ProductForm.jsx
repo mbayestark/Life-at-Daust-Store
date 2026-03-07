@@ -23,6 +23,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
         collection: "",
         stock: "",
         type: "",
+        shippingTimeline: "",
     });
 
     const [imageFile, setImageFile] = useState(null);
@@ -62,6 +63,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                 collection: product.collection || "",
                 stock: product.stock?.toString() || "",
                 type: product.type || "",
+                shippingTimeline: product.shippingTimeline || "",
             });
             setImagePreview(product.image || "");
         }
@@ -201,6 +203,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                 stock: formData.stock !== "" ? parseInt(formData.stock) : undefined,
                 image: finalImageUrl,
                 type: formData.category === "Hoodies" ? formData.type : undefined,
+                shippingTimeline: formData.shippingTimeline || undefined,
             };
 
             if (product) {
@@ -610,6 +613,17 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                             placeholder="0"
                         />
                     </div>
+                </div>
+
+                <div>
+                    <label className="block text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Shipping Timeline</label>
+                    <input
+                        type="text"
+                        value={formData.shippingTimeline}
+                        onChange={(e) => setFormData({ ...formData, shippingTimeline: e.target.value })}
+                        className="w-full bg-gray-50 border-none rounded-xl md:rounded-2xl px-4 md:px-5 py-3 md:py-4 text-sm md:text-base text-brand-navy font-bold focus:ring-2 focus:ring-brand-orange/20 transition-all"
+                        placeholder="e.g. 2-4 days campus ship"
+                    />
                 </div>
 
                 {error && (

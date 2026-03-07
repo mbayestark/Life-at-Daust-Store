@@ -113,8 +113,7 @@ export function CartProvider({ children }) {
   );
 
   const shipping = subtotal > 0 ? 0 : 0;
-  const tax = subtotal * 0.05;
-  const total = subtotal + shipping + tax;
+  const total = subtotal + shipping;
 
   const value = {
     items,
@@ -127,7 +126,6 @@ export function CartProvider({ children }) {
     subtotal,
     totalSavings,
     shipping,
-    tax,
     total
   };
 
