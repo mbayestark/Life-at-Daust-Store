@@ -6,7 +6,7 @@ export default function About() {
   const values = [
     { icon: Sparkles, title: "Uncompromising Quality", text: "Every thread is chosen for its performance and feel. We partner with the best textile experts in Senegal to ensure your DAUST merch lasts for generations." },
     { icon: Heart, title: "Student-Led Design", text: "Our designs are born in the DAUST studios. They reflect the real experiences and aspirations of our student body, not just corporate branding." },
-    { icon: Users, title: "Family Support", text: "15% of all profits go directly into the DAUST Financial Aid program, ensuring that excellence is never limited by background." },
+    { icon: Users, title: "Community & Pride", text: "Every item in this shop serves a dual purpose: funding the programs that matter and cementing the pride of being a Daustian. We don't just study here — we belong here." },
   ];
 
   return (
