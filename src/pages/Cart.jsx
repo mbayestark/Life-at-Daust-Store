@@ -153,7 +153,7 @@ export default function Cart() {
               )}
 
               {regularItems.map((item) => (
-                <div key={`${item.id}-${item.selectedColor}-${item.selectedSize}-${item.selectedLogo}`} className="bg-white rounded-3xl premium-shadow p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-8 border border-gray-50 group transition-all duration-300 mb-4">
+                <div key={`${item.id}-${item.selectedColor}-${item.selectedSize}-${item.selectedLogo}-${item.selectedHoodieType}`} className="bg-white rounded-3xl premium-shadow p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-8 border border-gray-50 group transition-all duration-300 mb-4">
                   <div className="relative w-full sm:w-32 aspect-[3/4] rounded-2xl overflow-hidden bg-gray-50 flex-shrink-0">
                     <img
                       src={item.image}
@@ -170,6 +170,9 @@ export default function Cart() {
                       {item.type && (
                         <span className="flex items-center gap-2">Type: <span className="text-brand-navy">{item.type}</span></span>
                       )}
+                      {item.selectedHoodieType && (
+                        <span className="flex items-center gap-2">Hoodie: <span className="text-brand-navy">{item.selectedHoodieType}</span></span>
+                      )}
                       {item.selectedLogo && (
                         <span className="flex items-center gap-2">Logo: <span className="text-brand-navy">{item.selectedLogo}</span></span>
                       )}
@@ -185,7 +188,7 @@ export default function Cart() {
                     <div className="flex items-center justify-between mt-auto">
                       <div className="flex items-center bg-gray-50 rounded-xl p-1 h-12">
                         <button
-                          onClick={() => setQty(item.id, item.selectedColor, item.selectedSize, item.selectedLogo, item.qty - 1)}
+                          onClick={() => setQty(item.id, item.selectedColor, item.selectedSize, item.selectedLogo, item.qty - 1, false, item.selectedLogoPosition, item.selectedHoodieType)}
                           className="w-10 h-full rounded-lg hover:bg-white hover:shadow-sm text-lg font-bold transition-all disabled:opacity-30"
                           disabled={item.qty <= 1}
                         >
@@ -193,7 +196,7 @@ export default function Cart() {
                         </button>
                         <span className="w-10 text-center font-black text-brand-navy text-sm">{item.qty}</span>
                         <button
-                          onClick={() => setQty(item.id, item.selectedColor, item.selectedSize, item.selectedLogo, item.qty + 1)}
+                          onClick={() => setQty(item.id, item.selectedColor, item.selectedSize, item.selectedLogo, item.qty + 1, false, item.selectedLogoPosition, item.selectedHoodieType)}
                           className="w-10 h-full rounded-lg hover:bg-white hover:shadow-sm text-lg font-bold transition-all"
                           disabled={item.qty >= 99}
                         >
@@ -213,7 +216,7 @@ export default function Cart() {
                   <div className="h-[1px] w-full sm:h-24 sm:w-[1px] bg-gray-100 hidden sm:block" />
 
                   <button
-                    onClick={() => removeItem(item.id, item.selectedColor, item.selectedSize, item.selectedLogo)}
+                    onClick={() => removeItem(item.id, item.selectedColor, item.selectedSize, item.selectedLogo, false, item.selectedLogoPosition, item.selectedHoodieType)}
                     className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all duration-300 interactive-scale"
                     title="Remove from bag"
                   >

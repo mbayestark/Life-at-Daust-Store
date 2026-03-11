@@ -19,6 +19,7 @@ export default function ProductDetails() {
     const [selectedSize, setSelectedSize] = useState(null);
     const [selectedLogo, setSelectedLogo] = useState(null);
     const [selectedLogoPosition, setSelectedLogoPosition] = useState(null);
+    const [selectedHoodieType, setSelectedHoodieType] = useState(null);
     const [quantity, setQuantity] = useState(1);
     const [logoPreview, setLogoPreview] = useState(null);
 
@@ -36,6 +37,7 @@ export default function ProductDetails() {
             const firstLogo = product.logos?.[0] || null;
             setSelectedLogo(firstLogo);
             setSelectedLogoPosition(firstLogo?.positions?.[0] || null);
+            setSelectedHoodieType(null);
         }
     }, [product]);
 
@@ -184,6 +186,32 @@ export default function ProductDetails() {
 
                     {/* Variants Section */}
                     <div className="space-y-10 mb-12 animate-in slide-in-from-right-10 duration-700 delay-200">
+                        {/* Hoodie Type */}
+                        {product.category === "Hoodies" && (
+                            <div className="space-y-5">
+                                <div>
+                                    <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-5">
+                                        Hoodie Type · <span className="text-brand-navy">{selectedHoodieType || "Select"}</span>
+                                    </h3>
+                                    <div className="flex flex-wrap gap-3">
+                                        {["Zipped", "No zip"].map((t) => (
+                                            <button
+                                                key={t}
+                                                type="button"
+                                                onClick={() => setSelectedHoodieType(t)}
+                                                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${selectedHoodieType === t
+                                                    ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
+                                                    : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
+                                                    }`}
+                                            >
+                                                {t}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
                         {/* Logo Variants - click to preview */}
                         {product.logos && product.logos.length > 0 && (
                             <div className="space-y-5">
@@ -350,6 +378,10 @@ onClick={() => {
                                     if (product.stock === 0) return;
 
                                     // Validate selections
+                                    if (product.category === "Hoodies" && !selectedHoodieType) {
+                                        alert('Please select a hoodie type (Zipped or No zip)');
+                                        return;
+                                    }
                                     if (product.colors?.length > 0 && !selectedColor) {
                                         alert('Please select a color');
                                         return;
@@ -370,6 +402,7 @@ onClick={() => {
                                     addItem({
                                         ...product,
                                         image: mainImage || product.image,
+                                        selectedHoodieType,
                                         selectedColor: selectedColor?.name,
                                         selectedSize: selectedSize,
                                         selectedLogo: selectedLogo?.name,

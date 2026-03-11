@@ -55,6 +55,7 @@ export default function Checkout() {
           qty: it.qty,
           price: it.price,
         };
+        if (it.selectedHoodieType) line.hoodieType = it.selectedHoodieType;
         if (it.selectedColor) line.color = it.selectedColor;
         if (it.selectedSize) line.size = it.selectedSize;
         if (it.selectedLogo) line.logo = it.selectedLogo;

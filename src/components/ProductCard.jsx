@@ -71,6 +71,10 @@ export default function ProductCard({ product }) {
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                if (product.category === "Hoodies") {
+                  window.location.href = `/product/${productId}`;
+                  return;
+                }
                 addItem(product, 1);
               }}
             >
@@ -106,6 +110,10 @@ export default function ProductCard({ product }) {
             <button
               onClick={(e) => {
                 e.stopPropagation();
+                if (product.category === "Hoodies") {
+                  window.location.href = `/product/${productId}`;
+                  return;
+                }
                 addItem(product, 1);
               }}
               className="lg:hidden p-2 rounded-lg bg-gray-100 text-brand-navy active:bg-brand-navy active:text-white transition-all duration-200"
