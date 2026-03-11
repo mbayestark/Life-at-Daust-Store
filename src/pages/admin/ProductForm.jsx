@@ -22,7 +22,6 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
         logoImages: null,
         collection: "",
         stock: "",
-        type: "",
         shippingTimeline: "",
     });
 
@@ -62,7 +61,6 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                 logoImages: product.logoImages || null,
                 collection: product.collection || "",
                 stock: product.stock?.toString() || "",
-                type: product.type || "",
                 shippingTimeline: product.shippingTimeline || "",
             });
             setImagePreview(product.image || "");
@@ -202,7 +200,6 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                 rating: parseFloat(formData.rating),
                 stock: formData.stock !== "" ? parseInt(formData.stock) : undefined,
                 image: finalImageUrl,
-                type: formData.category === "Hoodies" ? formData.type : undefined,
                 shippingTimeline: formData.shippingTimeline || undefined,
             };
 
@@ -271,34 +268,6 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                 />
                             </div>
                         </div>
-
-                        {formData.category === "Hoodies" && (
-                            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                                <label className="block text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Hoodie Type</label>
-                                <div className="grid grid-cols-2 gap-3 md:gap-4">
-                                    <button
-                                        type="button"
-                                        onClick={() => setFormData({ ...formData, type: "Zipped" })}
-                                        className={`px-4 py-3 md:py-4 rounded-xl md:rounded-2xl text-sm md:text-base font-bold transition-all border-2 ${formData.type === "Zipped"
-                                            ? "bg-brand-navy text-white border-brand-navy"
-                                            : "bg-gray-50 text-brand-navy border-transparent hover:border-gray-200"
-                                            }`}
-                                    >
-                                        Zipped
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setFormData({ ...formData, type: "No zip" })}
-                                        className={`px-4 py-3 md:py-4 rounded-xl md:rounded-2xl text-sm md:text-base font-bold transition-all border-2 ${formData.type === "No zip"
-                                            ? "bg-brand-navy text-white border-brand-navy"
-                                            : "bg-gray-50 text-brand-navy border-transparent hover:border-gray-200"
-                                            }`}
-                                    >
-                                        No zip
-                                    </button>
-                                </div>
-                            </div>
-                        )}
 
                         <div>
                             <label className="block text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Description</label>
