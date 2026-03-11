@@ -65,6 +65,7 @@ export default defineSchema({
             name: v.string(),
             qty: v.number(),
             price: v.number(),
+            hoodieType: v.optional(v.string()),
             color: v.optional(v.string()),
             size: v.optional(v.string()),
             logo: v.optional(v.string()),

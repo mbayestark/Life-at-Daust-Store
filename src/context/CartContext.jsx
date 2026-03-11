@@ -24,6 +24,7 @@ export function CartProvider({ children }) {
       const size = product.selectedSize || (product.sizes?.[0]) || null;
       const logo = product.selectedLogo || (product.logos?.[0]?.name) || null;
       const logoPosition = product.selectedLogoPosition || null;
+      const hoodieType = product.selectedHoodieType || null;
 
       const i = prev.findIndex(p =>
         p.id === product.id &&
@@ -31,6 +32,7 @@ export function CartProvider({ children }) {
         p.selectedSize === size &&
         p.selectedLogo === logo &&
         p.selectedLogoPosition === logoPosition &&
+        p.selectedHoodieType === hoodieType &&
         !p.isProductSet
       );
       if (i >= 0) {
@@ -48,6 +50,7 @@ export function CartProvider({ children }) {
         selectedSize: size,
         selectedLogo: logo,
         selectedLogoPosition: logoPosition,
+        selectedHoodieType: hoodieType,
         isProductSet: false,
       }];
     });
@@ -89,17 +92,17 @@ export function CartProvider({ children }) {
     });
   };
 
-  const removeItem = (id, color, size, logo, isProductSet = false, logoPosition = null) => {
+  const removeItem = (id, color, size, logo, isProductSet = false, logoPosition = null, hoodieType = null) => {
     setItems(prev => prev.filter(p => {
       // For product sets, match by productSetId
       if (p.isProductSet && isProductSet) {
         return p.productSetId !== id;
       }
-      return !(p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo && p.selectedLogoPosition === logoPosition && p.isProductSet === isProductSet);
+      return !(p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo && p.selectedLogoPosition === logoPosition && p.selectedHoodieType === hoodieType && p.isProductSet === isProductSet);
     }));
   };
 
-  const setQty = (id, color, size, logo, qty, isProductSet = false, logoPosition = null) =>
+  const setQty = (id, color, size, logo, qty, isProductSet = false, logoPosition = null, hoodieType = null) =>
     setItems(prev => prev.map(p => {
       // For product sets, match by productSetId
       if (p.isProductSet && isProductSet) {
@@ -108,7 +111,7 @@ export function CartProvider({ children }) {
         }
         return p;
       }
-      return (p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo && p.selectedLogoPosition === logoPosition && p.isProductSet === isProductSet)
+      return (p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo && p.selectedLogoPosition === logoPosition && p.selectedHoodieType === hoodieType && p.isProductSet === isProductSet)
         ? { ...p, qty: Math.max(1, Math.min(99, qty)) }
         : p;
     }));
