@@ -493,23 +493,6 @@ export default function ProductDetails() {
                 </div>
             </main>
 
-            {/* Product Details Tabs */}
-            <section className="max-w-7xl mx-auto px-4 py-24 sm:py-32 border-t border-gray-100">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
-                    <div>
-                        <h4 className="font-black text-brand-navy mb-5 uppercase tracking-[0.2em] text-[10px]">Premium Materials</h4>
-                        <p className="text-gray-500 text-sm italic leading-relaxed">"Every fiber is selected to endure the rigorous yet rewarding lifestyle of the DAUST student. We prioritize organic cotton and high-density blends for maximum longevity."</p>
-                    </div>
-                    <div>
-                        <h4 className="font-black text-brand-navy mb-5 uppercase tracking-[0.2em] text-[10px]">Our Promise</h4>
-                        <p className="text-gray-500 text-sm leading-relaxed">Part of our "Excellence in Gear" initiative—responsibly manufactured to ensure that your university pride never comes at a cost to the community or planet.</p>
-                    </div>
-                    <div>
-                        <h4 className="font-black text-brand-navy mb-5 uppercase tracking-[0.2em] text-[10px]">Exchanges</h4>
-                        <p className="text-gray-500 text-sm leading-relaxed">Not the perfect fit? Campus exchanges are always free. External returns accepted within 14 days of receipt in original condition.</p>
-                    </div>
-                </div>
-            </section>
         </div>
     );
 }
