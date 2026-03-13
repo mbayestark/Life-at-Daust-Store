@@ -14,7 +14,6 @@ const COMPANY_LINKS = [
 ];
 
 const SUPPORT_LINKS = [
-  { label: "Contact Us", to: "/contact" },
   { label: "Shipping & Returns", href: "#" },
   { label: "Size Guide", href: "#" },
 ];

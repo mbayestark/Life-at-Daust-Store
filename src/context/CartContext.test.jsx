@@ -67,7 +67,7 @@ describe('CartContext', () => {
 
         act(() => {
             const item = result.current.items[0];
-            result.current.removeItem(item.id, item.selectedColor, item.selectedSize, item.selectedLogo);
+            result.current.removeItem(item.id, item.selectedColor, item.selectedSize, item.selectedFrontLogo, item.selectedBackLogo);
         });
 
         expect(result.current.items).toHaveLength(0);
@@ -83,7 +83,7 @@ describe('CartContext', () => {
 
         act(() => {
             const item = result.current.items[0];
-            result.current.setQty(item.id, item.selectedColor, item.selectedSize, item.selectedLogo, 5);
+            result.current.setQty(item.id, item.selectedColor, item.selectedSize, item.selectedFrontLogo, item.selectedBackLogo, 5);
         });
 
         expect(result.current.items[0].qty).toBe(5);

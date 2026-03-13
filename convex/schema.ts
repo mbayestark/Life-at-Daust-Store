@@ -70,6 +70,8 @@ export default defineSchema({
             size: v.optional(v.string()),
             logo: v.optional(v.string()),
             logoPosition: v.optional(v.string()),
+            frontLogo: v.optional(v.string()),
+            backLogo: v.optional(v.string()),
             isProductSet: v.optional(v.boolean()),
             productSetName: v.optional(v.string()),
         })),

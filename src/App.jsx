@@ -9,7 +9,7 @@ import Home from "./pages/Home.jsx";
 import Shop from "./pages/Shop.jsx";
 import Collection from "./pages/Collection.jsx";
 import About from "./pages/About.jsx";
-import Contact from "./pages/Contact.jsx";
+
 import Cart from "./pages/Cart.jsx";
 import Checkout from "./pages/Checkout.jsx";
 import ProductDetails from "./pages/ProductDetails.jsx";
@@ -41,7 +41,7 @@ export default function App() {
             <Route path="/shop" element={<Shop />} />
             <Route path="/collections/:slug" element={<Collection />} />
             <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
+
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/order/success/:orderId" element={<OrderSuccess />} />

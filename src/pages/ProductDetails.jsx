@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronRight, ShoppingCart, Star, Info, Shield, Truck } from "lucide-react";
+import { ChevronRight, ShoppingCart, Star, Info, Shield, Truck, AlertCircle } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useCart } from "../context/CartContext.jsx";
@@ -17,8 +17,8 @@ export default function ProductDetails() {
     const [mainImage, setMainImage] = useState(null);
     const [selectedColor, setSelectedColor] = useState(null);
     const [selectedSize, setSelectedSize] = useState(null);
-    const [selectedLogo, setSelectedLogo] = useState(null);
-    const [selectedLogoPosition, setSelectedLogoPosition] = useState(null);
+    const [selectedFrontLogo, setSelectedFrontLogo] = useState(null);
+    const [selectedBackLogo, setSelectedBackLogo] = useState(null);
     const [selectedHoodieType, setSelectedHoodieType] = useState(null);
     const [quantity, setQuantity] = useState(1);
     const [logoPreview, setLogoPreview] = useState(null);
@@ -34,9 +34,8 @@ export default function ProductDetails() {
             setMainImage(product.image);
             setSelectedColor(product.colors?.[0] || null);
             setSelectedSize(product.sizes?.[0] || null);
-            const firstLogo = product.logos?.[0] || null;
-            setSelectedLogo(firstLogo);
-            setSelectedLogoPosition(firstLogo?.positions?.[0] || null);
+            setSelectedFrontLogo(null);
+            setSelectedBackLogo(null);
             setSelectedHoodieType(null);
         }
     }, [product]);
@@ -212,21 +211,31 @@ export default function ProductDetails() {
                             </div>
                         )}
 
-                        {/* Logo Variants - click to preview */}
-                        {product.logos && product.logos.length > 0 && (
+                        {/* Front Logo Selection */}
+                        {product.logos && product.logos.filter(l => !l.positions || l.positions.includes("front")).length > 0 && (
                             <div className="space-y-5">
                                 <div>
                                     <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-5">
-                                        Logo Style · <span className="text-brand-navy">{selectedLogo?.name || "Select"}</span>
+                                        Front Logo · <span className="text-brand-navy">{selectedFrontLogo?.name || "None"}</span>
                                     </h3>
                                     <div className="flex flex-wrap gap-3">
-                                        {product.logos.map((logo) => (
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedFrontLogo(null)}
+                                            className={`px-4 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${
+                                                !selectedFrontLogo
+                                                    ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
+                                                    : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
+                                            }`}
+                                        >
+                                            None
+                                        </button>
+                                        {product.logos.filter(l => !l.positions || l.positions.includes("front")).map((logo) => (
                                             <button
                                                 key={logo.id || logo.name}
-onClick={() => {
-                                                    setSelectedLogo(logo);
-                                                    setSelectedLogoPosition(logo.positions?.[0] || null);
-                                                    // Scroll to product image on mobile when selecting a logo
+                                                type="button"
+                                                onClick={() => {
+                                                    setSelectedFrontLogo(logo);
                                                     if (window.innerWidth < 1024) {
                                                         const imageSection = document.getElementById('product-image');
                                                         if (imageSection) {
@@ -238,10 +247,11 @@ onClick={() => {
                                                         setTimeout(() => setLogoPreview(null), 2500);
                                                     }
                                                 }}
-                                                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${selectedLogo?.id === logo.id || selectedLogo?.name === logo.name
+                                                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${
+                                                    selectedFrontLogo?.id === logo.id || selectedFrontLogo?.name === logo.name
                                                         ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
                                                         : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
-                                                    }`}
+                                                }`}
                                             >
                                                 {logo.image && (
                                                     <img src={logo.image} alt={logo.name} className="w-7 h-7 rounded-lg object-cover" />
@@ -251,29 +261,69 @@ onClick={() => {
                                         ))}
                                     </div>
                                 </div>
+                            </div>
+                        )}
 
-                                {/* Logo Position selector - only when a logo with positions is selected */}
-                                {selectedLogo?.positions && selectedLogo.positions.length > 1 && (
-                                    <div>
-                                        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4">
-                                            Logo Position · <span className="text-brand-navy capitalize">{selectedLogoPosition || "Select"}</span>
-                                        </h3>
-                                        <div className="flex gap-3">
-                                            {selectedLogo.positions.map((pos) => (
-                                                <button
-                                                    key={pos}
-                                                    onClick={() => setSelectedLogoPosition(pos)}
-                                                    className={`px-6 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale capitalize ${selectedLogoPosition === pos
+                        {/* Back Logo Selection */}
+                        {product.logos && product.logos.filter(l => !l.positions || l.positions.includes("back")).length > 0 && (
+                            <div className="space-y-5">
+                                <div>
+                                    <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-5">
+                                        Back Logo · <span className="text-brand-navy">{selectedBackLogo?.name || "None"}</span>
+                                    </h3>
+                                    <div className="flex flex-wrap gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedBackLogo(null)}
+                                            className={`px-4 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${
+                                                !selectedBackLogo
+                                                    ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
+                                                    : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
+                                            }`}
+                                        >
+                                            None
+                                        </button>
+                                        {product.logos.filter(l => !l.positions || l.positions.includes("back")).map((logo) => (
+                                            <button
+                                                key={logo.id || logo.name}
+                                                type="button"
+                                                onClick={() => {
+                                                    setSelectedBackLogo(logo);
+                                                    if (window.innerWidth < 1024) {
+                                                        const imageSection = document.getElementById('product-image');
+                                                        if (imageSection) {
+                                                            imageSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                                        }
+                                                    }
+                                                    if (logo.image) {
+                                                        setLogoPreview(logo.image);
+                                                        setTimeout(() => setLogoPreview(null), 2500);
+                                                    }
+                                                }}
+                                                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${
+                                                    selectedBackLogo?.id === logo.id || selectedBackLogo?.name === logo.name
                                                         ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
                                                         : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
-                                                    }`}
-                                                >
-                                                    {pos}
-                                                </button>
-                                            ))}
-                                        </div>
+                                                }`}
+                                            >
+                                                {logo.image && (
+                                                    <img src={logo.image} alt={logo.name} className="w-7 h-7 rounded-lg object-cover" />
+                                                )}
+                                                {logo.name}
+                                            </button>
+                                        ))}
                                     </div>
-                                )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Additional Logo Fee Notice */}
+                        {selectedFrontLogo && selectedBackLogo && (
+                            <div className="flex items-center gap-3 p-4 bg-orange-50 border border-orange-200 rounded-2xl">
+                                <Info size={18} className="text-brand-orange flex-shrink-0" />
+                                <p className="text-sm font-bold text-brand-orange">
+                                    +{formatPrice(1000)} additional fee for logos on both front and back
+                                </p>
                             </div>
                         )}
 
@@ -390,12 +440,8 @@ onClick={() => {
                                         alert('Please select a size');
                                         return;
                                     }
-                                    if (product.logos?.length > 0 && !selectedLogo) {
-                                        alert('Please select a logo style');
-                                        return;
-                                    }
-                                    if (selectedLogo?.positions?.length > 1 && !selectedLogoPosition) {
-                                        alert('Please select a logo position (Front or Back)');
+                                    if (product.logos?.length > 0 && !selectedFrontLogo && !selectedBackLogo) {
+                                        alert('Please select at least one logo (front or back)');
                                         return;
                                     }
 
@@ -405,8 +451,8 @@ onClick={() => {
                                         selectedHoodieType,
                                         selectedColor: selectedColor?.name,
                                         selectedSize: selectedSize,
-                                        selectedLogo: selectedLogo?.name,
-                                        selectedLogoPosition: selectedLogoPosition,
+                                        selectedFrontLogo: selectedFrontLogo?.name || null,
+                                        selectedBackLogo: selectedBackLogo?.name || null,
                                     }, quantity);
                                 }}
                             >

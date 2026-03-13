@@ -22,7 +22,7 @@ const locations = [
 ];
 
 export default function Checkout() {
-  const { items, subtotal, clear, totalSavings } = useCart();
+  const { items, subtotal, clear, totalSavings, logoFees } = useCart();
   const [orderId] = useState(makeOrderId());
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", location: "" });
@@ -41,7 +41,7 @@ export default function Checkout() {
     return loc ? loc.fee : 0;
   }, [form.location]);
 
-  const total = subtotal + deliveryFee;
+  const total = subtotal + deliveryFee + logoFees;
 
   // Separate product sets and regular items
   const productSetItems = items.filter(item => item.isProductSet);
@@ -58,8 +58,8 @@ export default function Checkout() {
         if (it.selectedHoodieType) line.hoodieType = it.selectedHoodieType;
         if (it.selectedColor) line.color = it.selectedColor;
         if (it.selectedSize) line.size = it.selectedSize;
-        if (it.selectedLogo) line.logo = it.selectedLogo;
-        if (it.selectedLogoPosition) line.logoPosition = it.selectedLogoPosition;
+        if (it.selectedFrontLogo) line.frontLogo = it.selectedFrontLogo;
+        if (it.selectedBackLogo) line.backLogo = it.selectedBackLogo;
         if (it.isProductSet) {
           line.isProductSet = true;
           line.productSetName = it.productSetName;
@@ -369,7 +369,7 @@ export default function Checkout() {
                   )}
                   <ul className="space-y-4 max-h-[200px] overflow-y-auto pr-2">
                     {regularItems.map((it) => (
-                      <li key={`${it.id}-${it.selectedSize}-${it.selectedLogo}`} className="flex items-center gap-3 group">
+                      <li key={`${it.id}-${it.selectedSize}-${it.selectedFrontLogo}-${it.selectedBackLogo}`} className="flex items-center gap-3 group">
                         <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-white/10">
                           <img src={it.image} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
                         </div>
@@ -377,7 +377,8 @@ export default function Checkout() {
                           <p className="font-bold text-xs truncate">{it.name}</p>
                           <p className="text-[10px] font-bold text-brand-cream/40 uppercase tracking-widest mt-0.5">
                             QTY: {it.qty}
-                            {it.selectedLogo ? ` • ${it.selectedLogo}${it.selectedLogoPosition ? ` (${it.selectedLogoPosition})` : ""}` : ""}
+                            {it.selectedFrontLogo ? ` • Front: ${it.selectedFrontLogo}` : ""}
+                            {it.selectedBackLogo ? ` • Back: ${it.selectedBackLogo}` : ""}
                             {it.selectedSize ? ` • ${it.selectedSize}` : ""}
                           </p>
                         </div>
@@ -397,6 +398,12 @@ export default function Checkout() {
                   <div className="flex justify-between items-center text-green-400">
                     <span>Bundle Savings</span>
                     <span>-{fmt(totalSavings)}</span>
+                  </div>
+                )}
+                {logoFees > 0 && (
+                  <div className="flex justify-between items-center text-brand-cream/60">
+                    <span>Additional Logo Fees</span>
+                    <span>{fmt(logoFees)}</span>
                   </div>
                 )}
                 <div className="flex justify-between items-center text-brand-cream/60">
