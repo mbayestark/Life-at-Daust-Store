@@ -6,7 +6,7 @@ import { formatPrice } from "../utils/format.js";
 import Button from "../components/ui/Button";
 
 export default function Cart() {
-  const { items, removeItem, setQty, count, subtotal, totalSavings } = useCart();
+  const { items, removeItem, setQty, count, subtotal, totalSavings, logoFees, total } = useCart();
 
   // Separate product sets from regular items
   const productSetItems = items.filter(item => item.isProductSet);
@@ -153,7 +153,7 @@ export default function Cart() {
               )}
 
               {regularItems.map((item) => (
-                <div key={`${item.id}-${item.selectedColor}-${item.selectedSize}-${item.selectedLogo}-${item.selectedHoodieType}`} className="bg-white rounded-3xl premium-shadow p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-8 border border-gray-50 group transition-all duration-300 mb-4">
+                <div key={`${item.id}-${item.selectedColor}-${item.selectedSize}-${item.selectedFrontLogo}-${item.selectedBackLogo}-${item.selectedHoodieType}`} className="bg-white rounded-3xl premium-shadow p-6 sm:p-8 flex flex-col sm:flex-row items-center gap-8 border border-gray-50 group transition-all duration-300 mb-4">
                   <div className="relative w-full sm:w-32 aspect-[3/4] rounded-2xl overflow-hidden bg-gray-50 flex-shrink-0">
                     <img
                       src={item.image}
@@ -173,8 +173,11 @@ export default function Cart() {
                       {item.selectedHoodieType && (
                         <span className="flex items-center gap-2">Hoodie: <span className="text-brand-navy">{item.selectedHoodieType}</span></span>
                       )}
-                      {item.selectedLogo && (
-                        <span className="flex items-center gap-2">Logo: <span className="text-brand-navy">{item.selectedLogo}</span></span>
+                      {item.selectedFrontLogo && (
+                        <span className="flex items-center gap-2">Front: <span className="text-brand-navy">{item.selectedFrontLogo}</span></span>
+                      )}
+                      {item.selectedBackLogo && (
+                        <span className="flex items-center gap-2">Back: <span className="text-brand-navy">{item.selectedBackLogo}</span></span>
                       )}
                       {item.selectedColor && (
                         <span className="flex items-center gap-2">Color: <span className="text-brand-navy">{item.selectedColor}</span></span>
@@ -188,7 +191,7 @@ export default function Cart() {
                     <div className="flex items-center justify-between mt-auto">
                       <div className="flex items-center bg-gray-50 rounded-xl p-1 h-12">
                         <button
-                          onClick={() => setQty(item.id, item.selectedColor, item.selectedSize, item.selectedLogo, item.qty - 1, false, item.selectedLogoPosition, item.selectedHoodieType)}
+                          onClick={() => setQty(item.id, item.selectedColor, item.selectedSize, item.selectedFrontLogo, item.selectedBackLogo, item.qty - 1, false, item.selectedHoodieType)}
                           className="w-10 h-full rounded-lg hover:bg-white hover:shadow-sm text-lg font-bold transition-all disabled:opacity-30"
                           disabled={item.qty <= 1}
                         >
@@ -196,7 +199,7 @@ export default function Cart() {
                         </button>
                         <span className="w-10 text-center font-black text-brand-navy text-sm">{item.qty}</span>
                         <button
-                          onClick={() => setQty(item.id, item.selectedColor, item.selectedSize, item.selectedLogo, item.qty + 1, false, item.selectedLogoPosition, item.selectedHoodieType)}
+                          onClick={() => setQty(item.id, item.selectedColor, item.selectedSize, item.selectedFrontLogo, item.selectedBackLogo, item.qty + 1, false, item.selectedHoodieType)}
                           className="w-10 h-full rounded-lg hover:bg-white hover:shadow-sm text-lg font-bold transition-all"
                           disabled={item.qty >= 99}
                         >
@@ -216,7 +219,7 @@ export default function Cart() {
                   <div className="h-[1px] w-full sm:h-24 sm:w-[1px] bg-gray-100 hidden sm:block" />
 
                   <button
-                    onClick={() => removeItem(item.id, item.selectedColor, item.selectedSize, item.selectedLogo, false, item.selectedLogoPosition, item.selectedHoodieType)}
+                    onClick={() => removeItem(item.id, item.selectedColor, item.selectedSize, item.selectedFrontLogo, item.selectedBackLogo, false, item.selectedHoodieType)}
                     className="p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-2xl transition-all duration-300 interactive-scale"
                     title="Remove from bag"
                   >
@@ -244,6 +247,12 @@ export default function Cart() {
                   <span className="font-bold text-green-400">-{formatPrice(totalSavings)}</span>
                 </div>
               )}
+              {logoFees > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-brand-cream/60 font-medium">Additional Logo Fees</span>
+                  <span className="font-bold">{formatPrice(logoFees)}</span>
+                </div>
+              )}
               <div className="flex justify-between items-center">
                 <span className="text-brand-cream/60 font-medium">Est. Shipping</span>
                 <span className="font-bold text-brand-orange uppercase text-xs tracking-widest">Complimentary</span>
@@ -255,7 +264,7 @@ export default function Cart() {
             <div className="flex justify-between items-end mb-10">
               <div className="space-y-1">
                 <p className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-orange">Estimated Total</p>
-                <p className="text-4xl font-black tracking-tighter">{formatPrice(subtotal)}</p>
+                <p className="text-4xl font-black tracking-tighter">{formatPrice(total)}</p>
               </div>
             </div>
 

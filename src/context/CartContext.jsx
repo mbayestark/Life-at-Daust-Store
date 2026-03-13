@@ -22,16 +22,16 @@ export function CartProvider({ children }) {
     setItems(prev => {
       const color = product.selectedColor || (product.colors?.[0]?.name) || null;
       const size = product.selectedSize || (product.sizes?.[0]) || null;
-      const logo = product.selectedLogo || (product.logos?.[0]?.name) || null;
-      const logoPosition = product.selectedLogoPosition || null;
+      const frontLogo = product.selectedFrontLogo || null;
+      const backLogo = product.selectedBackLogo || null;
       const hoodieType = product.selectedHoodieType || null;
 
       const i = prev.findIndex(p =>
         p.id === product.id &&
         p.selectedColor === color &&
         p.selectedSize === size &&
-        p.selectedLogo === logo &&
-        p.selectedLogoPosition === logoPosition &&
+        p.selectedFrontLogo === frontLogo &&
+        p.selectedBackLogo === backLogo &&
         p.selectedHoodieType === hoodieType &&
         !p.isProductSet
       );
@@ -48,8 +48,8 @@ export function CartProvider({ children }) {
         qty: Math.min(qty, 99),
         selectedColor: color,
         selectedSize: size,
-        selectedLogo: logo,
-        selectedLogoPosition: logoPosition,
+        selectedFrontLogo: frontLogo,
+        selectedBackLogo: backLogo,
         selectedHoodieType: hoodieType,
         isProductSet: false,
       }];
@@ -86,23 +86,23 @@ export function CartProvider({ children }) {
         variantSelections,
         selectedColor: null,
         selectedSize: null,
-        selectedLogo: null,
-        selectedLogoPosition: null,
+        selectedFrontLogo: null,
+        selectedBackLogo: null,
       }];
     });
   };
 
-  const removeItem = (id, color, size, logo, isProductSet = false, logoPosition = null, hoodieType = null) => {
+  const removeItem = (id, color, size, frontLogo, backLogo, isProductSet = false, hoodieType = null) => {
     setItems(prev => prev.filter(p => {
       // For product sets, match by productSetId
       if (p.isProductSet && isProductSet) {
         return p.productSetId !== id;
       }
-      return !(p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo && p.selectedLogoPosition === logoPosition && p.selectedHoodieType === hoodieType && p.isProductSet === isProductSet);
+      return !(p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedFrontLogo === frontLogo && p.selectedBackLogo === backLogo && p.selectedHoodieType === hoodieType && p.isProductSet === isProductSet);
     }));
   };
 
-  const setQty = (id, color, size, logo, qty, isProductSet = false, logoPosition = null, hoodieType = null) =>
+  const setQty = (id, color, size, frontLogo, backLogo, qty, isProductSet = false, hoodieType = null) =>
     setItems(prev => prev.map(p => {
       // For product sets, match by productSetId
       if (p.isProductSet && isProductSet) {
@@ -111,7 +111,7 @@ export function CartProvider({ children }) {
         }
         return p;
       }
-      return (p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedLogo === logo && p.selectedLogoPosition === logoPosition && p.selectedHoodieType === hoodieType && p.isProductSet === isProductSet)
+      return (p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedFrontLogo === frontLogo && p.selectedBackLogo === backLogo && p.selectedHoodieType === hoodieType && p.isProductSet === isProductSet)
         ? { ...p, qty: Math.max(1, Math.min(99, qty)) }
         : p;
     }));
@@ -127,8 +127,20 @@ export function CartProvider({ children }) {
     [items]
   );
 
+  const LOGO_FEE = 1000;
+
+  const logoFees = useMemo(() =>
+    items.reduce((sum, p) => {
+      if (!p.isProductSet && p.selectedFrontLogo && p.selectedBackLogo) {
+        return sum + LOGO_FEE * p.qty;
+      }
+      return sum;
+    }, 0),
+    [items]
+  );
+
   const shipping = subtotal > 0 ? 0 : 0;
-  const total = subtotal + shipping;
+  const total = subtotal + shipping + logoFees;
 
   const value = {
     items,
@@ -140,6 +152,8 @@ export function CartProvider({ children }) {
     count,
     subtotal,
     totalSavings,
+    logoFees,
+    LOGO_FEE,
     shipping,
     total
   };
