@@ -19,8 +19,7 @@ export default function ProductDetails() {
     const [selectedSize, setSelectedSize] = useState(null);
     const [selectedFrontLogo, setSelectedFrontLogo] = useState(null);
     const [selectedBackLogo, setSelectedBackLogo] = useState(null);
-    const [selectedLeftLogo, setSelectedLeftLogo] = useState(null);
-    const [selectedRightLogo, setSelectedRightLogo] = useState(null);
+    const [selectedSideLogo, setSelectedSideLogo] = useState(null);
     const [selectedHoodieType, setSelectedHoodieType] = useState(null);
     const [quantity, setQuantity] = useState(1);
     const [logoPreview, setLogoPreview] = useState(null);
@@ -38,8 +37,7 @@ export default function ProductDetails() {
             setSelectedSize(product.sizes?.[0] || null);
             setSelectedFrontLogo(null);
             setSelectedBackLogo(null);
-            setSelectedLeftLogo(null);
-            setSelectedRightLogo(null);
+            setSelectedSideLogo(null);
             setSelectedHoodieType(null);
         }
     }, [product]);
@@ -327,31 +325,31 @@ export default function ProductDetails() {
                             </div>
                         )}
 
-                        {/* Left Logo Selection */}
-                        {product.logos && product.logos.filter(l => !l.positions || l.positions.includes("left")).length > 0 && (
+                        {/* Side Logo Selection */}
+                        {product.logos && product.logos.filter(l => !l.positions || l.positions.includes("side")).length > 0 && (
                             <div className="space-y-5">
                                 <div>
                                     <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-5">
-                                        Left Side Logo · <span className="text-brand-navy">{selectedLeftLogo?.name || "None"}</span>
+                                        Side Logo · <span className="text-brand-navy">{selectedSideLogo?.name || "None"}</span>
                                     </h3>
                                     <div className="flex flex-wrap gap-3">
                                         <button
                                             type="button"
-                                            onClick={() => setSelectedLeftLogo(null)}
+                                            onClick={() => setSelectedSideLogo(null)}
                                             className={`px-4 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${
-                                                !selectedLeftLogo
+                                                !selectedSideLogo
                                                     ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
                                                     : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
                                             }`}
                                         >
                                             None
                                         </button>
-                                        {product.logos.filter(l => !l.positions || l.positions.includes("left")).map((logo) => (
+                                        {product.logos.filter(l => !l.positions || l.positions.includes("side")).map((logo) => (
                                             <button
                                                 key={logo.id || logo.name}
                                                 type="button"
                                                 onClick={() => {
-                                                    setSelectedLeftLogo(logo);
+                                                    setSelectedSideLogo(logo);
                                                     if (window.innerWidth < 1024) {
                                                         const imageSection = document.getElementById('product-image');
                                                         if (imageSection) {
@@ -364,60 +362,7 @@ export default function ProductDetails() {
                                                     }
                                                 }}
                                                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${
-                                                    selectedLeftLogo?.id === logo.id || selectedLeftLogo?.name === logo.name
-                                                        ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
-                                                        : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
-                                                }`}
-                                            >
-                                                {logo.image && (
-                                                    <img src={logo.image} alt={logo.name} className="w-7 h-7 rounded-lg object-cover" />
-                                                )}
-                                                {logo.name}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Right Logo Selection */}
-                        {product.logos && product.logos.filter(l => !l.positions || l.positions.includes("right")).length > 0 && (
-                            <div className="space-y-5">
-                                <div>
-                                    <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-5">
-                                        Right Side Logo · <span className="text-brand-navy">{selectedRightLogo?.name || "None"}</span>
-                                    </h3>
-                                    <div className="flex flex-wrap gap-3">
-                                        <button
-                                            type="button"
-                                            onClick={() => setSelectedRightLogo(null)}
-                                            className={`px-4 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${
-                                                !selectedRightLogo
-                                                    ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
-                                                    : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
-                                            }`}
-                                        >
-                                            None
-                                        </button>
-                                        {product.logos.filter(l => !l.positions || l.positions.includes("right")).map((logo) => (
-                                            <button
-                                                key={logo.id || logo.name}
-                                                type="button"
-                                                onClick={() => {
-                                                    setSelectedRightLogo(logo);
-                                                    if (window.innerWidth < 1024) {
-                                                        const imageSection = document.getElementById('product-image');
-                                                        if (imageSection) {
-                                                            imageSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                                        }
-                                                    }
-                                                    if (logo.image) {
-                                                        setLogoPreview(logo.image);
-                                                        setTimeout(() => setLogoPreview(null), 2500);
-                                                    }
-                                                }}
-                                                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${
-                                                    selectedRightLogo?.id === logo.id || selectedRightLogo?.name === logo.name
+                                                    selectedSideLogo?.id === logo.id || selectedSideLogo?.name === logo.name
                                                         ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
                                                         : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
                                                 }`}
@@ -434,9 +379,7 @@ export default function ProductDetails() {
                         )}
 
                         {/* Additional Logo Fee Notice */}
-                        {(selectedFrontLogo && selectedBackLogo) || (selectedLeftLogo && selectedRightLogo) || 
-                         (selectedFrontLogo && (selectedLeftLogo || selectedRightLogo)) || 
-                         (selectedBackLogo && (selectedLeftLogo || selectedRightLogo)) ? (
+                        {[selectedFrontLogo, selectedBackLogo, selectedSideLogo].filter(Boolean).length > 1 ? (
                             <div className="flex items-center gap-3 p-4 bg-orange-50 border border-orange-200 rounded-2xl">
                                 <Info size={18} className="text-brand-orange flex-shrink-0" />
                                 <p className="text-sm font-bold text-brand-orange">
@@ -571,8 +514,7 @@ export default function ProductDetails() {
                                         selectedSize: selectedSize,
                                         selectedFrontLogo: selectedFrontLogo?.name || null,
                                         selectedBackLogo: selectedBackLogo?.name || null,
-                                        selectedLeftLogo: selectedLeftLogo?.name || null,
-                                        selectedRightLogo: selectedRightLogo?.name || null,
+                                        selectedSideLogo: selectedSideLogo?.name || null,
                                     }, quantity);
                                 }}
                             >

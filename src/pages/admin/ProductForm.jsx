@@ -441,7 +441,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                         ))}
                     </div>
                     <div className="flex flex-wrap gap-2 mb-3">
-                        {["front", "back", "left", "right"].map(pos => (
+                        {["front", "back", "side"].map(pos => (
                             <label key={pos} className="flex items-center gap-2 cursor-pointer select-none">
                                 <input
                                     type="checkbox"

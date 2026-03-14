@@ -60,8 +60,7 @@ export default function Checkout() {
         if (it.selectedSize) line.size = it.selectedSize;
         if (it.selectedFrontLogo) line.frontLogo = it.selectedFrontLogo;
         if (it.selectedBackLogo) line.backLogo = it.selectedBackLogo;
-        if (it.selectedLeftLogo) line.leftLogo = it.selectedLeftLogo;
-        if (it.selectedRightLogo) line.rightLogo = it.selectedRightLogo;
+        if (it.selectedSideLogo) line.sideLogo = it.selectedSideLogo;
         if (it.isProductSet) {
           line.isProductSet = true;
           line.productSetName = it.productSetName;
