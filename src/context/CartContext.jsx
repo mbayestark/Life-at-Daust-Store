@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-const STORAGE_KEY = "lifeAtDaust.cart.v1";
+const STORAGE_KEY = "lifeAtDaust.cart.v2";
 
 export const CartContext = createContext(null);
 
@@ -95,26 +95,26 @@ export function CartProvider({ children }) {
     });
   };
 
+  const n = (v) => v || null;
+
   const removeItem = (id, color, size, frontLogo, backLogo, sideLogo, isProductSet = false, hoodieType = null) => {
     setItems(prev => prev.filter(p => {
-      // For product sets, match by productSetId
       if (p.isProductSet && isProductSet) {
         return p.productSetId !== id;
       }
-      return !(p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedFrontLogo === frontLogo && p.selectedBackLogo === backLogo && p.selectedSideLogo === sideLogo && p.selectedHoodieType === hoodieType && p.isProductSet === isProductSet);
+      return !(p.id === id && n(p.selectedColor) === n(color) && n(p.selectedSize) === n(size) && n(p.selectedFrontLogo) === n(frontLogo) && n(p.selectedBackLogo) === n(backLogo) && n(p.selectedSideLogo) === n(sideLogo) && n(p.selectedHoodieType) === n(hoodieType) && p.isProductSet === isProductSet);
     }));
   };
 
   const setQty = (id, color, size, frontLogo, backLogo, sideLogo, qty, isProductSet = false, hoodieType = null) =>
     setItems(prev => prev.map(p => {
-      // For product sets, match by productSetId
       if (p.isProductSet && isProductSet) {
         if (p.productSetId === id) {
           return { ...p, qty: Math.max(1, Math.min(99, qty)) };
         }
         return p;
       }
-      return (p.id === id && p.selectedColor === color && p.selectedSize === size && p.selectedFrontLogo === frontLogo && p.selectedBackLogo === backLogo && p.selectedSideLogo === sideLogo && p.selectedHoodieType === hoodieType && p.isProductSet === isProductSet)
+      return (p.id === id && n(p.selectedColor) === n(color) && n(p.selectedSize) === n(size) && n(p.selectedFrontLogo) === n(frontLogo) && n(p.selectedBackLogo) === n(backLogo) && n(p.selectedSideLogo) === n(sideLogo) && n(p.selectedHoodieType) === n(hoodieType) && p.isProductSet === isProductSet)
         ? { ...p, qty: Math.max(1, Math.min(99, qty)) }
         : p;
     }));
