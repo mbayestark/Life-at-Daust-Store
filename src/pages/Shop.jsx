@@ -33,7 +33,6 @@ export default function Shop() {
   // Fetch product sets
   const convexProductSets = useQuery(api.products.listProductSets);
   const productSets = convexProductSets || [];
-  const isLoadingSets = convexProductSets === undefined;
 
   const itemsByCollection = useMemo(() => {
     let filtered = PRODUCTS.filter((p) =>

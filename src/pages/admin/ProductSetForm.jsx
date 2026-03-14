@@ -174,7 +174,7 @@ export default function ProductSetForm({ productSet, onSave, onCancel }) {
             }
 
             onSave();
-        } catch (err) {
+        } catch {
             setError("An error occurred while saving. Please try again.");
         } finally {
             setLoading(false);

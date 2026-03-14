@@ -43,7 +43,7 @@ export default function AdminProducts() {
         if (window.confirm("Are you sure you want to delete this product? This action cannot be undone.")) {
             try {
                 await removeProduct({ id, adminToken });
-            } catch (err) {
+            } catch {
                 alert("Failed to delete product. Please try again.");
             }
         }

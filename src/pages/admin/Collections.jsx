@@ -31,7 +31,7 @@ export default function AdminCollections() {
         if (window.confirm("Are you sure you want to delete this collection? Products will be unassigned from this collection.")) {
             try {
                 await removeCollection({ id, adminToken });
-            } catch (error) {
+            } catch {
                 alert("Failed to delete collection. Please try again.");
             }
         }

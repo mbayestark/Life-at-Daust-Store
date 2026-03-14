@@ -1,5 +1,4 @@
 import { describe, it } from 'vitest';
-import { screen } from '@testing-library/react';
 import { renderWithProviders } from '../test/utils';
 import ProductCard from './ProductCard';
 import React from 'react';

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ChevronRight, ShoppingCart, Star, Info, Shield, Truck, AlertCircle } from "lucide-react";
 import { useQuery } from "convex/react";
@@ -186,14 +186,14 @@ export default function ProductDetails() {
                     {/* Variants Section */}
                     <div className="space-y-10 mb-12 animate-in slide-in-from-right-10 duration-700 delay-200">
                         {/* Hoodie Type */}
-                        {product.category === "Hoodies" && (
+                        {product.hoodieTypes && product.hoodieTypes.length > 0 && (
                             <div className="space-y-5">
                                 <div>
                                     <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-5">
                                         Hoodie Type · <span className="text-brand-navy">{selectedHoodieType || "Select"}</span>
                                     </h3>
                                     <div className="flex flex-wrap gap-3">
-                                        {["Zipped", "No zip"].map((t) => (
+                                        {product.hoodieTypes.map((t) => (
                                             <button
                                                 key={t}
                                                 type="button"
@@ -546,8 +546,8 @@ export default function ProductDetails() {
                                     if (product.stock === 0) return;
 
                                     // Validate selections
-                                    if (product.category === "Hoodies" && !selectedHoodieType) {
-                                        alert('Please select a hoodie type (Zipped or No zip)');
+                                    if (product.hoodieTypes?.length > 0 && !selectedHoodieType) {
+                                        alert('Please select a hoodie type');
                                         return;
                                     }
                                     if (product.colors?.length > 0 && !selectedColor) {

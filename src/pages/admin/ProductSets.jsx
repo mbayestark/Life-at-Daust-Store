@@ -25,7 +25,7 @@ export default function ProductSets() {
         if (window.confirm("Are you sure you want to delete this product bundle?")) {
             try {
                 await removeProductSet({ id: setId, adminToken });
-            } catch (err) {
+            } catch {
                 alert("Failed to delete product bundle");
             }
         }
@@ -38,7 +38,7 @@ export default function ProductSets() {
                 isActive: !set.isActive,
                 adminToken
             });
-        } catch (err) {
+        } catch {
             alert("Failed to update product bundle");
         }
     };

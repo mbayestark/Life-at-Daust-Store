@@ -48,7 +48,7 @@ export default function AdminOrders() {
             if (result && result.transaction_status) {
                 alert(`NabooPay Status: ${result.transaction_status}`);
             }
-        } catch (err) {
+        } catch {
             alert("Failed to check status. Make sure the NabooPay ID is valid.");
         }
     };
@@ -58,7 +58,7 @@ export default function AdminOrders() {
             if (newStatus === "Cancelled" && selectedOrder.naboopayOrderId) {
                 try {
                     await deleteNabooTransaction({ orderId: selectedOrder.naboopayOrderId });
-                } catch (err) {
+                } catch {
                     // Continue anyway — transaction may already be deleted or expired
                 }
             }
@@ -66,7 +66,7 @@ export default function AdminOrders() {
             if (selectedOrder && selectedOrder._id === id) {
                 setSelectedOrder({ ...selectedOrder, status: newStatus });
             }
-        } catch (err) {
+        } catch {
             alert("Failed to update order status. Please try again.");
         }
     };
@@ -76,7 +76,7 @@ export default function AdminOrders() {
             await deleteOrderMutation({ id: selectedOrder._id, adminToken });
             setSelectedOrder(null);
             setShowDeleteConfirm(false);
-        } catch (err) {
+        } catch {
             alert("Failed to delete order. Please try again.");
         }
     };
