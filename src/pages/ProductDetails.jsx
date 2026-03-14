@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronRight, ShoppingCart, Star, Info, Shield, Truck, AlertCircle } from "lucide-react";
+import { ChevronRight, ShoppingCart, Star, Info, Shield, Truck } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useCart } from "../context/CartContext.jsx";
@@ -165,11 +165,6 @@ export default function ProductDetails() {
                         <h1 className="text-[var(--text-4xl)] font-black text-brand-navy leading-tight tracking-tighter mb-2">
                             {product.name}
                         </h1>
-                        {product.type && (
-                            <p className="text-sm font-bold text-brand-orange uppercase tracking-widest mb-6">
-                                {product.type} Edition
-                            </p>
-                        )}
                         <div className="flex items-center gap-6">
                             <span className="text-3xl font-black text-brand-orange tracking-tight">
                                 {formatPrice(product.price)}
@@ -178,14 +173,15 @@ export default function ProductDetails() {
                             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 rounded-lg">
                                 <Star size={16} fill="#fbbf24" className="text-yellow-400" />
                                 <span className="text-sm font-black text-gray-800">{product.rating}</span>
-                                <span className="text-gray-400 text-xs font-bold pl-1 border-l border-yellow-200 ml-1">124 Reviews</span>
                             </div>
                         </div>
                     </div>
 
-                    <p className="text-gray-500 text-lg leading-relaxed mb-10 font-medium">
-                        {product.description || "Inspired by campus life, this DAUST essential combines comfort with university spirit. Perfect for everyday wear or as a special gift."}
-                    </p>
+                    {product.description && (
+                        <p className="text-gray-500 text-lg leading-relaxed mb-10 font-medium">
+                            {product.description}
+                        </p>
+                    )}
 
                     {/* Variants Section */}
                     <div className="space-y-10 mb-12 animate-in slide-in-from-right-10 duration-700 delay-200">
