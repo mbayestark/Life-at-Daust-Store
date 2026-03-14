@@ -19,6 +19,8 @@ export default function ProductDetails() {
     const [selectedSize, setSelectedSize] = useState(null);
     const [selectedFrontLogo, setSelectedFrontLogo] = useState(null);
     const [selectedBackLogo, setSelectedBackLogo] = useState(null);
+    const [selectedLeftLogo, setSelectedLeftLogo] = useState(null);
+    const [selectedRightLogo, setSelectedRightLogo] = useState(null);
     const [selectedHoodieType, setSelectedHoodieType] = useState(null);
     const [quantity, setQuantity] = useState(1);
     const [logoPreview, setLogoPreview] = useState(null);
@@ -36,6 +38,8 @@ export default function ProductDetails() {
             setSelectedSize(product.sizes?.[0] || null);
             setSelectedFrontLogo(null);
             setSelectedBackLogo(null);
+            setSelectedLeftLogo(null);
+            setSelectedRightLogo(null);
             setSelectedHoodieType(null);
         }
     }, [product]);
@@ -571,6 +575,8 @@ export default function ProductDetails() {
                                         selectedSize: selectedSize,
                                         selectedFrontLogo: selectedFrontLogo?.name || null,
                                         selectedBackLogo: selectedBackLogo?.name || null,
+                                        selectedLeftLogo: selectedLeftLogo?.name || null,
+                                        selectedRightLogo: selectedRightLogo?.name || null,
                                     }, quantity);
                                 }}
                             >
