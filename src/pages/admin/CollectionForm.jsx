@@ -118,7 +118,7 @@ export default function CollectionForm({ collection, onClose, onSave }) {
             }
 
             onSave();
-        } catch (err) {
+        } catch {
             setError("An error occurred while saving the collection. Please try again.");
         } finally {
             setLoading(false);

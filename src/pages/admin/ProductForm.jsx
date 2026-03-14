@@ -23,6 +23,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
         collection: "",
         stock: "",
         shippingTimeline: "",
+        hoodieTypes: [],
     });
 
     const [imageFile, setImageFile] = useState(null);
@@ -62,6 +63,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                 collection: product.collection || "",
                 stock: product.stock?.toString() || "",
                 shippingTimeline: product.shippingTimeline || "",
+                hoodieTypes: product.hoodieTypes || [],
             });
             setImagePreview(product.image || "");
         }
@@ -210,7 +212,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
             }
 
             onSave();
-        } catch (err) {
+        } catch {
             setError("An error occurred while saving the product. Please try again.");
         } finally {
             setLoading(false);
@@ -439,7 +441,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                         ))}
                     </div>
                     <div className="flex flex-wrap gap-2 mb-3">
-                        {["front", "back"].map(pos => (
+                        {["front", "back", "left", "right"].map(pos => (
                             <label key={pos} className="flex items-center gap-2 cursor-pointer select-none">
                                 <input
                                     type="checkbox"
@@ -521,6 +523,41 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                     }`}
                             >
                                 + {size}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="bg-gray-50 rounded-2xl md:rounded-3xl p-4 md:p-8">
+                    <h3 className="font-black text-brand-navy mb-1 text-sm md:text-base">Hoodie Types</h3>
+                    <p className="text-[10px] text-gray-400 font-bold mb-4">Add style variants like Zipped, No Zip, Pullover, etc. Leave empty if not applicable.</p>
+                    <div className="flex flex-wrap gap-2 md:gap-3 mb-3 md:mb-4">
+                        {formData.hoodieTypes.map((ht, index) => (
+                            <div key={index} className="flex items-center gap-2 bg-white px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl shadow-sm">
+                                <span className="text-xs md:text-sm font-bold text-brand-navy">{ht}</span>
+                                <button type="button" onClick={() => setFormData({ ...formData, hoodieTypes: formData.hoodieTypes.filter((_, i) => i !== index) })} className="text-gray-400 hover:text-red-500">
+                                    <X size={12} />
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        {["Zipped", "No Zip", "Pullover", "Quarter Zip"].map(ht => (
+                            <button
+                                key={ht}
+                                type="button"
+                                onClick={() => {
+                                    if (!formData.hoodieTypes.includes(ht)) {
+                                        setFormData({ ...formData, hoodieTypes: [...formData.hoodieTypes, ht] });
+                                    }
+                                }}
+                                disabled={formData.hoodieTypes.includes(ht)}
+                                className={`px-3 md:px-4 py-2 rounded-lg md:rounded-xl font-bold text-xs md:text-sm ${formData.hoodieTypes.includes(ht)
+                                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+                                    : "bg-white text-brand-navy hover:bg-brand-navy hover:text-white"
+                                    }`}
+                            >
+                                + {ht}
                             </button>
                         ))}
                     </div>

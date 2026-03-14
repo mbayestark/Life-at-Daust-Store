@@ -28,6 +28,7 @@ export default defineSchema({
         stock: v.optional(v.number()),
         type: v.optional(v.string()),
         shippingTimeline: v.optional(v.string()),
+        hoodieTypes: v.optional(v.array(v.string())),
     }),
     productSets: defineTable({
         name: v.string(),
@@ -72,6 +73,8 @@ export default defineSchema({
             logoPosition: v.optional(v.string()),
             frontLogo: v.optional(v.string()),
             backLogo: v.optional(v.string()),
+            leftLogo: v.optional(v.string()),
+            rightLogo: v.optional(v.string()),
             isProductSet: v.optional(v.boolean()),
             productSetName: v.optional(v.string()),
         })),

@@ -26,8 +26,8 @@ export default function Checkout() {
   const [orderId] = useState(makeOrderId());
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", location: "" });
-  const [paymentMethod, setPaymentMethod] = useState("naboopay");
-  const [paymentFile, setPaymentFile] = useState(null);
+  const [paymentMethod] = useState("naboopay");
+  const [paymentFile] = useState(null);
   const [error, setError] = useState("");
   const nav = useNavigate();
 
@@ -60,6 +60,8 @@ export default function Checkout() {
         if (it.selectedSize) line.size = it.selectedSize;
         if (it.selectedFrontLogo) line.frontLogo = it.selectedFrontLogo;
         if (it.selectedBackLogo) line.backLogo = it.selectedBackLogo;
+        if (it.selectedLeftLogo) line.leftLogo = it.selectedLeftLogo;
+        if (it.selectedRightLogo) line.rightLogo = it.selectedRightLogo;
         if (it.isProductSet) {
           line.isProductSet = true;
           line.productSetName = it.productSetName;
@@ -171,7 +173,7 @@ export default function Checkout() {
 
       clear();
       nav(`/order/success/${orderId}`, { state: { orderId, paymentMethod: "manual" } });
-    } catch (err) {
+    } catch {
       setError("Could not secure the transaction. Check your internet or try again.");
     } finally {
       setLoading(false);
