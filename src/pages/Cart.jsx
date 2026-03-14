@@ -103,7 +103,7 @@ export default function Cart() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center bg-gray-50 rounded-xl p-1 h-10">
                           <button
-                            onClick={() => setQty(item.id, null, null, null, item.qty - 1, true)}
+                            onClick={() => setQty(item.id, null, null, null, null, null, item.qty - 1, true)}
                             className="w-8 h-full rounded-lg hover:bg-white hover:shadow-sm text-lg font-bold transition-all disabled:opacity-30"
                             disabled={item.qty <= 1}
                           >
@@ -111,7 +111,7 @@ export default function Cart() {
                           </button>
                           <span className="w-8 text-center font-black text-brand-navy text-sm">{item.qty}</span>
                           <button
-                            onClick={() => setQty(item.id, null, null, null, item.qty + 1, true)}
+                            onClick={() => setQty(item.id, null, null, null, null, null, item.qty + 1, true)}
                             className="w-8 h-full rounded-lg hover:bg-white hover:shadow-sm text-lg font-bold transition-all"
                             disabled={item.qty >= 99}
                           >
@@ -128,7 +128,7 @@ export default function Cart() {
                     </div>
 
                     <button
-                      onClick={() => removeItem(item.id, null, null, null, true)}
+                      onClick={() => removeItem(item.id, null, null, null, null, null, true)}
                       className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all duration-300"
                       title="Remove from bag"
                     >
