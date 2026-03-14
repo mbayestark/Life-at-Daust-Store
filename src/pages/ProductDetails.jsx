@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronRight, ShoppingCart, Star, Info, Shield, Truck, AlertCircle } from "lucide-react";
+import { ChevronRight, ShoppingCart, Star, Info, Shield, Truck } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useCart } from "../context/CartContext.jsx";
@@ -19,8 +19,7 @@ export default function ProductDetails() {
     const [selectedSize, setSelectedSize] = useState(null);
     const [selectedFrontLogo, setSelectedFrontLogo] = useState(null);
     const [selectedBackLogo, setSelectedBackLogo] = useState(null);
-    const [selectedLeftLogo, setSelectedLeftLogo] = useState(null);
-    const [selectedRightLogo, setSelectedRightLogo] = useState(null);
+    const [selectedSideLogo, setSelectedSideLogo] = useState(null);
     const [selectedHoodieType, setSelectedHoodieType] = useState(null);
     const [quantity, setQuantity] = useState(1);
     const [logoPreview, setLogoPreview] = useState(null);
@@ -38,8 +37,7 @@ export default function ProductDetails() {
             setSelectedSize(product.sizes?.[0] || null);
             setSelectedFrontLogo(null);
             setSelectedBackLogo(null);
-            setSelectedLeftLogo(null);
-            setSelectedRightLogo(null);
+            setSelectedSideLogo(null);
             setSelectedHoodieType(null);
         }
     }, [product]);
@@ -165,11 +163,6 @@ export default function ProductDetails() {
                         <h1 className="text-[var(--text-4xl)] font-black text-brand-navy leading-tight tracking-tighter mb-2">
                             {product.name}
                         </h1>
-                        {product.type && (
-                            <p className="text-sm font-bold text-brand-orange uppercase tracking-widest mb-6">
-                                {product.type} Edition
-                            </p>
-                        )}
                         <div className="flex items-center gap-6">
                             <span className="text-3xl font-black text-brand-orange tracking-tight">
                                 {formatPrice(product.price)}
@@ -178,14 +171,15 @@ export default function ProductDetails() {
                             <div className="flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 rounded-lg">
                                 <Star size={16} fill="#fbbf24" className="text-yellow-400" />
                                 <span className="text-sm font-black text-gray-800">{product.rating}</span>
-                                <span className="text-gray-400 text-xs font-bold pl-1 border-l border-yellow-200 ml-1">124 Reviews</span>
                             </div>
                         </div>
                     </div>
 
-                    <p className="text-gray-500 text-lg leading-relaxed mb-10 font-medium">
-                        {product.description || "Inspired by campus life, this DAUST essential combines comfort with university spirit. Perfect for everyday wear or as a special gift."}
-                    </p>
+                    {product.description && (
+                        <p className="text-gray-500 text-lg leading-relaxed mb-10 font-medium">
+                            {product.description}
+                        </p>
+                    )}
 
                     {/* Variants Section */}
                     <div className="space-y-10 mb-12 animate-in slide-in-from-right-10 duration-700 delay-200">
@@ -331,31 +325,31 @@ export default function ProductDetails() {
                             </div>
                         )}
 
-                        {/* Left Logo Selection */}
-                        {product.logos && product.logos.filter(l => !l.positions || l.positions.includes("left")).length > 0 && (
+                        {/* Side Logo Selection */}
+                        {product.logos && product.logos.filter(l => !l.positions || l.positions.includes("side")).length > 0 && (
                             <div className="space-y-5">
                                 <div>
                                     <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-5">
-                                        Left Side Logo · <span className="text-brand-navy">{selectedLeftLogo?.name || "None"}</span>
+                                        Side Logo · <span className="text-brand-navy">{selectedSideLogo?.name || "None"}</span>
                                     </h3>
                                     <div className="flex flex-wrap gap-3">
                                         <button
                                             type="button"
-                                            onClick={() => setSelectedLeftLogo(null)}
+                                            onClick={() => setSelectedSideLogo(null)}
                                             className={`px-4 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${
-                                                !selectedLeftLogo
+                                                !selectedSideLogo
                                                     ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
                                                     : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
                                             }`}
                                         >
                                             None
                                         </button>
-                                        {product.logos.filter(l => !l.positions || l.positions.includes("left")).map((logo) => (
+                                        {product.logos.filter(l => !l.positions || l.positions.includes("side")).map((logo) => (
                                             <button
                                                 key={logo.id || logo.name}
                                                 type="button"
                                                 onClick={() => {
-                                                    setSelectedLeftLogo(logo);
+                                                    setSelectedSideLogo(logo);
                                                     if (window.innerWidth < 1024) {
                                                         const imageSection = document.getElementById('product-image');
                                                         if (imageSection) {
@@ -368,60 +362,7 @@ export default function ProductDetails() {
                                                     }
                                                 }}
                                                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${
-                                                    selectedLeftLogo?.id === logo.id || selectedLeftLogo?.name === logo.name
-                                                        ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
-                                                        : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
-                                                }`}
-                                            >
-                                                {logo.image && (
-                                                    <img src={logo.image} alt={logo.name} className="w-7 h-7 rounded-lg object-cover" />
-                                                )}
-                                                {logo.name}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Right Logo Selection */}
-                        {product.logos && product.logos.filter(l => !l.positions || l.positions.includes("right")).length > 0 && (
-                            <div className="space-y-5">
-                                <div>
-                                    <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-5">
-                                        Right Side Logo · <span className="text-brand-navy">{selectedRightLogo?.name || "None"}</span>
-                                    </h3>
-                                    <div className="flex flex-wrap gap-3">
-                                        <button
-                                            type="button"
-                                            onClick={() => setSelectedRightLogo(null)}
-                                            className={`px-4 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${
-                                                !selectedRightLogo
-                                                    ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
-                                                    : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
-                                            }`}
-                                        >
-                                            None
-                                        </button>
-                                        {product.logos.filter(l => !l.positions || l.positions.includes("right")).map((logo) => (
-                                            <button
-                                                key={logo.id || logo.name}
-                                                type="button"
-                                                onClick={() => {
-                                                    setSelectedRightLogo(logo);
-                                                    if (window.innerWidth < 1024) {
-                                                        const imageSection = document.getElementById('product-image');
-                                                        if (imageSection) {
-                                                            imageSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                                                        }
-                                                    }
-                                                    if (logo.image) {
-                                                        setLogoPreview(logo.image);
-                                                        setTimeout(() => setLogoPreview(null), 2500);
-                                                    }
-                                                }}
-                                                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 interactive-scale ${
-                                                    selectedRightLogo?.id === logo.id || selectedRightLogo?.name === logo.name
+                                                    selectedSideLogo?.id === logo.id || selectedSideLogo?.name === logo.name
                                                         ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
                                                         : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
                                                 }`}
@@ -438,9 +379,7 @@ export default function ProductDetails() {
                         )}
 
                         {/* Additional Logo Fee Notice */}
-                        {(selectedFrontLogo && selectedBackLogo) || (selectedLeftLogo && selectedRightLogo) || 
-                         (selectedFrontLogo && (selectedLeftLogo || selectedRightLogo)) || 
-                         (selectedBackLogo && (selectedLeftLogo || selectedRightLogo)) ? (
+                        {[selectedFrontLogo, selectedBackLogo, selectedSideLogo].filter(Boolean).length > 1 ? (
                             <div className="flex items-center gap-3 p-4 bg-orange-50 border border-orange-200 rounded-2xl">
                                 <Info size={18} className="text-brand-orange flex-shrink-0" />
                                 <p className="text-sm font-bold text-brand-orange">
@@ -575,8 +514,7 @@ export default function ProductDetails() {
                                         selectedSize: selectedSize,
                                         selectedFrontLogo: selectedFrontLogo?.name || null,
                                         selectedBackLogo: selectedBackLogo?.name || null,
-                                        selectedLeftLogo: selectedLeftLogo?.name || null,
-                                        selectedRightLogo: selectedRightLogo?.name || null,
+                                        selectedSideLogo: selectedSideLogo?.name || null,
                                     }, quantity);
                                 }}
                             >
