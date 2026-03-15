@@ -13,6 +13,7 @@ import {
     Layers,
     AlertTriangle
 } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { formatPrice } from "../../utils/format.js";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { useAdmin } from "../../context/AdminContext";
@@ -52,6 +53,26 @@ export default function AdminDashboard() {
             .filter(p => p.stock !== undefined && p.stock !== null && p.stock <= 5)
             .sort((a, b) => (a.stock ?? 0) - (b.stock ?? 0));
     }, [products]);
+
+    const revenueByDay = useMemo(() => {
+        const days = 14;
+        const now = new Date();
+        return Array.from({ length: days }, (_, i) => {
+            const d = new Date(now);
+            d.setDate(now.getDate() - (days - 1 - i));
+            d.setHours(0, 0, 0, 0);
+            const dayStart = d.getTime();
+            const dayEnd = dayStart + 86400000;
+            const revenue = ordersData
+                .filter(o => o.createdAt >= dayStart && o.createdAt < dayEnd)
+                .reduce((sum, o) => sum + (o.total || 0), 0);
+            return {
+                day: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+                revenue,
+                isToday: i === days - 1
+            };
+        });
+    }, [ordersData]);
 
     const topCategories = useMemo(() => {
         if (!products) return [];
@@ -100,6 +121,48 @@ export default function AdminDashboard() {
                         <p className="text-3xl font-[900] text-brand-navy tracking-tighter">{stat.value}</p>
                     </div>
                 ))}
+            </div>
+
+            {/* Revenue Chart */}
+            <div className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-2xl shadow-black/[0.02]">
+                <div className="flex items-center gap-4 mb-8">
+                    <div className="w-1.5 h-8 bg-brand-orange rounded-full" />
+                    <h2 className="text-2xl font-[900] text-brand-navy tracking-tight">14-Day Revenue</h2>
+                    <span className="ml-auto text-xs font-bold text-gray-400 uppercase tracking-widest">
+                        {formatPrice(revenueByDay.reduce((s, d) => s + d.revenue, 0))} total
+                    </span>
+                </div>
+                <ResponsiveContainer width="100%" height={180}>
+                    <BarChart data={revenueByDay} barCategoryGap="30%">
+                        <XAxis
+                            dataKey="day"
+                            tick={{ fontSize: 10, fontWeight: 700, fill: "#9ca3af" }}
+                            axisLine={false}
+                            tickLine={false}
+                            interval={1}
+                        />
+                        <YAxis hide />
+                        <Tooltip
+                            cursor={{ fill: "rgba(249,115,22,0.05)", radius: 8 }}
+                            content={({ active, payload }) => {
+                                if (!active || !payload?.length) return null;
+                                return (
+                                    <div className="bg-brand-navy text-white text-xs font-bold px-3 py-2 rounded-xl shadow-xl">
+                                        {formatPrice(payload[0].value)}
+                                    </div>
+                                );
+                            }}
+                        />
+                        <Bar dataKey="revenue" radius={[6, 6, 0, 0]} minPointSize={6}>
+                            {revenueByDay.map((entry, i) => (
+                                <Cell
+                                    key={i}
+                                    fill={entry.isToday ? "#f97316" : entry.revenue > 0 ? "#0A192F" : "#e5e7eb"}
+                                />
+                            ))}
+                        </Bar>
+                    </BarChart>
+                </ResponsiveContainer>
             </div>
 
             <div className="grid lg:grid-cols-12 gap-10">

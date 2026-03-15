@@ -10,17 +10,21 @@ import {
     User,
     Phone,
     MapPin,
-    DollarSign,
     AlertCircle,
     Trash2,
     Search,
-    Filter,
     Tag,
-    RotateCcw
+    RotateCcw,
+    Download,
+    ChevronLeft,
+    ChevronsLeft,
+    ChevronsRight
 } from "lucide-react";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { formatPrice } from "../../utils/format.js";
 import { useAdmin } from "../../context/AdminContext";
+
+const ITEMS_PER_PAGE = 15;
 
 export default function AdminOrders() {
     const { adminToken } = useAdmin();
@@ -35,6 +39,7 @@ export default function AdminOrders() {
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
+    const [currentPage, setCurrentPage] = useState(1);
 
     const isLoading = orders === undefined;
 
@@ -44,6 +49,7 @@ export default function AdminOrders() {
 
     const filteredOrders = useMemo(() => {
         if (!orders) return [];
+        setCurrentPage(1);
         return orders.filter(o => {
             const matchesSearch = !searchTerm ||
                 o.orderId.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -53,6 +59,34 @@ export default function AdminOrders() {
             return matchesSearch && matchesStatus;
         });
     }, [orders, searchTerm, statusFilter]);
+
+    const totalPages = Math.max(1, Math.ceil(filteredOrders.length / ITEMS_PER_PAGE));
+    const paginatedOrders = filteredOrders.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+    const exportCSV = () => {
+        const headers = ["Order ID", "Date", "Customer Name", "Phone", "Location", "Items", "Subtotal", "Delivery Fee", "Discount", "Total", "Status"];
+        const rows = filteredOrders.map(o => [
+            o.orderId,
+            new Date(o.createdAt).toLocaleDateString(),
+            o.customer.name,
+            o.customer.phone,
+            o.customer.location,
+            o.items.map(i => `${i.name} x${i.qty}`).join("; "),
+            o.subtotal || 0,
+            o.deliveryFee || 0,
+            o.discount || 0,
+            o.total || 0,
+            o.status
+        ]);
+        const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `orders-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -135,7 +169,16 @@ export default function AdminOrders() {
                     <div className="p-6 border-b border-gray-50 space-y-4">
                         <div className="flex items-center justify-between">
                             <h2 className="text-lg font-black text-brand-navy">All Orders</h2>
-                            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">{filteredOrders.length} / {orders.length}</p>
+                            <div className="flex items-center gap-3">
+                                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">{filteredOrders.length} / {orders.length}</p>
+                                <button
+                                    onClick={exportCSV}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 text-gray-600 hover:bg-brand-navy hover:text-white font-bold text-xs uppercase tracking-widest transition-all"
+                                    title="Export filtered orders as CSV"
+                                >
+                                    <Download size={13} /> CSV
+                                </button>
+                            </div>
                         </div>
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4" />
@@ -161,7 +204,7 @@ export default function AdminOrders() {
                     </div>
 
                     <div className="divide-y divide-gray-50 max-h-[calc(100vh-350px)] overflow-y-auto pr-1">
-                        {filteredOrders.map((order) => (
+                        {paginatedOrders.map((order) => (
                             <button
                                 key={order._id}
                                 onClick={() => setSelectedOrderId(order._id)}
@@ -194,6 +237,44 @@ export default function AdminOrders() {
                             </div>
                         )}
                     </div>
+
+                    {totalPages > 1 && (
+                        <div className="p-4 border-t border-gray-50 flex items-center justify-between">
+                            <button
+                                onClick={() => setCurrentPage(1)}
+                                disabled={currentPage === 1}
+                                className="p-1.5 rounded-lg text-gray-400 hover:text-brand-navy disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <ChevronsLeft size={16} />
+                            </button>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                    disabled={currentPage === 1}
+                                    className="p-1.5 rounded-lg text-gray-400 hover:text-brand-navy disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    <ChevronLeft size={16} />
+                                </button>
+                                <span className="text-xs font-bold text-gray-500 px-3">
+                                    {currentPage} / {totalPages}
+                                </span>
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                    disabled={currentPage === totalPages}
+                                    className="p-1.5 rounded-lg text-gray-400 hover:text-brand-navy disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                                >
+                                    <ChevronRight size={16} />
+                                </button>
+                            </div>
+                            <button
+                                onClick={() => setCurrentPage(totalPages)}
+                                disabled={currentPage === totalPages}
+                                className="p-1.5 rounded-lg text-gray-400 hover:text-brand-navy disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                            >
+                                <ChevronsRight size={16} />
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -347,9 +428,18 @@ export default function AdminOrders() {
                                             <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400">
                                                 <Phone size={18} />
                                             </div>
-                                            <div>
+                                            <div className="flex-1">
                                                 <p className="text-[10px] font-black uppercase text-gray-400">Phone</p>
-                                                <p className="font-bold text-brand-navy">{selectedOrder.customer.phone}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="font-bold text-brand-navy">{selectedOrder.customer.phone}</p>
+                                                    <button
+                                                        onClick={() => { setSearchTerm(selectedOrder.customer.phone); setSelectedOrderId(null); }}
+                                                        className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-brand-navy/5 text-brand-navy/50 hover:bg-brand-orange/10 hover:text-brand-orange transition-all"
+                                                        title="View all orders from this customer"
+                                                    >
+                                                        All orders
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">
