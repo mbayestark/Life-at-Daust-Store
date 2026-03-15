@@ -78,6 +78,7 @@ export default defineSchema({
         })),
         subtotal: v.number(),
         deliveryFee: v.number(),
+        discount: v.optional(v.number()),
         total: v.number(),
         status: v.string(),
         paymentMethod: v.optional(v.string()),
