@@ -121,6 +121,7 @@ export const listProductSets = query({
                         productName: product.name,
                         productImage,
                         productPrice: product.price,
+                        productBuyingPrice: product.buyingPrice,
                         colors: product.colors || [],
                         sizes: product.sizes || [],
                         logos: logos || [],
@@ -132,12 +133,19 @@ export const listProductSets = query({
                 (sum, item) => sum + (item?.productPrice || 0) * (item?.quantity || 1),
                 0
             );
+            const costOfGoods = validProducts.reduce(
+                (sum, item) => sum + (item?.productBuyingPrice ?? 0) * (item?.quantity || 1),
+                0
+            );
             return {
                 ...set,
                 image: imageUrl,
                 products: validProducts,
                 originalPrice,
                 savings: originalPrice - set.specialPrice,
+                costOfGoods,
+                netProfit: set.specialPrice - costOfGoods,
+                hasBuyingPrices: validProducts.some(p => p?.productBuyingPrice != null),
             };
         }));
     },
@@ -176,6 +184,7 @@ export const getProductSetById = query({
                     productName: product.name,
                     productImage,
                     productPrice: product.price,
+                    productBuyingPrice: product.buyingPrice,
                     colors: product.colors || [],
                     sizes: product.sizes || [],
                     logos: logos || [],
@@ -187,12 +196,19 @@ export const getProductSetById = query({
             (sum, item) => sum + (item?.productPrice || 0) * (item?.quantity || 1),
             0
         );
+        const costOfGoods = validProducts.reduce(
+            (sum, item) => sum + (item?.productBuyingPrice ?? 0) * (item?.quantity || 1),
+            0
+        );
         return {
             ...productSet,
             image: imageUrl,
             products: validProducts,
             originalPrice,
             savings: originalPrice - productSet.specialPrice,
+            costOfGoods,
+            netProfit: productSet.specialPrice - costOfGoods,
+            hasBuyingPrices: validProducts.some(p => p?.productBuyingPrice != null),
         };
     },
 });
