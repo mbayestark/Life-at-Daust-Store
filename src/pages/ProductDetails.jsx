@@ -17,9 +17,9 @@ export default function ProductDetails() {
     const [mainImage, setMainImage] = useState(null);
     const [selectedColor, setSelectedColor] = useState(null);
     const [selectedSize, setSelectedSize] = useState(null);
-    const [selectedFrontLogo, setSelectedFrontLogo] = useState(null);
-    const [selectedBackLogo, setSelectedBackLogo] = useState(null);
-    const [selectedSideLogo, setSelectedSideLogo] = useState(null);
+    const [selectedFrontLogos, setSelectedFrontLogos] = useState([]);
+    const [selectedBackLogos, setSelectedBackLogos] = useState([]);
+    const [selectedSideLogos, setSelectedSideLogos] = useState([]);
     const [selectedHoodieType, setSelectedHoodieType] = useState(null);
     const [quantity, setQuantity] = useState(1);
     const [logoPreview, setLogoPreview] = useState(null);
@@ -36,9 +36,9 @@ export default function ProductDetails() {
             setMainImage(product.image);
             setSelectedColor(product.colors?.[0] || null);
             setSelectedSize(product.sizes?.[0] || null);
-            setSelectedFrontLogo(null);
-            setSelectedBackLogo(null);
-            setSelectedSideLogo(null);
+            setSelectedFrontLogos([]);
+            setSelectedBackLogos([]);
+            setSelectedSideLogos([]);
             setSelectedHoodieType(null);
         }
     }, [product]);
@@ -216,49 +216,49 @@ export default function ProductDetails() {
                             <div className="space-y-5">
                                 <div>
                                     <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-5">
-                                        Front Logo · <span className="text-brand-navy">{selectedFrontLogo?.name || "None"}</span>
+                                        Front Logo · <span className="text-brand-navy">{selectedFrontLogos.length > 0 ? selectedFrontLogos.map(l => l.name).join(", ") : "None"}</span>
                                     </h3>
                                     <div className="flex flex-wrap gap-3">
                                         <button
                                             type="button"
-                                            onClick={() => setSelectedFrontLogo(null)}
+                                            onClick={() => setSelectedFrontLogos([])}
                                             className={`px-5 py-3 sm:px-4 sm:py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 active:scale-95 ${
-                                                !selectedFrontLogo
+                                                selectedFrontLogos.length === 0
                                                     ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
                                                     : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
                                             }`}
                                         >
                                             None
                                         </button>
-                                        {product.logos.filter(l => !l.positions || l.positions.includes("front")).map((logo) => (
-                                            <button
-                                                key={logo.id || logo.name}
-                                                type="button"
-                                                onClick={() => {
-                                                    setSelectedFrontLogo(logo);
-                                                    if (window.innerWidth < 1024) {
-                                                        const imageSection = document.getElementById('product-image');
-                                                        if (imageSection) {
-                                                            imageSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                        {product.logos.filter(l => !l.positions || l.positions.includes("front")).map((logo) => {
+                                            const isSelected = selectedFrontLogos.some(l => (l.id && l.id === logo.id) || l.name === logo.name);
+                                            return (
+                                                <button
+                                                    key={logo.id || logo.name}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setSelectedFrontLogos(prev =>
+                                                            isSelected ? prev.filter(l => !((l.id && l.id === logo.id) || l.name === logo.name)) : [...prev, logo]
+                                                        );
+                                                        if (!isSelected && window.innerWidth < 1024) {
+                                                            document.getElementById('product-image')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                                         }
-                                                    }
-                                                    if (logo.image) {
-                                                        setLogoPreview(logo.image);
-                                                        setTimeout(() => setLogoPreview(null), 2500);
-                                                    }
-                                                }}
-                                                className={`flex items-center gap-2 px-5 py-3 sm:px-4 sm:py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 active:scale-95 ${
-                                                    selectedFrontLogo?.id === logo.id || selectedFrontLogo?.name === logo.name
-                                                        ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
-                                                        : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
-                                                }`}
-                                            >
-                                                {logo.image && (
-                                                    <img src={logo.image} alt={logo.name} className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg object-cover" />
-                                                )}
-                                                {logo.name}
-                                            </button>
-                                        ))}
+                                                        if (!isSelected && logo.image) {
+                                                            setLogoPreview(logo.image);
+                                                            setTimeout(() => setLogoPreview(null), 2500);
+                                                        }
+                                                    }}
+                                                    className={`flex items-center gap-2 px-5 py-3 sm:px-4 sm:py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 active:scale-95 ${
+                                                        isSelected
+                                                            ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
+                                                            : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
+                                                    }`}
+                                                >
+                                                    {logo.image && <img src={logo.image} alt={logo.name} className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg object-cover" />}
+                                                    {logo.name}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             </div>
@@ -269,49 +269,49 @@ export default function ProductDetails() {
                             <div className="space-y-5">
                                 <div>
                                     <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-5">
-                                        Back Logo · <span className="text-brand-navy">{selectedBackLogo?.name || "None"}</span>
+                                        Back Logo · <span className="text-brand-navy">{selectedBackLogos.length > 0 ? selectedBackLogos.map(l => l.name).join(", ") : "None"}</span>
                                     </h3>
                                     <div className="flex flex-wrap gap-3">
                                         <button
                                             type="button"
-                                            onClick={() => setSelectedBackLogo(null)}
+                                            onClick={() => setSelectedBackLogos([])}
                                             className={`px-5 py-3 sm:px-4 sm:py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 active:scale-95 ${
-                                                !selectedBackLogo
+                                                selectedBackLogos.length === 0
                                                     ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
                                                     : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
                                             }`}
                                         >
                                             None
                                         </button>
-                                        {product.logos.filter(l => !l.positions || l.positions.includes("back")).map((logo) => (
-                                            <button
-                                                key={logo.id || logo.name}
-                                                type="button"
-                                                onClick={() => {
-                                                    setSelectedBackLogo(logo);
-                                                    if (window.innerWidth < 1024) {
-                                                        const imageSection = document.getElementById('product-image');
-                                                        if (imageSection) {
-                                                            imageSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                        {product.logos.filter(l => !l.positions || l.positions.includes("back")).map((logo) => {
+                                            const isSelected = selectedBackLogos.some(l => (l.id && l.id === logo.id) || l.name === logo.name);
+                                            return (
+                                                <button
+                                                    key={logo.id || logo.name}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setSelectedBackLogos(prev =>
+                                                            isSelected ? prev.filter(l => !((l.id && l.id === logo.id) || l.name === logo.name)) : [...prev, logo]
+                                                        );
+                                                        if (!isSelected && window.innerWidth < 1024) {
+                                                            document.getElementById('product-image')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                                         }
-                                                    }
-                                                    if (logo.image) {
-                                                        setLogoPreview(logo.image);
-                                                        setTimeout(() => setLogoPreview(null), 2500);
-                                                    }
-                                                }}
-                                                className={`flex items-center gap-2 px-5 py-3 sm:px-4 sm:py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 active:scale-95 ${
-                                                    selectedBackLogo?.id === logo.id || selectedBackLogo?.name === logo.name
-                                                        ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
-                                                        : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
-                                                }`}
-                                            >
-                                                {logo.image && (
-                                                    <img src={logo.image} alt={logo.name} className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg object-cover" />
-                                                )}
-                                                {logo.name}
-                                            </button>
-                                        ))}
+                                                        if (!isSelected && logo.image) {
+                                                            setLogoPreview(logo.image);
+                                                            setTimeout(() => setLogoPreview(null), 2500);
+                                                        }
+                                                    }}
+                                                    className={`flex items-center gap-2 px-5 py-3 sm:px-4 sm:py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 active:scale-95 ${
+                                                        isSelected
+                                                            ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
+                                                            : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
+                                                    }`}
+                                                >
+                                                    {logo.image && <img src={logo.image} alt={logo.name} className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg object-cover" />}
+                                                    {logo.name}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             </div>
@@ -322,56 +322,56 @@ export default function ProductDetails() {
                             <div className="space-y-5">
                                 <div>
                                     <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-5">
-                                        Side Logo · <span className="text-brand-navy">{selectedSideLogo?.name || "None"}</span>
+                                        Side Logo · <span className="text-brand-navy">{selectedSideLogos.length > 0 ? selectedSideLogos.map(l => l.name).join(", ") : "None"}</span>
                                     </h3>
                                     <div className="flex flex-wrap gap-3">
                                         <button
                                             type="button"
-                                            onClick={() => setSelectedSideLogo(null)}
+                                            onClick={() => setSelectedSideLogos([])}
                                             className={`px-5 py-3 sm:px-4 sm:py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 active:scale-95 ${
-                                                !selectedSideLogo
+                                                selectedSideLogos.length === 0
                                                     ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
                                                     : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
                                             }`}
                                         >
                                             None
                                         </button>
-                                        {product.logos.filter(l => !l.positions || l.positions.includes("side")).map((logo) => (
-                                            <button
-                                                key={logo.id || logo.name}
-                                                type="button"
-                                                onClick={() => {
-                                                    setSelectedSideLogo(logo);
-                                                    if (window.innerWidth < 1024) {
-                                                        const imageSection = document.getElementById('product-image');
-                                                        if (imageSection) {
-                                                            imageSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                        {product.logos.filter(l => !l.positions || l.positions.includes("side")).map((logo) => {
+                                            const isSelected = selectedSideLogos.some(l => (l.id && l.id === logo.id) || l.name === logo.name);
+                                            return (
+                                                <button
+                                                    key={logo.id || logo.name}
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setSelectedSideLogos(prev =>
+                                                            isSelected ? prev.filter(l => !((l.id && l.id === logo.id) || l.name === logo.name)) : [...prev, logo]
+                                                        );
+                                                        if (!isSelected && window.innerWidth < 1024) {
+                                                            document.getElementById('product-image')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                                         }
-                                                    }
-                                                    if (logo.image) {
-                                                        setLogoPreview(logo.image);
-                                                        setTimeout(() => setLogoPreview(null), 2500);
-                                                    }
-                                                }}
-                                                className={`flex items-center gap-2 px-5 py-3 sm:px-4 sm:py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 active:scale-95 ${
-                                                    selectedSideLogo?.id === logo.id || selectedSideLogo?.name === logo.name
-                                                        ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
-                                                        : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
-                                                }`}
-                                            >
-                                                {logo.image && (
-                                                    <img src={logo.image} alt={logo.name} className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg object-cover" />
-                                                )}
-                                                {logo.name}
-                                            </button>
-                                        ))}
+                                                        if (!isSelected && logo.image) {
+                                                            setLogoPreview(logo.image);
+                                                            setTimeout(() => setLogoPreview(null), 2500);
+                                                        }
+                                                    }}
+                                                    className={`flex items-center gap-2 px-5 py-3 sm:px-4 sm:py-2.5 rounded-xl font-black text-sm transition-all duration-300 border-2 active:scale-95 ${
+                                                        isSelected
+                                                            ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
+                                                            : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
+                                                    }`}
+                                                >
+                                                    {logo.image && <img src={logo.image} alt={logo.name} className="w-8 h-8 sm:w-7 sm:h-7 rounded-lg object-cover" />}
+                                                    {logo.name}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             </div>
                         )}
 
                         {/* Additional Logo Fee Notice */}
-                        {[selectedFrontLogo, selectedBackLogo, selectedSideLogo].filter(Boolean).length === 3 ? (
+                        {selectedFrontLogos.length > 0 && selectedBackLogos.length > 0 && selectedSideLogos.length > 0 ? (
                             <div className="flex items-center gap-3 p-4 bg-orange-50 border border-orange-200 rounded-2xl">
                                 <Info size={18} className="text-brand-orange flex-shrink-0" />
                                 <p className="text-sm font-bold text-brand-orange">
@@ -507,9 +507,9 @@ export default function ProductDetails() {
                                         selectedHoodieType,
                                         selectedColor: selectedColor?.name,
                                         selectedSize: selectedSize,
-                                        selectedFrontLogo: selectedFrontLogo?.name || null,
-                                        selectedBackLogo: selectedBackLogo?.name || null,
-                                        selectedSideLogo: selectedSideLogo?.name || null,
+                                        selectedFrontLogo: selectedFrontLogos.length > 0 ? selectedFrontLogos.map(l => l.name).join(", ") : null,
+                                        selectedBackLogo: selectedBackLogos.length > 0 ? selectedBackLogos.map(l => l.name).join(", ") : null,
+                                        selectedSideLogo: selectedSideLogos.length > 0 ? selectedSideLogos.map(l => l.name).join(", ") : null,
                                     }, quantity);
                                     showToast(`${quantity}x ${product.name} added to bag!`);
                                 }}
