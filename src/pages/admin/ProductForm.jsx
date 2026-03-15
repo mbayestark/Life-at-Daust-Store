@@ -308,7 +308,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                             <label className="block text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Buying Price / Cost (XOF) <span className="normal-case font-medium text-gray-300">— admin only, used for profit tracking</span></label>
                             <input
                                 type="number"
-                                step="100"
+                                step="any"
                                 min="0"
                                 value={formData.buyingPrice}
                                 onChange={(e) => setFormData({ ...formData, buyingPrice: e.target.value })}
