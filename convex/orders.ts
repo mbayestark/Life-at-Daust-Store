@@ -140,3 +140,24 @@ export const deleteOrder = mutation({
     await ctx.db.delete(args.id);
   },
 });
+
+export const clearAllOrders = mutation({
+  args: {
+    adminToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust")) {
+      throw new Error("Unauthorized");
+    }
+    const orders = await ctx.db.query("orders").collect();
+    await Promise.all(orders.map((order) => ctx.db.delete(order._id)));
+  },
+});
+
+export const getOrderCount = query({
+  args: {},
+  handler: async (ctx) => {
+    const orders = await ctx.db.query("orders").collect();
+    return orders.length;
+  },
+});

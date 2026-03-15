@@ -8,14 +8,15 @@ import {
     Truck,
     ChevronRight,
     User,
-    Mail,
-    Calendar,
+    Phone,
+    MapPin,
     DollarSign,
     AlertCircle,
     Trash2
 } from "lucide-react";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { useAdmin } from "../../context/AdminContext";
+import { formatPrice } from "../../utils/format.js";
 
 export default function AdminOrders() {
     const { adminToken } = useAdmin();
@@ -24,10 +25,12 @@ export default function AdminOrders() {
     const checkNabooStatus = useAction(api.naboopay.getTransaction);
     const deleteNabooTransaction = useAction(api.naboopay.deleteTransaction);
     const deleteOrderMutation = useMutation(api.orders.deleteOrder);
-    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [selectedOrderId, setSelectedOrderId] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
     const isLoading = orders === undefined;
+
+    const selectedOrder = orders?.find((o) => o._id === selectedOrderId) ?? null;
 
     const getStatusColor = (status) => {
         switch (status) {
@@ -55,7 +58,7 @@ export default function AdminOrders() {
 
     const handleStatusUpdate = async (id, newStatus) => {
         try {
-            if (newStatus === "Cancelled" && selectedOrder.naboopayOrderId) {
+            if (newStatus === "Cancelled" && selectedOrder?.naboopayOrderId) {
                 try {
                     await deleteNabooTransaction({ orderId: selectedOrder.naboopayOrderId });
                 } catch {
@@ -63,9 +66,6 @@ export default function AdminOrders() {
                 }
             }
             await updateStatus({ id, status: newStatus, adminToken });
-            if (selectedOrder && selectedOrder._id === id) {
-                setSelectedOrder({ ...selectedOrder, status: newStatus });
-            }
         } catch {
             alert("Failed to update order status. Please try again.");
         }
@@ -74,7 +74,7 @@ export default function AdminOrders() {
     const handleDeleteOrder = async () => {
         try {
             await deleteOrderMutation({ id: selectedOrder._id, adminToken });
-            setSelectedOrder(null);
+            setSelectedOrderId(null);
             setShowDeleteConfirm(false);
         } catch {
             alert("Failed to delete order. Please try again.");
@@ -104,7 +104,7 @@ export default function AdminOrders() {
                         {orders.map((order) => (
                             <button
                                 key={order._id}
-                                onClick={() => setSelectedOrder(order)}
+                                onClick={() => setSelectedOrderId(order._id)}
                                 className={`w-full text-left p-6 hover:bg-gray-50 transition-all flex items-center justify-between group ${selectedOrder?._id === order._id ? "bg-gray-50 ring-1 ring-inset ring-brand-orange/10" : ""
                                     }`}
                             >
@@ -119,7 +119,7 @@ export default function AdminOrders() {
                                     <p className="text-[10px] text-gray-400 mt-1">{new Date(order.createdAt).toLocaleDateString()}</p>
                                 </div>
                                 <div className="text-right flex items-center gap-3">
-                                    <p className="font-black text-brand-navy text-sm">${(order?.total || 0).toFixed(2)}</p>
+                                    <p className="font-black text-brand-navy text-sm">{formatPrice(order?.total || 0)}</p>
                                     <ChevronRight size={16} className={`text-gray-300 group-hover:text-brand-orange transition-all ${selectedOrder?._id === order._id ? "translate-x-1 text-brand-orange" : ""}`} />
                                 </div>
                             </button>
@@ -161,7 +161,7 @@ export default function AdminOrders() {
                                     <Trash2 size={14} /> Delete
                                 </button>
                                 <button
-                                    onClick={() => setSelectedOrder(null)}
+                                    onClick={() => setSelectedOrderId(null)}
                                     className="text-gray-400 hover:text-brand-navy font-bold text-xs uppercase tracking-widest"
                                 >
                                     Close Details
@@ -275,20 +275,20 @@ export default function AdminOrders() {
                                         </div>
                                         <div className="flex items-center gap-4">
                                             <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400">
-                                                <Mail size={18} />
+                                                <Phone size={18} />
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black uppercase text-gray-400">Email Address</p>
-                                                <p className="font-bold text-brand-navy">{selectedOrder.customer.email}</p>
+                                                <p className="text-[10px] font-black uppercase text-gray-400">Phone</p>
+                                                <p className="font-bold text-brand-navy">{selectedOrder.customer.phone}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-4">
                                             <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center text-gray-400">
-                                                <Calendar size={18} />
+                                                <MapPin size={18} />
                                             </div>
                                             <div>
-                                                <p className="text-[10px] font-black uppercase text-gray-400">Academic Year</p>
-                                                <p className="font-bold text-brand-navy">{selectedOrder.customer.year}</p>
+                                                <p className="text-[10px] font-black uppercase text-gray-400">Location</p>
+                                                <p className="font-bold text-brand-navy">{selectedOrder.customer.location}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -304,16 +304,16 @@ export default function AdminOrders() {
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-sm font-bold text-brand-navy truncate">{item.name}</p>
                                                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                                            QTY: {item.qty} {item?.size ? `• Size: ${item.size}` : ""} {item?.color ? `• ${item.color}` : ""} {item?.frontLogo ? `• Front: ${item.frontLogo}` : ""} {item?.backLogo ? `• Back: ${item.backLogo}` : ""} {item?.logo ? `• Logo: ${item.logo}${item.logoPosition ? ` (${item.logoPosition})` : ""}` : ""}
+                                                            QTY: {item.qty} {item?.size ? `• Size: ${item.size}` : ""} {item?.color ? `• ${item.color}` : ""} {item?.frontLogo ? `• Front: ${item.frontLogo}` : ""} {item?.backLogo ? `• Back: ${item.backLogo}` : ""} {item?.sideLogo ? `• Side: ${item.sideLogo}` : ""} {item?.logo ? `• Logo: ${item.logo}${item.logoPosition ? ` (${item.logoPosition})` : ""}` : ""}
                                                         </p>
                                                     </div>
-                                                    <p className="font-black text-brand-navy text-sm">${((item.price || 0) * (item.qty || 1)).toFixed(2)}</p>
+                                                    <p className="font-black text-brand-navy text-sm">{formatPrice((item.price || 0) * (item.qty || 1))}</p>
                                                 </div>
                                             ))}
                                         </div>
                                         <div className="p-4 bg-brand-navy text-white flex justify-between items-center">
                                             <span className="text-[10px] font-black uppercase tracking-widest opacity-60">Grand Total</span>
-                                            <span className="text-lg font-black">${(selectedOrder?.total || 0).toFixed(2)}</span>
+                                            <span className="text-lg font-black">{formatPrice(selectedOrder?.total || 0)}</span>
                                         </div>
                                     </div>
                                 </div>

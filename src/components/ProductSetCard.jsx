@@ -12,7 +12,7 @@ export default function ProductSetCard({ productSet }) {
 
   // Check if any product in the set has variants
   const hasVariants = productSet.products?.some(
-    (item) => (item.colors && item.colors.length > 0) || (item.sizes && item.sizes.length > 0)
+    (item) => (item.colors && item.colors.length > 0) || (item.sizes && item.sizes.length > 0) || (item.logos && item.logos.length > 0)
   );
 
   const initSelections = () => {
@@ -21,6 +21,9 @@ export default function ProductSetCard({ productSet }) {
       initial[item.productId] = {
         color: item.colors?.[0]?.name || null,
         size: item.sizes?.[0] || null,
+        frontLogo: null,
+        backLogo: null,
+        sideLogo: null,
       };
     });
     return initial;
@@ -263,6 +266,92 @@ export default function ProductSetCard({ productSet }) {
                           </button>
                         ))}
                       </div>
+                    </div>
+                  )}
+
+                  {/* Logo Selectors */}
+                  {item.logos && item.logos.length > 0 && (
+                    <div className="space-y-3 mt-3">
+                      {/* Front Logo */}
+                      {item.logos.filter(l => !l.positions || l.positions.includes("front")).length > 0 && (
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">
+                            Front Logo · <span className="text-brand-navy">{selections[item.productId]?.frontLogo || "None"}</span>
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              onClick={() => setSelections((prev) => ({ ...prev, [item.productId]: { ...prev[item.productId], frontLogo: null } }))}
+                              className={`px-3 py-1.5 rounded-lg font-black text-xs transition-all border-2 ${!selections[item.productId]?.frontLogo ? "border-brand-navy bg-brand-navy text-white" : "border-gray-200 text-gray-500"}`}
+                            >
+                              None
+                            </button>
+                            {item.logos.filter(l => !l.positions || l.positions.includes("front")).map((logo) => (
+                              <button
+                                key={logo.id || logo.name}
+                                onClick={() => setSelections((prev) => ({ ...prev, [item.productId]: { ...prev[item.productId], frontLogo: logo.name } }))}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-black text-xs transition-all border-2 ${selections[item.productId]?.frontLogo === logo.name ? "border-brand-navy bg-brand-navy text-white" : "border-gray-200 text-gray-500"}`}
+                              >
+                                {logo.image && <img src={logo.image} alt={logo.name} className="w-5 h-5 rounded object-cover" />}
+                                {logo.name}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Back Logo */}
+                      {item.logos.filter(l => !l.positions || l.positions.includes("back")).length > 0 && (
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">
+                            Back Logo · <span className="text-brand-navy">{selections[item.productId]?.backLogo || "None"}</span>
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              onClick={() => setSelections((prev) => ({ ...prev, [item.productId]: { ...prev[item.productId], backLogo: null } }))}
+                              className={`px-3 py-1.5 rounded-lg font-black text-xs transition-all border-2 ${!selections[item.productId]?.backLogo ? "border-brand-navy bg-brand-navy text-white" : "border-gray-200 text-gray-500"}`}
+                            >
+                              None
+                            </button>
+                            {item.logos.filter(l => !l.positions || l.positions.includes("back")).map((logo) => (
+                              <button
+                                key={logo.id || logo.name}
+                                onClick={() => setSelections((prev) => ({ ...prev, [item.productId]: { ...prev[item.productId], backLogo: logo.name } }))}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-black text-xs transition-all border-2 ${selections[item.productId]?.backLogo === logo.name ? "border-brand-navy bg-brand-navy text-white" : "border-gray-200 text-gray-500"}`}
+                              >
+                                {logo.image && <img src={logo.image} alt={logo.name} className="w-5 h-5 rounded object-cover" />}
+                                {logo.name}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Side Logo */}
+                      {item.logos.filter(l => !l.positions || l.positions.includes("side")).length > 0 && (
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">
+                            Side Logo · <span className="text-brand-navy">{selections[item.productId]?.sideLogo || "None"}</span>
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              onClick={() => setSelections((prev) => ({ ...prev, [item.productId]: { ...prev[item.productId], sideLogo: null } }))}
+                              className={`px-3 py-1.5 rounded-lg font-black text-xs transition-all border-2 ${!selections[item.productId]?.sideLogo ? "border-brand-navy bg-brand-navy text-white" : "border-gray-200 text-gray-500"}`}
+                            >
+                              None
+                            </button>
+                            {item.logos.filter(l => !l.positions || l.positions.includes("side")).map((logo) => (
+                              <button
+                                key={logo.id || logo.name}
+                                onClick={() => setSelections((prev) => ({ ...prev, [item.productId]: { ...prev[item.productId], sideLogo: logo.name } }))}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-black text-xs transition-all border-2 ${selections[item.productId]?.sideLogo === logo.name ? "border-brand-navy bg-brand-navy text-white" : "border-gray-200 text-gray-500"}`}
+                              >
+                                {logo.image && <img src={logo.image} alt={logo.name} className="w-5 h-5 rounded object-cover" />}
+                                {logo.name}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

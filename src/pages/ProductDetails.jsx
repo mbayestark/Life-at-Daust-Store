@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronRight, ShoppingCart, Star, Info, Shield, Truck } from "lucide-react";
+import { ChevronRight, ShoppingCart, Star, Info, Shield, Truck, CheckCircle } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useCart } from "../context/CartContext.jsx";
@@ -23,6 +23,7 @@ export default function ProductDetails() {
     const [selectedHoodieType, setSelectedHoodieType] = useState(null);
     const [quantity, setQuantity] = useState(1);
     const [logoPreview, setLogoPreview] = useState(null);
+    const [showAddedAnimation, setShowAddedAnimation] = useState(false);
 
     // Scroll to top when navigating to product details
     useEffect(() => {
@@ -506,6 +507,8 @@ export default function ProductDetails() {
                                         selectedBackLogo: selectedBackLogo?.name || null,
                                         selectedSideLogo: selectedSideLogo?.name || null,
                                     }, quantity);
+                                    setShowAddedAnimation(true);
+                                    setTimeout(() => setShowAddedAnimation(false), 2000);
                                 }}
                             >
                                 {product.stock === 0 ? (
@@ -517,6 +520,14 @@ export default function ProductDetails() {
                                     </>
                                 )}
                             </Button>
+
+                            {/* Added to bag toast */}
+                            {showAddedAnimation && (
+                                <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border border-green-200 rounded-2xl animate-in fade-in zoom-in-95 duration-300 w-full sm:w-auto">
+                                    <CheckCircle size={18} className="text-green-500 flex-shrink-0" />
+                                    <span className="text-sm font-black text-green-700">Added to bag!</span>
+                                </div>
+                            )}
 
                         </div>
 

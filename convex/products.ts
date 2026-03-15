@@ -103,6 +103,16 @@ export const listProductSets = query({
                     if (productImage && productImage.startsWith("kg")) {
                         productImage = await ctx.storage.getUrl(productImage) || product.image;
                     }
+                    let logos = product.logos || [];
+                    if (logos.length > 0) {
+                        logos = await Promise.all(logos.map(async (logo) => {
+                            if (logo.image && logo.image.startsWith("kg")) {
+                                const logoUrl = await ctx.storage.getUrl(logo.image);
+                                return { ...logo, image: logoUrl || logo.image };
+                            }
+                            return logo;
+                        }));
+                    }
                     return {
                         ...item,
                         productName: product.name,
@@ -110,12 +120,11 @@ export const listProductSets = query({
                         productPrice: product.price,
                         colors: product.colors || [],
                         sizes: product.sizes || [],
+                        logos,
                     };
                 })
             );
-            // Filter out null products (deleted products)
             const validProducts = resolvedProducts.filter(p => p !== null);
-            // Calculate original price (sum of individual product prices)
             const originalPrice = validProducts.reduce(
                 (sum, item) => sum + (item?.productPrice || 0) * (item?.quantity || 1),
                 0
