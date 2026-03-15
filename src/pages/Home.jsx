@@ -361,7 +361,7 @@ export default function Home() {
             >
               {trendingProducts.map(product => (
                 <div
-                  key={product._id || product.id}
+                  key={product._id}
                   className="min-w-[260px] sm:min-w-[280px] max-w-[280px] snap-start flex-shrink-0"
                 >
                   <ProductCard product={product} />

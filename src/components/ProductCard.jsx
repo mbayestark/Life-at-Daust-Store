@@ -6,7 +6,7 @@ import { formatPrice } from "../utils/format.js";
 import Button from "./ui/Button";
 
 export default function ProductCard({ product }) {
-  const { addItem } = useCart();
+  const { addItem, showToast } = useCart();
   const [isHovered, setIsHovered] = useState(false);
 
   if (!product) return null;
@@ -16,8 +16,29 @@ export default function ProductCard({ product }) {
     ? product.images[1]
     : product.image;
 
-  const productId = product._id || product.id;
+  const productId = product._id;
   const isSoldOut = product.stock === 0;
+
+  // Check if product requires specifications
+  const needsSpecifications =
+    (product.colors && product.colors.length > 0) ||
+    (product.sizes && product.sizes.length > 0) ||
+    (product.logos && product.logos.length > 0) ||
+    (product.hoodieTypes && product.hoodieTypes.length > 0);
+
+  const handleAddToCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (needsSpecifications) {
+      // Redirect to product details to select specifications
+      window.location.href = `/product/${productId}`;
+    } else {
+      // Add directly to cart
+      addItem(product, 1);
+      showToast(`${product.name} added to bag!`);
+    }
+  };
 
   return (
     <div
@@ -58,7 +79,7 @@ export default function ProductCard({ product }) {
             <Button
               variant="ghost"
               size="sm"
-              aria-label="Add to Cart"
+              aria-label={needsSpecifications ? "Select Options" : "Add to Cart"}
               className="w-full glass-morphism border-none text-brand-navy font-black transition-all duration-300 shadow-lg"
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = '#0a2342';
@@ -68,18 +89,19 @@ export default function ProductCard({ product }) {
                 e.currentTarget.style.backgroundColor = 'transparent';
                 e.currentTarget.style.color = '#0a2342';
               }}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (product.category === "Hoodies") {
-                  window.location.href = `/product/${productId}`;
-                  return;
-                }
-                addItem(product, 1);
-              }}
+              onClick={handleAddToCart}
             >
-              <ShoppingCart className="h-4 w-4 mr-2" />
-              Quick Add
+              {needsSpecifications ? (
+                <>
+                  <Eye className="h-4 w-4 mr-2" />
+                  Select Options
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Quick Add
+                </>
+              )}
             </Button>
           </div>
         )}
@@ -110,16 +132,16 @@ export default function ProductCard({ product }) {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                if (product.category === "Hoodies") {
-                  window.location.href = `/product/${productId}`;
-                  return;
-                }
-                addItem(product, 1);
+                handleAddToCart(e);
               }}
               className="lg:hidden p-2 rounded-lg bg-gray-100 text-brand-navy active:bg-brand-navy active:text-white transition-all duration-200"
-              aria-label="Add to Cart"
+              aria-label={needsSpecifications ? "Select Options" : "Add to Cart"}
             >
-              <ShoppingCart className="h-5 w-5" />
+              {needsSpecifications ? (
+                <Eye className="h-5 w-5" />
+              ) : (
+                <ShoppingCart className="h-5 w-5" />
+              )}
             </button>
           )}
           {isSoldOut && (

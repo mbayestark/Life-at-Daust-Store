@@ -1,15 +1,15 @@
 import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
+import { verifyAdminToken } from "./auth";
 
-// Convex exposes process.env at runtime. We declare it as an ambient variable
-// here to avoid requiring @types/node, since Convex is not a Node.js environment.
 declare const process: { env: Record<string, string | undefined> };
 
 export const list = query({
   args: { adminToken: v.string() },
   handler: async (ctx, args) => {
-    if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust")) {
-      throw new Error("Unauthorized");
+    const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+    if (!isAuthorized) {
+      throw new Error("Unauthorized - Invalid or expired session");
     }
     return await ctx.db.query("orders").order("desc").collect();
   },
@@ -18,8 +18,9 @@ export const list = query({
 export const getById = query({
   args: { id: v.id("orders"), adminToken: v.string() },
   handler: async (ctx, args) => {
-    if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust")) {
-      throw new Error("Unauthorized");
+    const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+    if (!isAuthorized) {
+      throw new Error("Unauthorized - Invalid or expired session");
     }
     return await ctx.db.get(args.id);
   },
@@ -34,14 +35,13 @@ export const addOrder = mutation({
       location: v.string(),
     }),
     items: v.array(v.object({
+      productId: v.optional(v.string()),
       name: v.string(),
       qty: v.number(),
       price: v.number(),
       hoodieType: v.optional(v.string()),
       color: v.optional(v.string()),
       size: v.optional(v.string()),
-      logo: v.optional(v.string()),
-      logoPosition: v.optional(v.string()),
       frontLogo: v.optional(v.string()),
       backLogo: v.optional(v.string()),
       sideLogo: v.optional(v.string()),
@@ -121,8 +121,9 @@ export const updateStatus = mutation({
     adminToken: v.string(),
   },
   handler: async (ctx, args) => {
-    if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust")) {
-      throw new Error("Unauthorized");
+    const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+    if (!isAuthorized) {
+      throw new Error("Unauthorized - Invalid or expired session");
     }
     await ctx.db.patch(args.id, { status: args.status });
   },
@@ -134,8 +135,9 @@ export const deleteOrder = mutation({
     adminToken: v.string(),
   },
   handler: async (ctx, args) => {
-    if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust")) {
-      throw new Error("Unauthorized");
+    const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+    if (!isAuthorized) {
+      throw new Error("Unauthorized - Invalid or expired session");
     }
     await ctx.db.delete(args.id);
   },

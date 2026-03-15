@@ -1,5 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { verifyAdminToken } from "./auth";
 
 declare const process: { env: Record<string, string | undefined> };
 
@@ -103,6 +104,18 @@ export const listProductSets = query({
                     if (productImage && productImage.startsWith("kg")) {
                         productImage = await ctx.storage.getUrl(productImage) || product.image;
                     }
+                    // Resolve logo images
+                    let logos = product.logos;
+                    if (logos && logos.length > 0) {
+                        logos = await Promise.all(logos.map(async (logo) => {
+                            if (logo.image && logo.image.startsWith("kg")) {
+                                const logoUrl = await ctx.storage.getUrl(logo.image);
+                                return { ...logo, image: logoUrl || logo.image };
+                            }
+                            return logo;
+                        }));
+                    }
+
                     return {
                         ...item,
                         productName: product.name,
@@ -110,6 +123,7 @@ export const listProductSets = query({
                         productPrice: product.price,
                         colors: product.colors || [],
                         sizes: product.sizes || [],
+                        logos: logos || [],
                     };
                 })
             );
@@ -148,6 +162,17 @@ export const getProductSetById = query({
                 if (productImage && productImage.startsWith("kg")) {
                     productImage = await ctx.storage.getUrl(productImage) || product.image;
                 }
+                // Resolve logo images
+                let logos = product.logos;
+                if (logos && logos.length > 0) {
+                    logos = await Promise.all(logos.map(async (logo) => {
+                        if (logo.image && logo.image.startsWith("kg")) {
+                            const logoUrl = await ctx.storage.getUrl(logo.image);
+                            return { ...logo, image: logoUrl || logo.image };
+                        }
+                        return logo;
+                    }));
+                }
                 return {
                     ...item,
                     productName: product.name,
@@ -155,6 +180,7 @@ export const getProductSetById = query({
                     productPrice: product.price,
                     colors: product.colors || [],
                     sizes: product.sizes || [],
+                    logos: logos || [],
                 };
             })
         );
@@ -204,8 +230,9 @@ export const addProduct = mutation({
         adminToken: v.string(),
     },
     handler: async (ctx, args) => {
-        if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust")) {
-            throw new Error("Unauthorized");
+        const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+        if (!isAuthorized) {
+            throw new Error("Unauthorized - Invalid or expired session");
         }
         const { adminToken, ...productArgs } = args;
         const productId = await ctx.db.insert("products", productArgs);
@@ -231,8 +258,9 @@ export const addProductSet = mutation({
         adminToken: v.string(),
     },
     handler: async (ctx, args) => {
-        if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust")) {
-            throw new Error("Unauthorized");
+        const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+        if (!isAuthorized) {
+            throw new Error("Unauthorized - Invalid or expired session");
         }
         const { adminToken, ...setArgs } = args;
         const setId = await ctx.db.insert("productSets", setArgs);
@@ -272,8 +300,9 @@ export const updateProduct = mutation({
         adminToken: v.string(),
     },
     handler: async (ctx, args) => {
-        if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust")) {
-            throw new Error("Unauthorized");
+        const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+        if (!isAuthorized) {
+            throw new Error("Unauthorized - Invalid or expired session");
         }
         const { id, adminToken, ...fields } = args;
         await ctx.db.patch(id, fields);
@@ -299,8 +328,9 @@ export const updateProductSet = mutation({
         adminToken: v.string(),
     },
     handler: async (ctx, args) => {
-        if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust")) {
-            throw new Error("Unauthorized");
+        const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+        if (!isAuthorized) {
+            throw new Error("Unauthorized - Invalid or expired session");
         }
         const { id, adminToken, ...fields } = args;
         await ctx.db.patch(id, fields);
@@ -310,8 +340,9 @@ export const updateProductSet = mutation({
 export const removeProduct = mutation({
     args: { id: v.id("products"), adminToken: v.string() },
     handler: async (ctx, args) => {
-        if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust")) {
-            throw new Error("Unauthorized");
+        const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+        if (!isAuthorized) {
+            throw new Error("Unauthorized - Invalid or expired session");
         }
         await ctx.db.delete(args.id);
     },
@@ -320,8 +351,9 @@ export const removeProduct = mutation({
 export const removeProductSet = mutation({
     args: { id: v.id("productSets"), adminToken: v.string() },
     handler: async (ctx, args) => {
-        if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust")) {
-            throw new Error("Unauthorized");
+        const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+        if (!isAuthorized) {
+            throw new Error("Unauthorized - Invalid or expired session");
         }
         await ctx.db.delete(args.id);
     },

@@ -1,8 +1,55 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import Toast from "../components/ui/Toast";
 
 const STORAGE_KEY = "lifeAtDaust.cart.v2";
 
 export const CartContext = createContext(null);
+
+// Helper function to normalize values (convert undefined/null to null for consistent comparison)
+const normalize = (v) => v || null;
+
+// Helper function to compare product set variant selections
+const matchesVariantSelections = (selections1, selections2) => {
+  const s1 = selections1 || {};
+  const s2 = selections2 || {};
+
+  // Get all unique product IDs from both selections
+  const allProductIds = new Set([
+    ...Object.keys(s1),
+    ...Object.keys(s2)
+  ]);
+
+  // Compare each product's selections
+  for (const productId of allProductIds) {
+    const v1 = s1[productId] || {};
+    const v2 = s2[productId] || {};
+
+    if (normalize(v1.color) !== normalize(v2.color)) return false;
+    if (normalize(v1.size) !== normalize(v2.size)) return false;
+    if (normalize(v1.logo) !== normalize(v2.logo)) return false;
+  }
+
+  return true;
+};
+
+// Helper function to check if a cart item matches the given criteria
+const matchesCartItem = (item, id, color, size, frontLogo, backLogo, sideLogo, hoodieType, isProductSet) => {
+  if (item.isProductSet !== isProductSet) return false;
+
+  if (isProductSet) {
+    return item.productSetId === id;
+  }
+
+  return (
+    item.id === id &&
+    normalize(item.selectedColor) === normalize(color) &&
+    normalize(item.selectedSize) === normalize(size) &&
+    normalize(item.selectedFrontLogo) === normalize(frontLogo) &&
+    normalize(item.selectedBackLogo) === normalize(backLogo) &&
+    normalize(item.selectedSideLogo) === normalize(sideLogo) &&
+    normalize(item.selectedHoodieType) === normalize(hoodieType)
+  );
+};
 
 export function CartProvider({ children }) {
   const [items, setItems] = useState(() => {
@@ -13,10 +60,19 @@ export function CartProvider({ children }) {
       return [];
     }
   });
+  const [toastMessage, setToastMessage] = useState("");
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
   }, [items]);
+
+  const showToast = (message) => {
+    setToastMessage(message);
+  };
+
+  const hideToast = () => {
+    setToastMessage("");
+  };
 
   const addItem = (product, qty = 1) => {
     setItems(prev => {
@@ -28,14 +84,7 @@ export function CartProvider({ children }) {
       const hoodieType = product.selectedHoodieType || null;
 
       const i = prev.findIndex(p =>
-        p.id === product.id &&
-        p.selectedColor === color &&
-        p.selectedSize === size &&
-        p.selectedFrontLogo === frontLogo &&
-        p.selectedBackLogo === backLogo &&
-        p.selectedSideLogo === sideLogo &&
-        p.selectedHoodieType === hoodieType &&
-        !p.isProductSet
+        matchesCartItem(p, product._id, color, size, frontLogo, backLogo, sideLogo, hoodieType, false)
       );
       if (i >= 0) {
         const next = [...prev];
@@ -43,7 +92,7 @@ export function CartProvider({ children }) {
         return next;
       }
       return [...prev, {
-        id: product.id,
+        id: product._id,
         name: product.name,
         price: product.price,
         image: product.image,
@@ -60,14 +109,13 @@ export function CartProvider({ children }) {
   };
 
   const addProductSet = (productSet, variantSelections = {}, qty = 1) => {
-    // variantSelections is { [productId]: { color, size } }
-    const selectionKey = JSON.stringify(variantSelections);
+    // variantSelections is { [productId]: { color, size, logo } }
     setItems(prev => {
       // Check if this exact product set with same variant selections is already in cart
       const i = prev.findIndex(p =>
         p.isProductSet &&
         p.productSetId === productSet._id &&
-        JSON.stringify(p.variantSelections || {}) === selectionKey
+        matchesVariantSelections(p.variantSelections, variantSelections)
       );
       if (i >= 0) {
         const next = [...prev];
@@ -95,29 +143,18 @@ export function CartProvider({ children }) {
     });
   };
 
-  const n = (v) => v || null;
-
   const removeItem = (id, color, size, frontLogo, backLogo, sideLogo, isProductSet = false, hoodieType = null) => {
-    setItems(prev => prev.filter(p => {
-      if (p.isProductSet && isProductSet) {
-        return p.productSetId !== id;
-      }
-      return !(p.id === id && n(p.selectedColor) === n(color) && n(p.selectedSize) === n(size) && n(p.selectedFrontLogo) === n(frontLogo) && n(p.selectedBackLogo) === n(backLogo) && n(p.selectedSideLogo) === n(sideLogo) && n(p.selectedHoodieType) === n(hoodieType) && p.isProductSet === isProductSet);
-    }));
+    setItems(prev => prev.filter(p =>
+      !matchesCartItem(p, id, color, size, frontLogo, backLogo, sideLogo, hoodieType, isProductSet)
+    ));
   };
 
   const setQty = (id, color, size, frontLogo, backLogo, sideLogo, qty, isProductSet = false, hoodieType = null) =>
-    setItems(prev => prev.map(p => {
-      if (p.isProductSet && isProductSet) {
-        if (p.productSetId === id) {
-          return { ...p, qty: Math.max(1, Math.min(99, qty)) };
-        }
-        return p;
-      }
-      return (p.id === id && n(p.selectedColor) === n(color) && n(p.selectedSize) === n(size) && n(p.selectedFrontLogo) === n(frontLogo) && n(p.selectedBackLogo) === n(backLogo) && n(p.selectedSideLogo) === n(sideLogo) && n(p.selectedHoodieType) === n(hoodieType) && p.isProductSet === isProductSet)
+    setItems(prev => prev.map(p =>
+      matchesCartItem(p, id, color, size, frontLogo, backLogo, sideLogo, hoodieType, isProductSet)
         ? { ...p, qty: Math.max(1, Math.min(99, qty)) }
-        : p;
-    }));
+        : p
+    ));
 
   const clear = () => setItems([]);
 
@@ -161,10 +198,18 @@ export function CartProvider({ children }) {
     logoFees,
     LOGO_FEE,
     shipping,
-    total
+    total,
+    showToast,
+    toastMessage,
+    hideToast
   };
 
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  return (
+    <CartContext.Provider value={value}>
+      {children}
+      {toastMessage && <Toast message={toastMessage} onClose={hideToast} />}
+    </CartContext.Provider>
+  );
 }
 
 export const useCart = () => {

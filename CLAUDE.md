@@ -56,36 +56,46 @@ The app has two distinct sections with separate routing:
 
 **Admin Routes** (`/admin/*`)
 - Uses `AdminLayout` component (Sidebar + protected routes)
-- Requires authentication via `AdminContext` (persists to sessionStorage)
-- Hardcoded password: `daust_admin_2024` (see `src/context/AdminContext.jsx:14`)
+- Requires authentication via secure token-based system (`convex/auth.ts`)
+- Default password: `daust` (override via `ADMIN_PASSWORD` server env variable - NOT `VITE_` prefix)
+- Session tokens (30min expiry) with auto-refresh
 - Includes Dashboard (analytics), Products (CRUD), Collections (CRUD), Orders (fulfillment tracking)
 
 ### State Management
 
 **CartContext** (`src/context/CartContext.jsx`)
 - Manages shopping cart with localStorage persistence
-- Key: `lifeAtDaust.cart.v1`
-- Items include: `id`, `name`, `price`, `qty`, `selectedColor`, `selectedSize`
-- Cart matching logic: items are distinct by `(id, color, size)` combination
-- Exports: `addItem`, `removeItem`, `setQty`, `clear`, `count`, `subtotal`, `shipping`, `tax`, `total`
+- Key: `lifeAtDaust.cart.v2`
+- Items include: `id`, `name`, `price`, `qty`, `selectedColor`, `selectedSize`, `selectedFrontLogo`, `selectedBackLogo`, `selectedSideLogo`, `selectedHoodieType`, `isProductSet`
+- Cart matching logic:
+  - Regular items: distinct by `(id, color, size, frontLogo, backLogo, sideLogo, hoodieType)` combination
+  - Product sets: uses normalized variant selection comparison (property-order independent)
+- Logo fee: 1000 CFA when all 3 logos selected (front + back + side)
+- Exports: `addItem`, `addProductSet`, `removeItem`, `setQty`, `clear`, `count`, `subtotal`, `logoFees`, `totalSavings`, `total`, `showToast`
 
 **AdminContext** (`src/context/AdminContext.jsx`)
-- Session-based admin authentication
-- Key: `is_admin` in sessionStorage
-- Exports: `isAdmin`, `login(password)`, `logout()`
+- Secure token-based admin authentication with server-side verification
+- Uses Convex auth system (`convex/auth.ts`)
+- Session tokens stored in `admin_token` (sessionStorage)
+- Auto-refresh 5 minutes before expiry
+- 30-minute session timeout
+- Rate limiting: 5 failed attempts = 15 minute lockout
+- Exports: `isAdmin`, `adminToken`, `login(password)`, `logout()`, `sessionExpiry`
 
 ### Convex Backend Structure
 
 **Schema** (`convex/schema.ts`):
 - `products`: name, category, price, rating, badge, image, colors[], sizes[], collection, description
 - `collections`: name, slug (indexed), description, image
-- `orders`: orderId, customer{name, email, year}, items[], subtotal, total, status, createdAt
-- `categories`: name
+- `orders`: orderId, customer{name, phone, location}, items[productId, name, qty, price, frontLogo, backLogo, sideLogo, ...], subtotal, deliveryFee, total, status, createdAt
+- `adminSessions`: token (indexed), expiresAt, createdAt
+- `productSets`: name, description, products[], specialPrice, image, badge
 
 **Key Files:**
-- `convex/products.ts`: CRUD operations + image upload handlers
-- `convex/collections.ts`: Collection management
-- `convex/orders.ts`: Order creation and fulfillment tracking
+- `convex/auth.ts`: Secure authentication system with session management
+- `convex/products.ts`: CRUD operations + image upload handlers (token-verified)
+- `convex/collections.ts`: Collection management (token-verified)
+- `convex/orders.ts`: Order creation and fulfillment tracking (token-verified)
 - `convex/seed.ts` & `convex/seedCollections.ts`: Database seeders
 
 **Important Patterns:**
@@ -140,6 +150,32 @@ formatPrice(7500); // Returns "7,500 CFA"
 - **PROJECT_CONTEXT.md**: Historical changelog and architectural decisions
 - **README.md**: Setup instructions and feature overview
 
-## Admin Password
+## Admin Authentication
 
-The admin authentication uses a hardcoded password (`daust_admin_2024`) defined in `src/context/AdminContext.jsx:14`. This is intentional for the university's internal use. When working on admin features, be aware this is not a production-grade auth system.
+The admin authentication uses a **secure server-side system** (`convex/auth.ts`):
+
+**Password Configuration:**
+- Stored in `ADMIN_PASSWORD` environment variable (server-side only, NOT `VITE_` prefix)
+- Default fallback: `daust` (for development only)
+- Password NEVER exposed to client code
+
+**Security Features:**
+- ✅ Server-side password verification (never sent plaintext after login)
+- ✅ Session tokens generated on successful login
+- ✅ Tokens verified server-side for all admin operations
+- ✅ Automatic 30-minute session expiration
+- ✅ Auto-refresh prevents unexpected logouts (5min before expiry)
+- ✅ Rate limiting: 5 failed attempts = 15 minute lockout
+- ✅ Session cleanup (expired sessions removed from database)
+
+**How It Works:**
+1. User enters password on login page
+2. `convex/auth.ts:login()` verifies password server-side
+3. Server generates unique session token
+4. Token stored in `adminSessions` table with expiry timestamp
+5. Client stores token (not password) in sessionStorage
+6. All admin mutations verify token via `verifyAdminToken()` helper
+7. Invalid/expired tokens result in automatic logout
+
+**For Production:**
+Set the `ADMIN_PASSWORD` environment variable in your Convex deployment dashboard.

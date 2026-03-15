@@ -17,6 +17,8 @@ export default function Shop() {
   const [category, setCategory] = useState("All Categories");
   const [sort, setSort] = useState("Featured");
   const [searchQuery, setSearchQuery] = useState("");
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
 
   // Sync search query from URL
   useEffect(() => {
@@ -53,7 +55,7 @@ export default function Shop() {
     let sorted = [...filtered];
     if (sort === "Price: Low to High") sorted.sort((a, b) => a.price - b.price);
     if (sort === "Price: High to Low") sorted.sort((a, b) => b.price - a.price);
-    if (sort === "Newest Arrivals") sorted.sort((a, b) => b.id - a.id);
+    if (sort === "Newest Arrivals") sorted.sort((a, b) => b._id.localeCompare(a._id));
 
     // Group by collection
     const groups = {};
@@ -98,6 +100,19 @@ export default function Shop() {
 
   const totalItems = Object.values(itemsByCollection).reduce((sum, arr) => sum + arr.length, 0);
 
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setCategoryDropdownOpen(false);
+      setSortDropdownOpen(false);
+    };
+
+    if (categoryDropdownOpen || sortDropdownOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [categoryDropdownOpen, sortDropdownOpen]);
+
   return (
     <main className="min-h-screen bg-gray-50/50">
       <Hero
@@ -116,55 +131,97 @@ export default function Shop() {
 
           <div className="flex flex-wrap items-center gap-3">
             {/* Category Filter */}
-            <div className="relative group">
-              <button className="flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2.5 sm:py-3 bg-white rounded-full shadow-sm border border-gray-100 hover:border-brand-orange transition-all font-bold text-xs sm:text-sm whitespace-nowrap">
+            <div className="relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCategoryDropdownOpen(!categoryDropdownOpen);
+                  setSortDropdownOpen(false);
+                }}
+                className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2.5 sm:py-3 bg-white rounded-full shadow-sm border transition-all font-bold text-xs sm:text-sm whitespace-nowrap active:scale-95 ${
+                  categoryDropdownOpen ? 'border-brand-orange' : 'border-gray-100 hover:border-brand-orange'
+                }`}
+              >
                 <span className="hidden sm:inline">{category}</span>
                 <span className="sm:hidden">Category</span>
-                <ChevronDown size={14} className="text-gray-400 group-hover:text-brand-orange transition-colors" />
+                <ChevronDown
+                  size={14}
+                  className={`transition-all ${
+                    categoryDropdownOpen ? 'text-brand-orange rotate-180' : 'text-gray-400'
+                  }`}
+                />
               </button>
 
-              <div className="absolute top-full left-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                <div className="p-2">
-                  {CATEGORIES.map(cat => (
-                    <button
-                      key={cat}
-                      onClick={() => setCategory(cat)}
-                      className={`w-full text-left px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-all ${category === cat
-                          ? "bg-brand-navy text-white"
-                          : "text-gray-600 hover:bg-gray-50 hover:text-brand-orange"
+              {categoryDropdownOpen && (
+                <div className="absolute top-full left-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="p-2 max-h-[60vh] overflow-y-auto">
+                    {CATEGORIES.map(cat => (
+                      <button
+                        key={cat}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCategory(cat);
+                          setCategoryDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-all active:scale-95 ${
+                          category === cat
+                            ? "bg-brand-navy text-white"
+                            : "text-gray-600 hover:bg-gray-50 hover:text-brand-orange"
                         }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Sort */}
-            <div className="relative group">
-              <button className="flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2.5 sm:py-3 bg-white rounded-full shadow-sm border border-gray-100 hover:border-brand-orange transition-all font-bold text-xs sm:text-sm whitespace-nowrap">
+            <div className="relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSortDropdownOpen(!sortDropdownOpen);
+                  setCategoryDropdownOpen(false);
+                }}
+                className={`flex items-center gap-2 sm:gap-3 px-4 sm:px-5 py-2.5 sm:py-3 bg-white rounded-full shadow-sm border transition-all font-bold text-xs sm:text-sm whitespace-nowrap active:scale-95 ${
+                  sortDropdownOpen ? 'border-brand-orange' : 'border-gray-100 hover:border-brand-orange'
+                }`}
+              >
                 <span className="hidden sm:inline">{sort}</span>
                 <span className="sm:hidden">Sort</span>
-                <ChevronDown size={14} className="text-gray-400 group-hover:text-brand-orange transition-colors" />
+                <ChevronDown
+                  size={14}
+                  className={`transition-all ${
+                    sortDropdownOpen ? 'text-brand-orange rotate-180' : 'text-gray-400'
+                  }`}
+                />
               </button>
 
-              <div className="absolute top-full right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-xl border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                <div className="p-2">
-                  {["Featured", "Price: Low to High", "Price: High to Low", "Newest Arrivals"].map(s => (
-                    <button
-                      key={s}
-                      onClick={() => setSort(s)}
-                      className={`w-full text-left px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-all ${sort === s
-                          ? "bg-brand-navy text-white"
-                          : "text-gray-600 hover:bg-gray-50 hover:text-brand-orange"
+              {sortDropdownOpen && (
+                <div className="absolute top-full right-0 mt-2 w-48 sm:w-56 bg-white rounded-2xl shadow-xl border border-gray-100 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="p-2">
+                    {["Featured", "Price: Low to High", "Price: High to Low", "Newest Arrivals"].map(s => (
+                      <button
+                        key={s}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSort(s);
+                          setSortDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold transition-all active:scale-95 ${
+                          sort === s
+                            ? "bg-brand-navy text-white"
+                            : "text-gray-600 hover:bg-gray-50 hover:text-brand-orange"
                         }`}
-                    >
-                      {s}
-                    </button>
-                  ))}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Search */}
@@ -250,7 +307,7 @@ export default function Shop() {
 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-3 gap-y-8 sm:gap-x-8 sm:gap-y-12">
                   {products.map((p) => (
-                    <ProductCard key={p.id} product={p} />
+                    <ProductCard key={p._id} product={p} />
                   ))}
                 </div>
               </div>

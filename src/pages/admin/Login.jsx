@@ -24,14 +24,19 @@ export default function AdminLogin() {
         setLoading(true);
         setError("");
 
-        setTimeout(() => {
-            if (login(password)) {
+        try {
+            const result = await login(password);
+
+            if (result.success) {
                 navigate(from, { replace: true });
             } else {
-                setError("Invalid password. Please try again.");
+                setError(result.error || "Invalid password. Please try again.");
                 setLoading(false);
             }
-        }, 600);
+        } catch (err) {
+            setError("Login failed. Please try again.");
+            setLoading(false);
+        }
     };
 
     return (

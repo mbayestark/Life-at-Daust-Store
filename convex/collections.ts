@@ -1,10 +1,8 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { verifyAdminToken } from "./auth";
 
-// Convex exposes process.env at runtime. We declare it as an ambient variable
-// here to avoid requiring @types/node, since Convex is not a Node.js environment.
 declare const process: { env: Record<string, string | undefined> };
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "daust";
 
 export const list = query({
     args: {},
@@ -61,8 +59,9 @@ export const addCollection = mutation({
         adminToken: v.string(),
     },
     handler: async (ctx, args) => {
-        if (args.adminToken !== ADMIN_PASSWORD) {
-            throw new Error("Unauthorized");
+        const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+        if (!isAuthorized) {
+            throw new Error("Unauthorized - Invalid or expired session");
         }
         const { adminToken: _adminToken, ...collectionArgs } = args;
         const collectionId = await ctx.db.insert("collections", collectionArgs);
@@ -84,8 +83,9 @@ export const updateCollection = mutation({
         adminToken: v.string(),
     },
     handler: async (ctx, args) => {
-        if (args.adminToken !== ADMIN_PASSWORD) {
-            throw new Error("Unauthorized");
+        const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+        if (!isAuthorized) {
+            throw new Error("Unauthorized - Invalid or expired session");
         }
         const { id, adminToken: _adminToken, ...fields } = args;
         await ctx.db.patch(id, fields);
@@ -95,8 +95,9 @@ export const updateCollection = mutation({
 export const removeCollection = mutation({
     args: { id: v.id("collections"), adminToken: v.string() },
     handler: async (ctx, args) => {
-        if (args.adminToken !== ADMIN_PASSWORD) {
-            throw new Error("Unauthorized");
+        const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+        if (!isAuthorized) {
+            throw new Error("Unauthorized - Invalid or expired session");
         }
         // Remove collection reference from all products first
         const products = await ctx.db.query("products").collect();

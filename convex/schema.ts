@@ -63,14 +63,13 @@ export default defineSchema({
             location: v.string(),
         }),
         items: v.array(v.object({
+            productId: v.optional(v.string()),
             name: v.string(),
             qty: v.number(),
             price: v.number(),
             hoodieType: v.optional(v.string()),
             color: v.optional(v.string()),
             size: v.optional(v.string()),
-            logo: v.optional(v.string()),
-            logoPosition: v.optional(v.string()),
             frontLogo: v.optional(v.string()),
             backLogo: v.optional(v.string()),
             sideLogo: v.optional(v.string()),
@@ -87,4 +86,9 @@ export default defineSchema({
         naboopayCheckoutUrl: v.optional(v.string()),
         createdAt: v.number(),
     }),
+    adminSessions: defineTable({
+        token: v.string(),
+        expiresAt: v.number(),
+        createdAt: v.number(),
+    }).index("by_token", ["token"]),
 });

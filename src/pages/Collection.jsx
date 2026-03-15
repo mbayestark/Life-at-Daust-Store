@@ -129,7 +129,7 @@ export default function Collection() {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-10 sm:gap-x-10 sm:gap-y-20">
             {filteredProducts.map((p, idx) => (
               <div
-                key={p._id || p.id}
+                key={p._id}
                 className="animate-fade-in-up"
                 style={{ animationDelay: `${(idx % 4) * 100}ms` }}
               >

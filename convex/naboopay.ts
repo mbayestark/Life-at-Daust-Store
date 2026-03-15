@@ -64,8 +64,28 @@ export const createTransaction = action({
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`NabooPay API error (${response.status}): ${errorText || response.statusText}`);
+      let errorDetails = response.statusText;
+      try {
+        const errorBody = await response.json();
+        errorDetails = JSON.stringify(errorBody);
+      } catch {
+        // If response is not JSON, try text
+        try {
+          errorDetails = await response.text();
+        } catch {
+          // Keep statusText as fallback
+        }
+      }
+
+      // Log full error for debugging (visible in Convex logs)
+      console.error(`NabooPay API Error:`, {
+        status: response.status,
+        statusText: response.statusText,
+        details: errorDetails,
+        payload: payload
+      });
+
+      throw new Error(`NabooPay API error (${response.status}): ${response.statusText}`);
     }
 
     const data = await response.json();

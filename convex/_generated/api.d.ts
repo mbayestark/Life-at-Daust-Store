@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as auth from "../auth.js";
 import type * as clearAllData from "../clearAllData.js";
 import type * as clearProducts from "../clearProducts.js";
 import type * as collections from "../collections.js";
@@ -25,6 +26,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  auth: typeof auth;
   clearAllData: typeof clearAllData;
   clearProducts: typeof clearProducts;
   collections: typeof collections;
