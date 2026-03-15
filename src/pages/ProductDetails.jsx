@@ -315,16 +315,6 @@ export default function ProductDetails() {
                             </div>
                         )}
 
-                        {/* Additional Logo Fee Notice */}
-                        {selectedFrontLogo && selectedBackLogo && (
-                            <div className="flex items-center gap-3 p-4 bg-orange-50 border border-orange-200 rounded-2xl">
-                                <Info size={18} className="text-brand-orange flex-shrink-0" />
-                                <p className="text-sm font-bold text-brand-orange">
-                                    +{formatPrice(1000)} additional fee for logos on both front and back
-                                </p>
-                            </div>
-                        )}
-
                         {/* Side Logo Selection */}
                         {product.logos && product.logos.filter(l => !l.positions || l.positions.includes("side")).length > 0 && (
                             <div className="space-y-5">
@@ -379,11 +369,11 @@ export default function ProductDetails() {
                         )}
 
                         {/* Additional Logo Fee Notice */}
-                        {[selectedFrontLogo, selectedBackLogo, selectedSideLogo].filter(Boolean).length > 1 ? (
+                        {[selectedFrontLogo, selectedBackLogo, selectedSideLogo].filter(Boolean).length === 3 ? (
                             <div className="flex items-center gap-3 p-4 bg-orange-50 border border-orange-200 rounded-2xl">
                                 <Info size={18} className="text-brand-orange flex-shrink-0" />
                                 <p className="text-sm font-bold text-brand-orange">
-                                    +{formatPrice(1000)} additional fee for multiple logo positions
+                                    +{formatPrice(1000)} additional fee for 3 logos
                                 </p>
                             </div>
                         ) : null}
