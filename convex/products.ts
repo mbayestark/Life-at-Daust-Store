@@ -225,6 +225,7 @@ export const addProduct = mutation({
         type: v.optional(v.string()),
         shippingTimeline: v.optional(v.string()),
         hoodieTypes: v.optional(v.array(v.string())),
+        buyingPrice: v.optional(v.number()),
         adminToken: v.string(),
     },
     handler: async (ctx, args) => {
@@ -295,6 +296,7 @@ export const updateProduct = mutation({
         type: v.optional(v.string()),
         shippingTimeline: v.optional(v.string()),
         hoodieTypes: v.optional(v.array(v.string())),
+        buyingPrice: v.optional(v.number()),
         adminToken: v.string(),
     },
     handler: async (ctx, args) => {

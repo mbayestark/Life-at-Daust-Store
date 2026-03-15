@@ -24,6 +24,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
         stock: "",
         shippingTimeline: "",
         hoodieTypes: [],
+        buyingPrice: "",
     });
 
     const [imageFile, setImageFile] = useState(null);
@@ -64,6 +65,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                 stock: product.stock?.toString() || "",
                 shippingTimeline: product.shippingTimeline || "",
                 hoodieTypes: product.hoodieTypes || [],
+                buyingPrice: product.buyingPrice?.toString() || "",
             });
             setImagePreview(product.image || "");
         }
@@ -232,6 +234,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                 stock: formData.stock !== "" ? parseInt(formData.stock) : undefined,
                 shippingTimeline: formData.shippingTimeline || undefined,
                 hoodieTypes: formData.hoodieTypes,
+                buyingPrice: formData.buyingPrice !== "" ? parseFloat(formData.buyingPrice) : undefined,
             };
 
             if (product) {
@@ -288,7 +291,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Price (XOF)</label>
+                                <label className="block text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Selling Price (XOF)</label>
                                 <input
                                     type="number"
                                     step="100"
@@ -299,6 +302,19 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                     placeholder="7500"
                                 />
                             </div>
+                        </div>
+
+                        <div>
+                            <label className="block text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Buying Price / Cost (XOF) <span className="normal-case font-medium text-gray-300">— admin only, used for profit tracking</span></label>
+                            <input
+                                type="number"
+                                step="100"
+                                min="0"
+                                value={formData.buyingPrice}
+                                onChange={(e) => setFormData({ ...formData, buyingPrice: e.target.value })}
+                                className="w-full bg-orange-50 border border-orange-100 rounded-xl md:rounded-2xl px-4 md:px-5 py-3 md:py-4 text-sm md:text-base text-brand-navy font-bold focus:ring-2 focus:ring-brand-orange/20 transition-all"
+                                placeholder="e.g. 4000"
+                            />
                         </div>
 
                         <div>

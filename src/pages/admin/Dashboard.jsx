@@ -11,7 +11,8 @@ import {
     DollarSign,
     Users,
     Layers,
-    AlertTriangle
+    AlertTriangle,
+    ArrowUpRight
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { formatPrice } from "../../utils/format.js";
@@ -27,6 +28,35 @@ export default function AdminDashboard() {
     // If no admin token (or orders query was skipped), treat as empty 
     const ordersData = orders ?? [];
 
+    const profitData = useMemo(() => {
+        if (!products) return { totalProfit: 0, totalCost: 0, margin: 0 };
+
+        // Build a lookup: productName -> buyingPrice
+        const buyingByName = {};
+        for (const p of products) {
+            if (p.buyingPrice != null) {
+                buyingByName[p.name.toLowerCase()] = p.buyingPrice;
+            }
+        }
+
+        const CONFIRMED_STATUSES = ["Paid", "Processing", "Shipped", "Delivered"];
+        let totalRevenue = 0;
+        let totalCost = 0;
+
+        for (const order of ordersData) {
+            if (!CONFIRMED_STATUSES.includes(order.status)) continue;
+            totalRevenue += order.total || 0;
+            for (const item of order.items || []) {
+                const cost = buyingByName[item.name?.toLowerCase()] ?? 0;
+                totalCost += cost * (item.qty || 1);
+            }
+        }
+
+        const totalProfit = totalRevenue - totalCost;
+        const margin = totalRevenue > 0 ? Math.round((totalProfit / totalRevenue) * 100) : 0;
+        return { totalProfit, totalCost, margin };
+    }, [products, ordersData]);
+
     const stats = useMemo(() => {
         if (!products) return [];
 
@@ -38,11 +68,12 @@ export default function AdminDashboard() {
 
         return [
             { label: "Total Revenue", value: formatPrice(totalRevenue), icon: DollarSign, color: "bg-green-50 text-green-600" },
+            { label: "Net Profit", value: formatPrice(profitData.totalProfit), sub: `${profitData.margin}% margin`, icon: TrendingUp, color: profitData.totalProfit >= 0 ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-500" },
             { label: "Active Orders", value: activeOrders.toString(), icon: ShoppingBag, color: "bg-brand-orange/10 text-brand-orange" },
             { label: "Catalog Size", value: totalProducts.toString(), icon: Package, color: "bg-blue-50 text-blue-600" },
             { label: "Fulfillment Rate", value: ordersData.length > 0 ? `${Math.round((completedOrders / ordersData.length) * 100)}%` : "0%", icon: CheckCircle2, color: "bg-purple-50 text-purple-600" },
         ];
-    }, [products, ordersData]);
+    }, [products, ordersData, profitData]);
 
     const recentOrders = useMemo(() => {
         return ordersData.slice(0, 5);
@@ -110,7 +141,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-8">
                 {stats.map((stat, i) => (
                     <div key={i} className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-2xl shadow-black/[0.02] hover:shadow-black/[0.05] hover:-translate-y-1 transition-all duration-500 group relative overflow-hidden">
                         <div className="absolute top-0 right-0 w-24 h-24 bg-brand-orange/5 rounded-full blur-2xl -mr-12 -mt-12 group-hover:bg-brand-orange/10 transition-colors" />
@@ -121,6 +152,7 @@ export default function AdminDashboard() {
                         </div>
                         <p className="text-[11px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">{stat.label}</p>
                         <p className="text-3xl font-[900] text-brand-navy tracking-tighter">{stat.value}</p>
+                        {stat.sub && <p className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-widest">{stat.sub}</p>}
                     </div>
                 ))}
             </div>
@@ -165,6 +197,49 @@ export default function AdminDashboard() {
                         </Bar>
                     </BarChart>
                 </ResponsiveContainer>
+            </div>
+
+            {/* Profit Breakdown */}
+            <div className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-2xl shadow-black/[0.02]">
+                <div className="flex items-center gap-4 mb-8">
+                    <div className="w-1.5 h-8 bg-emerald-500 rounded-full" />
+                    <h2 className="text-2xl font-[900] text-brand-navy tracking-tight">Profit Breakdown</h2>
+                    <span className="ml-auto text-[10px] font-black text-gray-400 uppercase tracking-widest">Confirmed orders only</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Revenue */}
+                    <div className="bg-gray-50 rounded-[2rem] p-7 space-y-2">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Total Revenue</p>
+                        <p className="text-3xl font-[900] text-brand-navy tracking-tighter">
+                            {formatPrice(ordersData.filter(o => ["Paid","Processing","Shipped","Delivered"].includes(o.status)).reduce((s,o) => s + (o.total||0), 0))}
+                        </p>
+                        <p className="text-xs text-gray-400 font-bold">Selling price × qty</p>
+                    </div>
+                    {/* Cost */}
+                    <div className="bg-gray-50 rounded-[2rem] p-7 space-y-2">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Cost of Goods Sold</p>
+                        <p className="text-3xl font-[900] text-brand-navy tracking-tighter">{formatPrice(profitData.totalCost)}</p>
+                        <p className="text-xs text-gray-400 font-bold">
+                            {profitData.totalCost === 0
+                                ? "Set buying prices on products to track cost"
+                                : "Buying price × qty sold"}
+                        </p>
+                    </div>
+                    {/* Profit */}
+                    <div className={`rounded-[2rem] p-7 space-y-2 ${profitData.totalProfit >= 0 ? "bg-emerald-50" : "bg-red-50"}`}>
+                        <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${profitData.totalProfit >= 0 ? "text-emerald-600" : "text-red-500"}`}>Net Profit</p>
+                        <p className={`text-3xl font-[900] tracking-tighter flex items-center gap-2 ${profitData.totalProfit >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+                            {formatPrice(profitData.totalProfit)}
+                            <ArrowUpRight size={20} />
+                        </p>
+                        <p className={`text-xs font-bold ${profitData.totalProfit >= 0 ? "text-emerald-500" : "text-red-400"}`}>{profitData.margin}% margin</p>
+                    </div>
+                </div>
+                {profitData.totalCost === 0 && (
+                    <p className="mt-6 text-xs text-gray-400 font-bold bg-yellow-50 border border-yellow-100 rounded-xl px-4 py-3">
+                        Tip: Add buying prices to your products in the Products section to see accurate profit calculations.
+                    </p>
+                )}
             </div>
 
             <div className="grid lg:grid-cols-12 gap-10">

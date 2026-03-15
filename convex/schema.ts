@@ -29,6 +29,7 @@ export default defineSchema({
         type: v.optional(v.string()),
         shippingTimeline: v.optional(v.string()),
         hoodieTypes: v.optional(v.array(v.string())),
+        buyingPrice: v.optional(v.number()),
     }),
     productSets: defineTable({
         name: v.string(),
