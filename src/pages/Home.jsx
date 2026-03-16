@@ -205,7 +205,6 @@ export default function Home() {
   }, [products]);
 
   const collectionsRef = useReveal(0.08);
-  const spotlightRef = useReveal(0.1);
   const trendingRef = useReveal(0.08);
 
   const scroll = (dir) => {
@@ -319,7 +318,7 @@ export default function Home() {
       {featuredProduct && (
         <section className="bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
-            <div ref={spotlightRef} className="section-reveal grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
               {/* Image */}
               <div className="relative">
