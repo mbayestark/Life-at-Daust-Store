@@ -11,7 +11,8 @@ import {
     Menu,
     ExternalLink,
     Layers,
-    Tag
+    Tag,
+    Image
 } from "lucide-react";
 import logo from "../../assets/logo.png";
 
@@ -32,6 +33,7 @@ export default function AdminLayout() {
         { icon: Tag, label: "Bundles", path: "/admin/product-sets" },
         { icon: Layers, label: "Collections", path: "/admin/collections" },
         { icon: ShoppingBag, label: "Orders", path: "/admin/orders" },
+        { icon: Image, label: "Hero", path: "/admin/hero" },
     ];
 
     return (
@@ -159,7 +161,7 @@ export default function AdminLayout() {
                             <Menu size={20} />
                         </button>
                         <h1 className="text-base lg:text-xl font-[900] text-brand-navy tracking-tight">
-                            {menuItems.find(item => item.path === location.pathname)?.label || "Admin Panel"}
+                            {menuItems.find(item => location.pathname.startsWith(item.path) && (item.path !== "/admin" || location.pathname === "/admin"))?.label || "Admin Panel"}
                         </h1>
                     </div>
 

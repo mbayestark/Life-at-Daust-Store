@@ -1,9 +1,8 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { ArrowRight, ChevronLeft, ChevronRight, Quote, Star, Zap } from "lucide-react";
-import { useMemo } from "react";
 import Hero from "../components/Hero.jsx";
 import Newsletter from "../components/Newsletter.jsx";
 import ProductCard from "../components/ProductCard.jsx";
@@ -176,8 +175,19 @@ function TestimonialMarquee() {
 export default function Home() {
   const collections = useQuery(api.collections.list);
   const scrollRef = useRef(null);
-
   const products = useQuery(api.products.list);
+  const heroImages = useQuery(api.settings.getHeroImages) || [];
+  const [heroIdx, setHeroIdx] = useState(0);
+
+  useEffect(() => {
+    if (heroImages.length <= 1) return;
+    const interval = setInterval(() => {
+      setHeroIdx(i => (i + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [heroImages.length]);
+
+  const heroImage = heroImages.length > 0 ? heroImages[heroIdx] : "/assets/DaustianShoot/Homepage.jpg";
 
   const featuredProduct = useMemo(() => {
     if (!products) return null;
@@ -208,7 +218,7 @@ export default function Home() {
         title="Welcome to the Life At Daust Store"
         subtitle="Campus apparel and essentials designed by students, made for the DAUST community."
         cta="Shop Collection"
-        image="/assets/DaustianShoot/Homepage.jpg"
+        image={heroImage}
         to="/shop"
       />
 

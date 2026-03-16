@@ -97,4 +97,7 @@ export default defineSchema({
         expiresAt: v.number(),
         createdAt: v.number(),
     }).index("by_token", ["token"]),
+    siteSettings: defineTable({
+        heroImages: v.optional(v.array(v.string())),
+    }),
 });

@@ -25,6 +25,7 @@ import AdminProducts from "./pages/admin/Products";
 import AdminProductSets from "./pages/admin/ProductSets";
 import AdminCollections from "./pages/admin/Collections";
 import AdminOrders from "./pages/admin/Orders";
+import AdminHeroSettings from "./pages/admin/HeroSettings";
 
 export default function App() {
   useEffect(() => {
@@ -56,6 +57,7 @@ export default function App() {
             <Route path="product-sets" element={<AdminProductSets />} />
             <Route path="collections" element={<AdminCollections />} />
             <Route path="orders" element={<AdminOrders />} />
+            <Route path="hero" element={<AdminHeroSettings />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
