@@ -10,6 +10,7 @@ export default function Hero({
   to = "/",
   image,
   video,
+  onVideoEnded,
   align = "left",
 }) {
   const isCenter = align === "center";
@@ -31,8 +32,8 @@ export default function Hero({
                 src={video}
                 autoPlay
                 muted
-                loop
                 playsInline
+                onEnded={onVideoEnded}
                 className="w-full h-full object-cover object-center"
               />
             ) : (

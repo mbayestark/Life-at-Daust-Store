@@ -179,14 +179,16 @@ export default function Home() {
   const heroMedia = useQuery(api.settings.getHeroMedia) || [];
   const reelVideos = useQuery(api.settings.getReelVideos) || [];
   const [heroIdx, setHeroIdx] = useState(0);
+  const advanceHero = () => setHeroIdx(i => (i + 1) % heroMedia.length);
 
+  // For image slides use a 5s timer; for video slides wait for onEnded
   useEffect(() => {
     if (heroMedia.length <= 1) return;
-    const interval = setInterval(() => {
-      setHeroIdx(i => (i + 1) % heroMedia.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [heroMedia.length]);
+    const currentSlide = heroMedia[heroIdx];
+    if (currentSlide?.type === "video") return; // video advances via onEnded
+    const timer = setTimeout(advanceHero, 5000);
+    return () => clearTimeout(timer);
+  }, [heroIdx, heroMedia.length]);
 
   const currentSlide = heroMedia.length > 0 ? heroMedia[heroIdx] : null;
 
@@ -221,6 +223,7 @@ export default function Home() {
         cta="Shop Collection"
         image={currentSlide?.type === "image" ? currentSlide.url : (!currentSlide ? "/assets/DaustianShoot/Homepage.jpg" : undefined)}
         video={currentSlide?.type === "video" ? currentSlide.url : undefined}
+        onVideoEnded={heroMedia.length > 1 ? advanceHero : undefined}
         to="/shop"
       />
 
