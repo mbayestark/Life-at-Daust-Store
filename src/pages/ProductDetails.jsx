@@ -238,7 +238,7 @@ export default function ProductDetails() {
                                                     type="button"
                                                     onClick={() => {
                                                         setSelectedFrontLogos(isSelected ? [] : [logo]);
-                                                        if (!isSelected && window.innerWidth < 1024) {
+                                                        if (!isSelected && logo.image && window.innerWidth < 1024) {
                                                             document.getElementById('product-image')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                                         }
                                                         if (!isSelected && logo.image) {
@@ -291,7 +291,7 @@ export default function ProductDetails() {
                                                         setSelectedBackLogos(prev =>
                                                             isSelected ? prev.filter(l => !((l.id && l.id === logo.id) || l.name === logo.name)) : [...prev, logo]
                                                         );
-                                                        if (!isSelected && window.innerWidth < 1024) {
+                                                        if (!isSelected && logo.image && window.innerWidth < 1024) {
                                                             document.getElementById('product-image')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                                         }
                                                         if (!isSelected && logo.image) {
@@ -344,7 +344,7 @@ export default function ProductDetails() {
                                                         setSelectedSideLogos(prev =>
                                                             isSelected ? prev.filter(l => !((l.id && l.id === logo.id) || l.name === logo.name)) : [...prev, logo]
                                                         );
-                                                        if (!isSelected && window.innerWidth < 1024) {
+                                                        if (!isSelected && logo.image && window.innerWidth < 1024) {
                                                             document.getElementById('product-image')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                                                         }
                                                         if (!isSelected && logo.image) {
