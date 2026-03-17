@@ -115,7 +115,7 @@ export default function ProductDetails() {
                 </nav>
             </div>
 
-            <main className="max-w-7xl mx-auto px-4 py-3 sm:py-24 grid grid-cols-[5fr_7fr] lg:grid-cols-12 gap-3 sm:gap-8 lg:gap-20">
+            <main className="max-w-7xl mx-auto px-4 py-6 sm:py-24 grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-20">
 {/* Left: Image Gallery (Span 7) */}
                 <div id="product-image" className="lg:col-span-5 space-y-2 sm:space-y-6">
                     <div className="relative aspect-[3/4] sm:aspect-[4/5] rounded-2xl sm:rounded-[2rem] overflow-hidden bg-gray-50/50 premium-shadow border border-gray-100 animate-in fade-in zoom-in-95 duration-700">
@@ -130,14 +130,14 @@ export default function ProductDetails() {
                                 className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm z-10 animate-in fade-in duration-300 cursor-pointer"
                                 onClick={() => setLogoPreview(null)}
                             >
-                                <div className="bg-white rounded-2xl p-4 shadow-2xl animate-in zoom-in-95 duration-300 max-w-[70%]">
+                                <div className="bg-white rounded-2xl p-2 sm:p-4 shadow-2xl animate-in zoom-in-95 duration-300 max-w-[70%]">
                                     <img src={logoPreview} alt="Logo preview" className="w-full object-contain rounded-xl" />
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest text-center mt-3">Logo Preview</p>
+                                    <p className="text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest text-center mt-1 sm:mt-3">Logo Preview</p>
                                 </div>
                             </div>
                         )}
                     </div>
-                    <div className="hidden sm:flex gap-3 sm:gap-4 overflow-x-auto py-2 sm:py-4 scrollbar-hide px-1 sm:px-2 snap-x snap-mandatory">
+                    <div className="flex gap-3 sm:gap-4 overflow-x-auto py-2 sm:py-4 scrollbar-hide px-1 sm:px-2 snap-x snap-mandatory">
                         {gallery.map((img, idx) => (
                             <button
                                 key={idx}
@@ -155,7 +155,7 @@ export default function ProductDetails() {
                 </div>
 
                 {/* Right: Info & Actions (Span 5) */}
-                <div className="lg:col-span-7 flex flex-col overflow-y-auto max-h-[calc(100svh-120px)] sm:max-h-none sm:pt-4">
+                <div className="lg:col-span-7 flex flex-col pt-0 sm:pt-4">
                     <div className="mb-3 sm:mb-10 animate-in slide-in-from-right-10 duration-700 delay-100">
                         {product.badge && (
                             <span className="inline-block px-2 py-1 sm:px-4 sm:py-1.5 rounded-full bg-orange-100 text-brand-orange text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] mb-2 sm:mb-6 shadow-sm">
@@ -397,7 +397,10 @@ export default function ProductDetails() {
                                         {product.colors.map((color) => (
                                             <button
                                                 key={color.name}
-                                                onClick={() => setSelectedColor(color)}
+                                                onClick={() => {
+                                                    setSelectedColor(color);
+                                                    document.getElementById('product-image')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                                }}
                                                 className={`relative w-8 h-8 rounded-full ring-2 ring-offset-2 transition-all duration-300 active:scale-95 ${selectedColor?.name === color.name
                                                     ? "ring-brand-orange"
                                                     : "ring-transparent"
@@ -543,30 +546,33 @@ export default function ProductDetails() {
 
                         </div>
 
-                        {/* Trust Badges */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-8 sm:mt-12 bg-gray-50/50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-white rounded-xl shadow-sm">
-                                    <Truck size={20} className="text-brand-orange" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase text-gray-900 leading-none">Fast Delivery</p>
-                                    <p className="text-[10px] text-gray-500 mt-1">{product.shippingTimeline || "10-15 days campus ship"}</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-white rounded-xl shadow-sm">
-                                    <Shield size={20} className="text-green-500" />
-                                </div>
-                                <div>
-                                    <p className="text-[10px] font-black uppercase text-gray-900 leading-none">Secure Payment</p>
-                                    <p className="text-[10px] text-gray-500 mt-1">100% encrypted</p>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </main>
+
+            {/* Trust Badges */}
+            <div className="max-w-7xl mx-auto px-4 pb-8 sm:pb-16">
+                <div className="grid grid-cols-2 gap-4 bg-gray-50/50 p-4 sm:p-6 rounded-2xl sm:rounded-3xl">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-white rounded-xl shadow-sm">
+                            <Truck size={20} className="text-brand-orange" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black uppercase text-gray-900 leading-none">Fast Delivery</p>
+                            <p className="text-[10px] text-gray-500 mt-1">{product.shippingTimeline || "10-15 days campus ship"}</p>
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-white rounded-xl shadow-sm">
+                            <Shield size={20} className="text-green-500" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black uppercase text-gray-900 leading-none">Secure Payment</p>
+                            <p className="text-[10px] text-gray-500 mt-1">100% encrypted</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
         </div>
     );
