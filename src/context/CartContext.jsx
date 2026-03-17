@@ -133,7 +133,7 @@ export function CartProvider({ children }) {
         productSetName: productSet.name,
         products: productSet.products,
         originalPrice: productSet.originalPrice,
-        savings: productSet.savings,
+        savings: Math.round(productSet.specialPrice * 0.08),
         variantSelections,
         selectedColor: null,
         selectedSize: null,
@@ -161,8 +161,7 @@ export function CartProvider({ children }) {
   const count = useMemo(() => items.reduce((n, p) => n + p.qty, 0), [items]);
   const subtotal = useMemo(() => items.reduce((s, p) => s + p.price * p.qty, 0), [items]);
 
-  // Calculate savings from product sets
-  const totalSavings = useMemo(() => 
+  const totalSavings = useMemo(() =>
     items.filter(p => p.isProductSet).reduce((s, p) => s + (p.savings || 0) * p.qty, 0),
     [items]
   );
@@ -185,7 +184,7 @@ export function CartProvider({ children }) {
   );
 
   const shipping = subtotal > 0 ? 0 : 0;
-  const total = subtotal + shipping + logoFees;
+  const total = subtotal - totalSavings + shipping + logoFees;
 
   const value = {
     items,
