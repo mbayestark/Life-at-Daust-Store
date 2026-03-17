@@ -232,7 +232,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                 image: imageToSave,
                 colors: formData.colors,
                 sizes: formData.sizes,
-                logos: formData.logos,
+                logos: formData.logos.map(({ displayImage, ...logo }) => logo),
                 logoImages: sanitizeLogoImages(colorImages),
                 collection: formData.collection || undefined,
                 stock: formData.stock !== "" ? parseInt(formData.stock) : undefined,
