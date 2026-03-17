@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 import { Shield, ChevronLeft, Lock, Info, AlertCircle, Package, Tag, ChevronUp } from "lucide-react";
 import { formatPrice } from "../utils/format.js";
@@ -27,7 +27,12 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", location: "" });
-  const [error, setError] = useState("");
+  const [searchParams] = useSearchParams();
+  const [error, setError] = useState(
+    searchParams.get("error") === "payment_failed"
+      ? "Your payment was not completed. Please try again."
+      : ""
+  );
   const nav = useNavigate();
 
   const addOrder = useMutation(api.orders.addOrder);
@@ -150,8 +155,6 @@ export default function Checkout() {
             naboopayOrderId: nabooResponse.order_id,
             naboopayCheckoutUrl: nabooResponse.checkout_url,
           });
-          // Clear cart before redirecting to payment gateway
-          clear();
           window.location.href = nabooResponse.checkout_url;
           return;
         } else {

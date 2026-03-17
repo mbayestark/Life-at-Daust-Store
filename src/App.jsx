@@ -1,5 +1,11 @@
 import React, { useEffect } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
 import AOS from "aos";
 import "aos/dist/aos.css";
 
@@ -34,6 +40,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
+      <ScrollToTop />
       <AdminProvider>
         <Routes>
           {/* Main Storefront Routes */}
