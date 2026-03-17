@@ -146,7 +146,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                 logos: [...formData.logos, {
                     id: logoId,
                     name: newLogoName.trim(),
-                    ...(imageStorageId ? { image: imageStorageId } : {}),
+                    ...(imageStorageId ? { image: imageStorageId, displayImage: newLogoPreview } : {}),
                     ...(newLogoPositions.length > 0 ? { positions: newLogoPositions } : {}),
                 }]
             });
@@ -154,7 +154,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
             setNewLogoFile(null);
             setNewLogoPositions(["front", "back"]);
             if (newLogoPreview) {
-                revokePreviewUrl(newLogoPreview);
+                // Do not revoke just yet, as we need it for immediate display
                 setNewLogoPreview("");
             }
         } catch {
@@ -403,10 +403,10 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                                     {formData.logos.map((logo, index) => (
                                         <div key={index} className="relative bg-white rounded-xl p-3 shadow-sm border border-gray-100">
-                                            {logo.image && !logo.image.startsWith("kg") ? (
+                                            {logo.displayImage || (logo.image && !logo.image.startsWith("kg")) ? (
                                                 <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 mb-2">
                                                     <img
-                                                        src={logo.image}
+                                                        src={logo.displayImage || logo.image}
                                                         alt={logo.name}
                                                         className="w-full h-full object-contain"
                                                     />
@@ -477,8 +477,8 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                     <div className="flex flex-wrap gap-2 md:gap-3 mb-3 md:mb-4">
                         {formData.logos.map((logo, index) => (
                             <div key={index} className="flex items-center gap-2 bg-white px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl shadow-sm">
-                                {logo.image && !logo.image.startsWith("kg") && (
-                                    <img src={logo.image} alt={logo.name} className="w-8 h-8 rounded-lg object-cover bg-gray-100" />
+                                {(logo.displayImage || (logo.image && !logo.image.startsWith("kg"))) && (
+                                    <img src={logo.displayImage || logo.image} alt={logo.name} className="w-8 h-8 rounded-lg object-cover bg-gray-100" />
                                 )}
                                 <span className="text-xs md:text-sm font-bold text-brand-navy">{logo.name}</span>
                                 {logo.positions && logo.positions.length > 0 && (

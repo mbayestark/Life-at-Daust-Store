@@ -72,7 +72,6 @@ export default function ProductCard({ product }) {
             )}
           </div>
         )}
-
         {/* Quick Add Overlay (Desktop) */}
         {!isSoldOut && (
           <div className={`absolute inset-x-0 bottom-0 p-4 transition-all duration-300 translate-y-full group-hover:translate-y-0 hidden lg:block bg-gradient-to-t from-black/20 to-transparent z-20`}>
