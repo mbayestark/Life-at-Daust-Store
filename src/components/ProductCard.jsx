@@ -113,7 +113,7 @@ export default function ProductCard({ product }) {
             <h3 className="text-xs sm:text-sm font-bold text-gray-900 line-clamp-1 group-hover:text-brand-orange transition-colors duration-300 tracking-tight">
               {product.name}
             </h3>
-            <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">{product.type ? `${product.type} ${product.category}` : product.category}</p>
+            <p className="text-[10px] sm:text-xs text-gray-500 mt-0.5">{product.category}</p>
           </Link>
           <div className="flex items-center bg-gray-50 px-1.5 py-0.5 sm:px-2 sm:py-1 rounded-md">
             <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-yellow-400 fill-current" />
