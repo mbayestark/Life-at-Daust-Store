@@ -255,7 +255,7 @@ ${order.items.map(item => `<tr>
                         <div className="flex items-center justify-between">
                             <h2 className="text-lg font-black text-brand-navy">All Orders</h2>
                             <div className="flex items-center gap-3">
-                                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">{filteredOrders.length} / {orders.length}</p>
+                                <p className="text-xs text-gray-400 font-bold uppercase tracking-widest">{filteredOrders.length} / {isPartner ? orders.filter(o => PARTNER_STATUSES.includes(o.status)).length : orders.length}</p>
                                 <button
                                     onClick={exportCSV}
                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 text-gray-600 hover:bg-brand-navy hover:text-white font-bold text-xs uppercase tracking-widest transition-all"
