@@ -45,7 +45,9 @@ export default function Checkout() {
   }, [form.location]);
 
   const baseTotal = subtotal + deliveryFee + logoFees;
-  const discountAmount = Math.round(baseTotal * 0.15);
+  const setSubtotal = items.filter(i => i.isProductSet).reduce((s, i) => s + i.price * i.qty, 0);
+  const regularBase = baseTotal - setSubtotal;
+  const discountAmount = Math.round(regularBase * 0.15) + Math.round(setSubtotal * 0.05);
   const total = baseTotal - discountAmount;
 
   // Separate product sets and regular items

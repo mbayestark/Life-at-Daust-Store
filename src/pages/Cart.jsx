@@ -7,7 +7,9 @@ import Button from "../components/ui/Button";
 
 export default function Cart() {
   const { items, removeItem, setQty, count, subtotal, totalSavings, logoFees, total } = useCart();
-  const discountAmount = Math.round(total * 0.15);
+  const setSubtotal = items.filter(i => i.isProductSet).reduce((s, i) => s + i.price * i.qty, 0);
+  const regularTotal = total - setSubtotal;
+  const discountAmount = Math.round(regularTotal * 0.15) + Math.round(setSubtotal * 0.05);
   const discountedTotal = total - discountAmount;
   const [summaryOpen, setSummaryOpen] = useState(false);
 
