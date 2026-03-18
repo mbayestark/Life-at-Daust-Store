@@ -53,6 +53,10 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
     const addProduct = useMutation(api.products.addProduct);
     const updateProduct = useMutation(api.products.updateProduct);
     const collections = useQuery(api.collections.list);
+    const allProducts = useQuery(api.products.list);
+
+    const [importSourceId, setImportSourceId] = useState("");
+    const [importOpen, setImportOpen] = useState(false);
 
     const categories = ["T-Shirts", "Hoodies", "Quarter Zip", "Caps", "Shorts", "Joggers", "Drinkware", "Accessories"];
 
@@ -556,6 +560,107 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                             {logoUploading ? "..." : <Plus size={18} />}
                         </button>
                     </div>
+                </div>
+
+                {/* Import Logos & Combinations from another product */}
+                <div className="bg-gray-50 rounded-2xl md:rounded-3xl p-4 md:p-8">
+                    <button type="button" onClick={() => setImportOpen(v => !v)} className="w-full flex items-center justify-between">
+                        <div>
+                            <h3 className="font-black text-brand-navy text-sm md:text-base text-left">Import from Another Product</h3>
+                            <p className="text-[10px] text-gray-400 font-bold text-left">Reuse logos and combinations already set up on other products.</p>
+                        </div>
+                        <span className="text-gray-400 font-black text-lg">{importOpen ? "−" : "+"}</span>
+                    </button>
+
+                    {importOpen && (
+                        <div className="mt-4 space-y-4">
+                            <select
+                                value={importSourceId}
+                                onChange={e => setImportSourceId(e.target.value)}
+                                className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-xs font-bold text-brand-navy"
+                            >
+                                <option value="">Select a product…</option>
+                                {allProducts?.filter(p => p._id !== product?._id && p.logos?.length > 0).map(p => (
+                                    <option key={p._id} value={p._id}>{p.name}</option>
+                                ))}
+                            </select>
+
+                            {(() => {
+                                const src = allProducts?.find(p => p._id === importSourceId);
+                                if (!src) return null;
+                                const currentLogoIds = new Set(formData.logos.map(l => l.id));
+                                const currentComboKeys = new Set(logoCombinations.map(c => [...c.logoIds].sort().join("|")));
+
+                                return (
+                                    <div className="space-y-4">
+                                        {/* Logos */}
+                                        {src.logos?.length > 0 && (
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Logos</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {src.logos.map(logo => {
+                                                        const already = currentLogoIds.has(logo.id);
+                                                        return (
+                                                            <button
+                                                                key={logo.id}
+                                                                type="button"
+                                                                disabled={already}
+                                                                onClick={() => {
+                                                                    setFormData(prev => ({ ...prev, logos: [...prev.logos, { ...logo }] }));
+                                                                }}
+                                                                className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold transition-all ${already ? "bg-green-50 border-green-200 text-green-700 cursor-not-allowed" : "bg-white border-gray-200 text-brand-navy hover:border-brand-navy"}`}
+                                                            >
+                                                                {logo.image && <img src={logo.image} alt={logo.name} className="w-6 h-6 rounded-md object-cover" />}
+                                                                {logo.name}
+                                                                {already ? <span className="text-green-500">✓</span> : <Plus size={12} />}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Combinations */}
+                                        {src.logoCombinations?.length > 0 && (
+                                            <div>
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Combinations</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {src.logoCombinations.map((combo, idx) => {
+                                                        const key = [...combo.logoIds].sort().join("|");
+                                                        const already = currentComboKeys.has(key);
+                                                        const logo1 = src.logos?.find(l => l.id === combo.logoIds[0]);
+                                                        const logo2 = src.logos?.find(l => l.id === combo.logoIds[1]);
+                                                        return (
+                                                            <button
+                                                                key={idx}
+                                                                type="button"
+                                                                disabled={already}
+                                                                onClick={() => {
+                                                                    // Also import the two logos if not already present
+                                                                    setFormData(prev => {
+                                                                        const ids = new Set(prev.logos.map(l => l.id));
+                                                                        const toAdd = [logo1, logo2].filter(l => l && !ids.has(l.id));
+                                                                        return toAdd.length > 0 ? { ...prev, logos: [...prev.logos, ...toAdd] } : prev;
+                                                                    });
+                                                                    setLogoCombinations(prev => [...prev, { logoIds: combo.logoIds, image: combo.image }]);
+                                                                    setLogoCombinationsDisplay(prev => [...prev, { logoIds: combo.logoIds, image: combo.image }]);
+                                                                }}
+                                                                className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold transition-all ${already ? "bg-green-50 border-green-200 text-green-700 cursor-not-allowed" : "bg-white border-gray-200 text-brand-navy hover:border-brand-navy"}`}
+                                                            >
+                                                                {combo.image && <img src={combo.image} alt="combo" className="w-6 h-6 rounded-md object-cover" />}
+                                                                {logo1?.name || combo.logoIds[0]} + {logo2?.name || combo.logoIds[1]}
+                                                                {already ? <span className="text-green-500">✓</span> : <Plus size={12} />}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })()}
+                        </div>
+                    )}
                 </div>
 
                 {/* Logo Combinations Section */}
