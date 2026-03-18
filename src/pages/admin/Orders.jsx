@@ -76,20 +76,31 @@ export default function AdminOrders() {
     const paginatedOrders = filteredOrders.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
     const exportCSV = () => {
-        const headers = ["Order ID", "Date", "Customer Name", "Phone", "Location", "Items", "Subtotal", "Delivery Fee", "Discount", "Total", "Status"];
-        const rows = filteredOrders.map(o => [
-            o.orderId,
-            new Date(o.createdAt).toLocaleDateString(),
-            o.customer.name,
-            o.customer.phone,
-            o.customer.location,
-            o.items.map(i => `${i.name} x${i.qty}`).join("; "),
-            o.subtotal || 0,
-            o.deliveryFee || 0,
-            o.discount || 0,
-            o.total || 0,
-            o.status
-        ]);
+        const headers = ["Order ID", "Date", "Customer Name", "Phone", "Location", "Payment Method", "Status", "Item", "Qty", "Unit Price", "Color", "Size", "Hoodie Type", "Front Logo", "Back Logo", "Side Logo", "Subtotal", "Delivery Fee", "Discount", "Total"];
+        const rows = filteredOrders.flatMap(o =>
+            o.items.map((item, idx) => [
+                idx === 0 ? o.orderId : "",
+                idx === 0 ? new Date(o.createdAt).toLocaleDateString() : "",
+                idx === 0 ? o.customer.name : "",
+                idx === 0 ? o.customer.phone : "",
+                idx === 0 ? o.customer.location : "",
+                idx === 0 ? (o.paymentMethod || "") : "",
+                idx === 0 ? o.status : "",
+                item.isProductSet ? `[Bundle] ${item.name}` : item.name,
+                item.qty,
+                item.price,
+                item.color || "",
+                item.size || "",
+                item.hoodieType || "",
+                item.frontLogo || "",
+                item.backLogo || "",
+                item.sideLogo || "",
+                idx === 0 ? (o.subtotal || 0) : "",
+                idx === 0 ? (o.deliveryFee || 0) : "",
+                idx === 0 ? (o.discount || 0) : "",
+                idx === 0 ? (o.total || 0) : "",
+            ])
+        );
         const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
         const blob = new Blob([csv], { type: "text/csv" });
         const url = URL.createObjectURL(blob);
