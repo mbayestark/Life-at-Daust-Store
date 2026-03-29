@@ -33,6 +33,7 @@ export default defineSchema({
         type: v.optional(v.string()),
         shippingTimeline: v.optional(v.string()),
         hoodieTypes: v.optional(v.array(v.string())),
+        hasCropTopOption: v.optional(v.boolean()),
         buyingPrice: v.optional(v.number()),
     }),
     productSets: defineTable({
@@ -73,6 +74,7 @@ export default defineSchema({
             qty: v.number(),
             price: v.number(),
             hoodieType: v.optional(v.string()),
+            isCropTop: v.optional(v.boolean()),
             color: v.optional(v.string()),
             size: v.optional(v.string()),
             frontLogo: v.optional(v.string()),

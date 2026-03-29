@@ -24,7 +24,8 @@ export default function ProductCard({ product }) {
     (product.colors && product.colors.length > 0) ||
     (product.sizes && product.sizes.length > 0) ||
     (product.logos && product.logos.length > 0) ||
-    (product.hoodieTypes && product.hoodieTypes.length > 0);
+    (product.hoodieTypes && product.hoodieTypes.length > 0) ||
+    product.hasCropTopOption;
 
   const handleAddToCart = (e) => {
     e.preventDefault();

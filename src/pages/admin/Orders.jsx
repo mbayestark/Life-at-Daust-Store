@@ -76,7 +76,7 @@ export default function AdminOrders() {
     const paginatedOrders = filteredOrders.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
     const exportCSV = () => {
-        const headers = ["Order ID", "Date", "Customer Name", "Phone", "Location", "Payment Method", "Status", "Item", "Qty", "Unit Price", "Color", "Size", "Hoodie Type", "Front Logo", "Back Logo", "Side Logo", "Subtotal", "Delivery Fee", "Discount", "Total"];
+        const headers = ["Order ID", "Date", "Customer Name", "Phone", "Location", "Payment Method", "Status", "Item", "Qty", "Unit Price", "Color", "Size", "Hoodie Type", "Crop Top", "Front Logo", "Back Logo", "Side Logo", "Subtotal", "Delivery Fee", "Discount", "Total"];
         const rows = filteredOrders.flatMap(o =>
             o.items.map((item, idx) => [
                 idx === 0 ? o.orderId : "",
@@ -92,6 +92,7 @@ export default function AdminOrders() {
                 item.color || "",
                 item.size || "",
                 item.hoodieType || "",
+                item.isCropTop ? "Yes" : "",
                 item.frontLogo || "",
                 item.backLogo || "",
                 item.sideLogo || "",
@@ -167,7 +168,7 @@ export default function AdminOrders() {
 <table><thead><tr><th>Item</th><th>Details</th><th>Qty</th><th>Price</th></tr></thead><tbody>
 ${order.items.map(item => `<tr>
   <td>${item.name}</td>
-  <td style="color:#999;font-size:11px">${[item.size ? `Size: ${item.size}` : "", item.color ? `Color: ${item.color}` : "", item.hoodieType ? `Type: ${item.hoodieType}` : "", item.frontLogo ? `Front: ${item.frontLogo}` : ""].filter(Boolean).join(" · ") || "—"}</td>
+  <td style="color:#999;font-size:11px">${[item.size ? `Size: ${item.size}` : "", item.color ? `Color: ${item.color}` : "", item.hoodieType ? `Type: ${item.hoodieType}` : "", item.isCropTop ? "Crop Top" : "", item.frontLogo ? `Front: ${item.frontLogo}` : ""].filter(Boolean).join(" · ") || "—"}</td>
   <td>${item.qty}</td>
   <td>${((item.price || 0) * (item.qty || 1)).toLocaleString()} CFA</td>
 </tr>`).join("")}

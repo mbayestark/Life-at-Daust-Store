@@ -267,6 +267,7 @@ export const addProduct = mutation({
         type: v.optional(v.string()),
         shippingTimeline: v.optional(v.string()),
         hoodieTypes: v.optional(v.array(v.string())),
+        hasCropTopOption: v.optional(v.boolean()),
         buyingPrice: v.optional(v.number()),
         logoCombinations: v.optional(v.array(v.object({
             logoIds: v.array(v.string()),
@@ -342,6 +343,7 @@ export const updateProduct = mutation({
         type: v.optional(v.string()),
         shippingTimeline: v.optional(v.string()),
         hoodieTypes: v.optional(v.array(v.string())),
+        hasCropTopOption: v.optional(v.boolean()),
         buyingPrice: v.optional(v.number()),
         logoCombinations: v.optional(v.array(v.object({
             logoIds: v.array(v.string()),

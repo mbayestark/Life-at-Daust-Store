@@ -21,6 +21,7 @@ export default function ProductDetails() {
     const [selectedBackLogos, setSelectedBackLogos] = useState([]);
     const [selectedSideLogos, setSelectedSideLogos] = useState([]);
     const [selectedHoodieType, setSelectedHoodieType] = useState(null);
+    const [isCropTop, setIsCropTop] = useState(false);
     const [quantity, setQuantity] = useState(1);
     const [logoPreview, setLogoPreview] = useState(null);
     const [showAddedAnimation, setShowAddedAnimation] = useState(false);
@@ -40,6 +41,7 @@ export default function ProductDetails() {
             setSelectedBackLogos([]);
             setSelectedSideLogos([]);
             setSelectedHoodieType(null);
+            setIsCropTop(false);
         }
     }, [product]);
 
@@ -206,6 +208,39 @@ export default function ProductDetails() {
                                                 {t}
                                             </button>
                                         ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Crop Top Option */}
+                        {product.hasCropTopOption && (
+                            <div className="space-y-2 sm:space-y-5">
+                                <div>
+                                    <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 sm:mb-5">
+                                        Crop Top Version · <span className="text-brand-navy">{isCropTop ? "Yes" : "No"}</span>
+                                    </h3>
+                                    <div className="flex gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsCropTop(false)}
+                                            className={`px-2.5 py-1.5 sm:px-4 sm:py-2.5 rounded-xl font-black text-xs sm:text-sm transition-all duration-300 border-2 active:scale-95 ${!isCropTop
+                                                ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
+                                                : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
+                                            }`}
+                                        >
+                                            Regular
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsCropTop(true)}
+                                            className={`px-2.5 py-1.5 sm:px-4 sm:py-2.5 rounded-xl font-black text-xs sm:text-sm transition-all duration-300 border-2 active:scale-95 ${isCropTop
+                                                ? "border-brand-navy bg-brand-navy text-white shadow-xl shadow-brand-navy/20"
+                                                : "border-gray-100 text-gray-500 hover:border-brand-navy hover:text-brand-navy"
+                                            }`}
+                                        >
+                                            Crop Top
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -534,6 +569,7 @@ export default function ProductDetails() {
                                         ...product,
                                         image: mainImage || product.image,
                                         selectedHoodieType,
+                                        isCropTop: product.hasCropTopOption ? isCropTop : false,
                                         selectedColor: selectedColor?.name,
                                         selectedSize: selectedSize,
                                         selectedFrontLogo: selectedFrontLogos.length > 0 ? selectedFrontLogos.map(l => l.name).join(", ") : null,

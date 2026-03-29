@@ -23,6 +23,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
         stock: "",
         shippingTimeline: "",
         hoodieTypes: [],
+        hasCropTopOption: false,
         buyingPrice: "",
     });
     const [colorImages, setColorImages] = useState(null); // raw storage IDs — used for saving
@@ -78,6 +79,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                 stock: product.stock?.toString() || "",
                 shippingTimeline: product.shippingTimeline || "",
                 hoodieTypes: product.hoodieTypes || [],
+                hasCropTopOption: product.hasCropTopOption || false,
                 buyingPrice: product.buyingPrice?.toString() || "",
             });
             setColorImages(product.logoImagesRaw || null);
@@ -251,6 +253,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                 stock: formData.stock !== "" ? parseInt(formData.stock) : undefined,
                 shippingTimeline: formData.shippingTimeline || undefined,
                 hoodieTypes: formData.hoodieTypes,
+                hasCropTopOption: formData.hasCropTopOption || undefined,
                 buyingPrice: formData.buyingPrice !== "" ? parseFloat(formData.buyingPrice) : undefined,
                 logoCombinations: logoCombinations.length > 0 ? logoCombinations : undefined,
             };
@@ -826,6 +829,22 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                 + {ht}
                             </button>
                         ))}
+                    </div>
+                </div>
+
+                <div className="bg-gray-50 rounded-2xl md:rounded-3xl p-4 md:p-8">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="font-black text-brand-navy mb-1 text-sm md:text-base">Crop Top Option</h3>
+                            <p className="text-[10px] text-gray-400 font-bold">Allow customers to choose a crop top version of this product.</p>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, hasCropTopOption: !formData.hasCropTopOption })}
+                            className={`relative w-12 h-7 rounded-full transition-colors duration-300 ${formData.hasCropTopOption ? "bg-brand-navy" : "bg-gray-300"}`}
+                        >
+                            <span className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform duration-300 ${formData.hasCropTopOption ? "translate-x-5" : ""}`} />
+                        </button>
                     </div>
                 </div>
 

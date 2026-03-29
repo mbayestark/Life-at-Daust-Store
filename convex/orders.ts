@@ -57,6 +57,7 @@ export const addOrder = mutation({
       qty: v.number(),
       price: v.number(),
       hoodieType: v.optional(v.string()),
+      isCropTop: v.optional(v.boolean()),
       color: v.optional(v.string()),
       size: v.optional(v.string()),
       frontLogo: v.optional(v.string()),

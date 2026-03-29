@@ -33,7 +33,7 @@ const matchesVariantSelections = (selections1, selections2) => {
 };
 
 // Helper function to check if a cart item matches the given criteria
-const matchesCartItem = (item, id, color, size, frontLogo, backLogo, sideLogo, hoodieType, isProductSet) => {
+const matchesCartItem = (item, id, color, size, frontLogo, backLogo, sideLogo, hoodieType, isProductSet, isCropTop) => {
   if (item.isProductSet !== isProductSet) return false;
 
   if (isProductSet) {
@@ -47,7 +47,8 @@ const matchesCartItem = (item, id, color, size, frontLogo, backLogo, sideLogo, h
     normalize(item.selectedFrontLogo) === normalize(frontLogo) &&
     normalize(item.selectedBackLogo) === normalize(backLogo) &&
     normalize(item.selectedSideLogo) === normalize(sideLogo) &&
-    normalize(item.selectedHoodieType) === normalize(hoodieType)
+    normalize(item.selectedHoodieType) === normalize(hoodieType) &&
+    !!item.isCropTop === !!isCropTop
   );
 };
 
@@ -82,9 +83,10 @@ export function CartProvider({ children }) {
       const backLogo = product.selectedBackLogo || null;
       const sideLogo = product.selectedSideLogo || null;
       const hoodieType = product.selectedHoodieType || null;
+      const cropTop = !!product.isCropTop;
 
       const i = prev.findIndex(p =>
-        matchesCartItem(p, product._id, color, size, frontLogo, backLogo, sideLogo, hoodieType, false)
+        matchesCartItem(p, product._id, color, size, frontLogo, backLogo, sideLogo, hoodieType, false, cropTop)
       );
       if (i >= 0) {
         const next = [...prev];
@@ -103,6 +105,7 @@ export function CartProvider({ children }) {
         selectedBackLogo: backLogo,
         selectedSideLogo: sideLogo,
         selectedHoodieType: hoodieType,
+        isCropTop: cropTop,
         isProductSet: false,
       }];
     });
@@ -143,15 +146,15 @@ export function CartProvider({ children }) {
     });
   };
 
-  const removeItem = (id, color, size, frontLogo, backLogo, sideLogo, isProductSet = false, hoodieType = null) => {
+  const removeItem = (id, color, size, frontLogo, backLogo, sideLogo, isProductSet = false, hoodieType = null, isCropTop = false) => {
     setItems(prev => prev.filter(p =>
-      !matchesCartItem(p, id, color, size, frontLogo, backLogo, sideLogo, hoodieType, isProductSet)
+      !matchesCartItem(p, id, color, size, frontLogo, backLogo, sideLogo, hoodieType, isProductSet, isCropTop)
     ));
   };
 
-  const setQty = (id, color, size, frontLogo, backLogo, sideLogo, qty, isProductSet = false, hoodieType = null) =>
+  const setQty = (id, color, size, frontLogo, backLogo, sideLogo, qty, isProductSet = false, hoodieType = null, isCropTop = false) =>
     setItems(prev => prev.map(p =>
-      matchesCartItem(p, id, color, size, frontLogo, backLogo, sideLogo, hoodieType, isProductSet)
+      matchesCartItem(p, id, color, size, frontLogo, backLogo, sideLogo, hoodieType, isProductSet, isCropTop)
         ? { ...p, qty: Math.max(1, Math.min(99, qty)) }
         : p
     ));

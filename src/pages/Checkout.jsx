@@ -68,6 +68,7 @@ export default function Checkout() {
           price: it.price,
         };
         if (it.selectedHoodieType) line.hoodieType = it.selectedHoodieType;
+        if (it.isCropTop) line.isCropTop = true;
         if (it.selectedColor) line.color = it.selectedColor;
         if (it.selectedSize) line.size = it.selectedSize;
         if (it.selectedFrontLogo) line.frontLogo = it.selectedFrontLogo;

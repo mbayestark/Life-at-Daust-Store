@@ -172,6 +172,9 @@ export default function Cart() {
                       {item.selectedHoodieType && (
                         <span className="flex items-center gap-2">Style: <span className="text-brand-navy">{item.selectedHoodieType}</span></span>
                       )}
+                      {item.isCropTop && (
+                        <span className="flex items-center gap-2">Cut: <span className="text-brand-navy">Crop Top</span></span>
+                      )}
                       {item.selectedFrontLogo && (
                         <span className="flex items-center gap-2">Front: <span className="text-brand-navy">{item.selectedFrontLogo}</span></span>
                       )}
@@ -193,7 +196,7 @@ export default function Cart() {
                     <div className="flex items-center justify-between mt-auto">
                       <div className="flex items-center bg-gray-50 rounded-xl p-1 h-12 sm:h-11">
                         <button
-                          onClick={() => setQty(item.id, item.selectedColor, item.selectedSize, item.selectedFrontLogo, item.selectedBackLogo, item.selectedSideLogo, item.qty - 1, false, item.selectedHoodieType)}
+                          onClick={() => setQty(item.id, item.selectedColor, item.selectedSize, item.selectedFrontLogo, item.selectedBackLogo, item.selectedSideLogo, item.qty - 1, false, item.selectedHoodieType, item.isCropTop)}
                           className="w-11 sm:w-10 h-full rounded-lg hover:bg-white hover:shadow-sm active:scale-95 active:bg-brand-navy active:text-white text-lg font-bold transition-all disabled:opacity-30"
                           disabled={item.qty <= 1}
                         >
@@ -201,7 +204,7 @@ export default function Cart() {
                         </button>
                         <span className="w-11 sm:w-10 text-center font-black text-brand-navy text-sm">{item.qty}</span>
                         <button
-                          onClick={() => setQty(item.id, item.selectedColor, item.selectedSize, item.selectedFrontLogo, item.selectedBackLogo, item.selectedSideLogo, item.qty + 1, false, item.selectedHoodieType)}
+                          onClick={() => setQty(item.id, item.selectedColor, item.selectedSize, item.selectedFrontLogo, item.selectedBackLogo, item.selectedSideLogo, item.qty + 1, false, item.selectedHoodieType, item.isCropTop)}
                           className="w-11 sm:w-10 h-full rounded-lg hover:bg-white hover:shadow-sm active:scale-95 active:bg-brand-navy active:text-white text-lg font-bold transition-all"
                           disabled={item.qty >= 99}
                         >
@@ -221,7 +224,7 @@ export default function Cart() {
                   <div className="h-[1px] w-full sm:h-24 sm:w-[1px] bg-gray-100 hidden sm:block" />
 
                   <button
-                    onClick={() => removeItem(item.id, item.selectedColor, item.selectedSize, item.selectedFrontLogo, item.selectedBackLogo, item.selectedSideLogo, false, item.selectedHoodieType)}
+                    onClick={() => removeItem(item.id, item.selectedColor, item.selectedSize, item.selectedFrontLogo, item.selectedBackLogo, item.selectedSideLogo, false, item.selectedHoodieType, item.isCropTop)}
                     className="p-3 sm:p-3 text-gray-400 hover:text-red-500 hover:bg-red-50 active:scale-95 active:bg-red-500 active:text-white rounded-2xl transition-all duration-300"
                     title="Remove from bag"
                     aria-label="Remove item from bag"
