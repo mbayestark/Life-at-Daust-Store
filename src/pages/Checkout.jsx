@@ -7,6 +7,7 @@ import Button from "../components/ui/Button";
 
 import { useMutation, useAction, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { useAuth } from "../context/AuthContext.jsx";
 
 const QUARTER_ZIP_RE = /quarter.?zip/i;
 const isQuarterZip = (name) => QUARTER_ZIP_RE.test(name);
