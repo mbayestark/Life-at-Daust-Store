@@ -134,7 +134,7 @@ export default function Checkout() {
         buyerUserId: session?.userId || undefined,
         cartItems: items.map((it) => ({ name: it.name, price: it.price, qty: it.qty })),
       });
-      setAppliedReferral(result);
+      setAppliedReferral({ ...result, code: referralInput.trim().toUpperCase() });
       setReferralError("");
     } catch (err) {
       setReferralError(err.message || "Invalid referral code.");
@@ -199,7 +199,7 @@ export default function Checkout() {
         paymentMethod,
         paymentStorageId: storageId,
         buyerUserId: session?.userId || undefined,
-        referralCode: appliedReferral ? referralInput.trim().toUpperCase() : undefined,
+        referralCode: appliedReferral?.code,
         referralDiscount: referralDiscount > 0 ? referralDiscount : undefined,
         couponDiscount: couponDiscount > 0 ? couponDiscount : undefined,
         couponApplied: couponApplied && couponDiscount > 0 ? true : undefined,
@@ -355,6 +355,11 @@ export default function Checkout() {
               <div className="p-5 bg-gray-50 border border-gray-200 rounded-2xl flex items-center gap-3 text-gray-500 text-sm font-medium">
                 <Tag size={18} className="flex-shrink-0 text-gray-400" />
                 Referral discount not applicable to this item.
+              </div>
+            ) : promoApplies ? (
+              <div className="p-5 bg-gray-50 border border-gray-200 rounded-2xl flex items-center gap-3 text-gray-500 text-sm font-medium">
+                <Tag size={18} className="flex-shrink-0 text-gray-400" />
+                Referral codes cannot be combined with the launch promo discount.
               </div>
             ) : hasEligibleItems && !appliedReferral && (
               <div className="space-y-3">

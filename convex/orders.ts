@@ -1,5 +1,6 @@
 import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
+import { Id } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
 
 // Convex exposes process.env at runtime. We declare it as an ambient variable
@@ -25,6 +26,8 @@ export const getById = query({
     return await ctx.db.get(args.id);
   },
 });
+
+const QZIP_RE = /quarter.?zip/i;
 
 export const addOrder = mutation({
   args: {
@@ -63,9 +66,77 @@ export const addOrder = mutation({
     couponApplied: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    // Check if the early-order promo is still active (first 10 confirmed orders)
+    const totalOrders = (await ctx.db.query("orders").collect()).length;
+    const promoActive = totalOrders < 10;
+
+    // Server-side referral validation — ignore client-supplied discount amount
+    let referralCode: string | undefined;
+    let referralDiscount: number | undefined;
+
+    if (args.referralCode && !promoActive) {
+      const code = args.referralCode.toUpperCase();
+      const referrer = await ctx.db
+        .query("users")
+        .withIndex("by_referral_code", (q) => q.eq("referral_code", code))
+        .first();
+
+      if (referrer && !(args.buyerUserId && args.buyerUserId === referrer._id.toString())) {
+        const alreadyUsed = args.buyerUserId
+          ? await ctx.db
+              .query("orders")
+              .filter((q) =>
+                q.and(
+                  q.eq(q.field("buyerUserId"), args.buyerUserId as string),
+                  q.eq(q.field("referralCode"), code),
+                  q.eq(q.field("referralTracked"), true)
+                )
+              )
+              .first()
+          : null;
+
+        if (!alreadyUsed) {
+          referralCode = code;
+          const eligibleTotal = args.items
+            .filter((it) => !QZIP_RE.test(it.name))
+            .reduce((sum, it) => sum + it.price * it.qty, 0);
+          referralDiscount = Math.round(eligibleTotal * 0.07);
+        }
+      }
+    }
+
+    // Server-side coupon validation — ignore client-supplied discount amount
+    let couponDiscount: number | undefined;
+    let couponApplied: boolean | undefined;
+
+    if (args.couponApplied && args.buyerUserId) {
+      const buyer = await ctx.db.get(args.buyerUserId as Id<"users">);
+      if (buyer && buyer.coupon_percent > 0 && !buyer.coupon_used) {
+        const eligibleTotal = args.items
+          .filter((it) => !QZIP_RE.test(it.name))
+          .reduce((sum, it) => sum + it.price * it.qty, 0);
+        couponDiscount = Math.round(eligibleTotal * (buyer.coupon_percent / 100));
+        couponApplied = true;
+      }
+    }
+
     const proofOfPaymentUrl = args.paymentStorageId ? (await ctx.storage.getUrl(args.paymentStorageId)) ?? undefined : undefined;
     const orderId = await ctx.db.insert("orders", {
-      ...args,
+      orderId: args.orderId,
+      customer: args.customer,
+      items: args.items,
+      subtotal: args.subtotal,
+      deliveryFee: args.deliveryFee,
+      total: args.total,
+      paymentMethod: args.paymentMethod,
+      paymentStorageId: args.paymentStorageId,
+      naboopayOrderId: args.naboopayOrderId,
+      naboopayCheckoutUrl: args.naboopayCheckoutUrl,
+      buyerUserId: args.buyerUserId,
+      referralCode,
+      referralDiscount,
+      couponDiscount,
+      couponApplied,
       status: args.paymentMethod === "naboopay" ? "Pending Payment" : "Pending Verification",
       proofOfPaymentUrl,
       createdAt: Date.now(),

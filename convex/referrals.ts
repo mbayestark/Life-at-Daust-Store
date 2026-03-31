@@ -105,6 +105,22 @@ export const applyReferralCode = mutation({
             throw new Error("You cannot use your own referral code.");
         }
 
+        if (args.buyerUserId) {
+            const previousUse = await ctx.db
+                .query("orders")
+                .filter((q) =>
+                    q.and(
+                        q.eq(q.field("buyerUserId"), args.buyerUserId as string),
+                        q.eq(q.field("referralCode"), args.code.toUpperCase()),
+                        q.eq(q.field("referralTracked"), true)
+                    )
+                )
+                .first();
+            if (previousUse) {
+                throw new Error("You've already used this referral code on a previous order.");
+            }
+        }
+
         const eligibleTotal = args.cartItems
             .filter((item) => !isQuarterZip(item.name))
             .reduce((sum, item) => sum + item.price * item.qty, 0);
