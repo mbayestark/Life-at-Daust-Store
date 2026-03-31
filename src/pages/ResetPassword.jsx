@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router-dom";
-import { Lock, Eye, EyeOff, CheckCircle, AlertCircle } from "lucide-react";
+import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, Circle } from "lucide-react";
 import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import Button from "../components/ui/Button";
@@ -128,6 +128,15 @@ export default function ResetPassword() {
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
+              {form.password.length > 0 && (
+                <div className="flex gap-4 pt-1">
+                  {[{ ok: form.password.length >= 8, label: "8+ chars" }, { ok: /[A-Z]/.test(form.password), label: "Uppercase" }, { ok: /[0-9]/.test(form.password), label: "Number" }].map(({ ok, label }) => (
+                    <span key={label} className={`flex items-center gap-1 text-[11px] font-semibold transition-colors ${ok ? "text-green-400" : "text-gray-600"}`}>
+                      {ok ? <CheckCircle size={12} /> : <Circle size={12} />} {label}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
