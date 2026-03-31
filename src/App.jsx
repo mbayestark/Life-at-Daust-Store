@@ -58,24 +58,10 @@ export default function App() {
               <Route path="/shop" element={<Shop />} />
               <Route path="/collections/:slug" element={<Collection />} />
               <Route path="/about" element={<About />} />
-              <Route
-                path="/referral"
-                element={
-                  <ProtectedRoute>
-                    <Referral />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/referral" element={<Referral />} />
 
               <Route path="/cart" element={<Cart />} />
-              <Route
-                path="/checkout"
-                element={
-                  <ProtectedRoute>
-                    <Checkout />
-                  </ProtectedRoute>
-                }
-              />
+              <Route path="/checkout" element={<Checkout />} />
               <Route
                 path="/account"
                 element={
