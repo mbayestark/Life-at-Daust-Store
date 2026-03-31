@@ -1,5 +1,5 @@
 import { query, mutation, internalMutation } from "./_generated/server";
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 
 const QUARTER_ZIP_PATTERN = /quarter.?zip/i;
 
@@ -98,11 +98,27 @@ export const applyReferralCode = mutation({
             )
             .first();
         if (!referrer) {
-            throw new Error("Invalid referral code.");
+            throw new ConvexError("Invalid referral code.");
         }
 
         if (args.buyerUserId && args.buyerUserId === referrer._id) {
-            throw new Error("You cannot use your own referral code.");
+            throw new ConvexError("You cannot use your own referral code.");
+        }
+
+        if (args.buyerUserId) {
+            const previousUse = await ctx.db
+                .query("orders")
+                .filter((q) =>
+                    q.and(
+                        q.eq(q.field("buyerUserId"), args.buyerUserId as string),
+                        q.eq(q.field("referralCode"), args.code.toUpperCase()),
+                        q.eq(q.field("referralTracked"), true)
+                    )
+                )
+                .first();
+            if (previousUse) {
+                throw new ConvexError("You've already used this referral code on a previous order.");
+            }
         }
 
         const eligibleTotal = args.cartItems
@@ -128,9 +144,9 @@ export const applyCoupon = mutation({
     },
     handler: async (ctx, args) => {
         const user = await ctx.db.get(args.userId);
-        if (!user) throw new Error("User not found.");
+        if (!user) throw new ConvexError("User not found.");
         if (user.coupon_percent <= 0 || user.coupon_used) {
-            throw new Error("No active coupon available.");
+            throw new ConvexError("No active coupon available.");
         }
 
         const eligibleTotal = args.cartItems

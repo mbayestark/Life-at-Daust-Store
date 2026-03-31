@@ -50,7 +50,7 @@ export default function ResetPassword() {
       setSuccess(true);
       setTimeout(() => navigate("/login"), 3000);
     } catch (err) {
-      setError(err.message || "Failed to reset password. The link may be expired.");
+      setError(err.data || err.message || "Failed to reset password. The link may be expired.");
     } finally {
       setLoading(false);
     }

@@ -120,10 +120,10 @@ export default function Checkout() {
         buyerUserId: session?.userId || undefined,
         cartItems: items.map((it) => ({ name: it.name, price: it.price, qty: it.qty })),
       });
-      setAppliedReferral(result);
+      setAppliedReferral({ ...result, code: referralInput.trim().toUpperCase() });
       setReferralError("");
     } catch (err) {
-      setReferralError(err.message || "Invalid referral code.");
+      setReferralError(err.data || err.message || "Invalid referral code.");
       setAppliedReferral(null);
     } finally {
       setReferralLoading(false);

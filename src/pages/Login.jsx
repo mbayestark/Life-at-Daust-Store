@@ -34,7 +34,7 @@ export default function Login() {
       login(result);
       navigate(from, { replace: true });
     } catch (err) {
-      setError(err.message || "Login failed. Please try again.");
+      setError(err.data || err.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }

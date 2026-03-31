@@ -57,7 +57,7 @@ export default function Signup() {
         navigate("/account", { replace: true });
       }
     } catch (err) {
-      setError(err.message || "Sign up failed. Please try again.");
+      setError(err.data || err.message || "Sign up failed. Please try again.");
     } finally {
       setLoading(false);
     }
