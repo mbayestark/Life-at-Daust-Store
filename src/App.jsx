@@ -22,6 +22,16 @@ import ProductDetails from "./pages/ProductDetails.jsx";
 import OrderSuccess from "./pages/OrderSuccess.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
+import Login from "./pages/Login.jsx";
+import Signup from "./pages/Signup.jsx";
+import Account from "./pages/Account.jsx";
+import Referral from "./pages/Referral.jsx";
+import ForgotPassword from "./pages/ForgotPassword.jsx";
+import ResetPassword from "./pages/ResetPassword.jsx";
+
+import { AuthProvider } from "./context/AuthContext.jsx";
+import ProtectedRoute from "./components/ProtectedRoute.jsx";
+
 // Admin Imports
 import { AdminProvider, useAdmin } from "./context/AdminContext";
 import AdminLayout from "./components/admin/AdminLayout";
@@ -56,11 +66,26 @@ export default function App() {
             <Route path="/collections/:slug" element={<Collection />} />
             <Route path="/about" element={<About />} />
 
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/order/success/:orderId" element={<OrderSuccess />} />
-            <Route path="/product/:id" element={<ProductDetails />} />
-          </Route>
+              <Route path="/cart" element={<Cart />} />
+              <Route
+                path="/checkout"
+                element={
+                  <ProtectedRoute>
+                    <Checkout />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/account"
+                element={
+                  <ProtectedRoute>
+                    <Account />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/order/success/:orderId" element={<OrderSuccess />} />
+              <Route path="/product/:id" element={<ProductDetails />} />
+            </Route>
 
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
@@ -73,9 +98,10 @@ export default function App() {
             <Route path="hero" element={<ManagerOnlyRoute><AdminHeroSettings /></ManagerOnlyRoute>} />
           </Route>
 
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </AdminProvider>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AdminProvider>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }

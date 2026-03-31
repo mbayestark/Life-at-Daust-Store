@@ -8,6 +8,9 @@ import Button from "../components/ui/Button";
 import { useMutation, useAction, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
+const QUARTER_ZIP_RE = /quarter.?zip/i;
+const isQuarterZip = (name) => QUARTER_ZIP_RE.test(name);
+
 const fmt = (n) => formatPrice(n);
 
 function makeOrderId() {
@@ -23,6 +26,7 @@ const locations = [
 
 export default function Checkout() {
   const { items, subtotal, clear, totalSavings, logoFees } = useCart();
+  const { session } = useAuth();
   const [orderId] = useState(makeOrderId());
   const [loading, setLoading] = useState(false);
   const [summaryOpen, setSummaryOpen] = useState(false);
@@ -35,9 +39,19 @@ export default function Checkout() {
   );
   const nav = useNavigate();
 
+  // Referral code state
+  const [referralInput, setReferralInput] = useState("");
+  const [appliedReferral, setAppliedReferral] = useState(null);
+  const [referralError, setReferralError] = useState("");
+  const [referralLoading, setReferralLoading] = useState(false);
+
+  // Coupon state
+  const [couponApplied, setCouponApplied] = useState(false);
+
   const addOrder = useMutation(api.orders.addOrder);
   const updateNabooPayDetails = useMutation(api.orders.updateNabooPayDetails);
   const createNabooPayTransaction = useAction(api.naboopay.createTransaction);
+  const applyReferralCodeMutation = useMutation(api.referrals.applyReferralCode);
 
   const deliveryFee = useMemo(() => {
     const loc = locations.find(l => l.name === form.location);
@@ -82,6 +96,26 @@ export default function Checkout() {
       }),
     [items]
   );
+
+  const handleApplyReferral = async () => {
+    if (!referralInput.trim()) return;
+    setReferralError("");
+    setReferralLoading(true);
+    try {
+      const result = await applyReferralCodeMutation({
+        code: referralInput.trim().toUpperCase(),
+        buyerUserId: session?.userId || undefined,
+        cartItems: items.map((it) => ({ name: it.name, price: it.price, qty: it.qty })),
+      });
+      setAppliedReferral(result);
+      setReferralError("");
+    } catch (err) {
+      setReferralError(err.message || "Invalid referral code.");
+      setAppliedReferral(null);
+    } finally {
+      setReferralLoading(false);
+    }
+  };
 
   if (items.length === 0) {
     return (

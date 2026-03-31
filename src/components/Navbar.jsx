@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, Search, X, ShoppingBag, ChevronDown } from "lucide-react";
+import { Menu, Search, X, ShoppingBag, ChevronDown, User, LogOut } from "lucide-react";
 import { useCart } from "../context/CartContext.jsx";
+import { useAuth } from "../context/AuthContext.jsx";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import logo from "../assets/logo.png";
@@ -10,10 +11,16 @@ import { NAV_LINKS } from "../data/navigation.js";
 export default function Navbar() {
   const navigate = useNavigate();
   const { count } = useCart();
+  const { session, logout, isLoggedIn } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const collections = useQuery(api.collections.list);
   const location = useLocation();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   useEffect(() => { setMobileOpen(false); }, [location]);
 
@@ -119,6 +126,33 @@ export default function Navbar() {
                 />
               </form>
 
+
+              {/* Account / Auth */}
+              {isLoggedIn ? (
+                <div className="hidden lg:flex items-center gap-1">
+                  <Link
+                    to="/account"
+                    className="flex items-center gap-2 px-4 py-2 text-[11px] font-[900] uppercase tracking-[0.2em] text-gray-700 hover:text-brand-orange rounded-2xl hover:bg-gray-50 transition-all"
+                  >
+                    <User size={15} />
+                    {session?.name?.split(" ")[0]}
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="p-2 text-gray-400 hover:text-red-500 rounded-xl hover:bg-gray-50 transition-all"
+                    title="Sign out"
+                  >
+                    <LogOut size={15} />
+                  </button>
+                </div>
+              ) : (
+                <Link
+                  to="/login"
+                  className="hidden lg:flex items-center gap-2 px-4 py-2 text-[11px] font-[900] uppercase tracking-[0.2em] text-gray-700 hover:text-brand-orange rounded-2xl hover:bg-gray-50 transition-all"
+                >
+                  <User size={15} /> Sign In
+                </Link>
+              )}
 
               {/* Cart */}
               <Link
@@ -226,7 +260,32 @@ export default function Navbar() {
           </nav>
 
           {/* Bottom CTA */}
-          <div className="px-6 pb-8 pt-4 border-t border-white/5">
+          <div className="px-6 pb-8 pt-4 border-t border-white/5 space-y-3">
+            {isLoggedIn ? (
+              <div className="flex items-center justify-between">
+                <Link
+                  to="/account"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2 px-4 py-2 text-white/60 hover:text-white text-sm font-[700] rounded-xl hover:bg-white/5 transition-all"
+                >
+                  <User size={16} /> {session?.name?.split(" ")[0] || "Account"}
+                </Link>
+                <button
+                  onClick={() => { handleLogout(); setMobileOpen(false); }}
+                  className="flex items-center gap-2 px-4 py-2 text-white/40 hover:text-red-400 text-xs font-[700] rounded-xl hover:bg-white/5 transition-all"
+                >
+                  <LogOut size={14} /> Sign Out
+                </button>
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center justify-center gap-2 px-5 py-3 bg-white/10 rounded-2xl text-white font-[700] text-sm hover:bg-white/20 active:scale-[0.98] transition-all"
+              >
+                <User size={16} /> Sign In
+              </Link>
+            )}
             <Link
               to="/cart"
               onClick={() => setMobileOpen(false)}

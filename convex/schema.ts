@@ -2,6 +2,23 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+    users: defineTable({
+        name: v.string(),
+        email: v.string(),
+        passwordHash: v.string(),
+        referral_code: v.string(),
+        referral_count: v.number(),
+        coupon_percent: v.number(),
+        coupon_used: v.boolean(),
+        loginAttempts: v.optional(v.number()),
+        lockedUntil: v.optional(v.number()),
+        resetToken: v.optional(v.string()),
+        resetTokenExpiry: v.optional(v.number()),
+    })
+        .index("by_email", ["email"])
+        .index("by_referral_code", ["referral_code"])
+        .index("by_reset_token", ["resetToken"]),
+
     products: defineTable({
         name: v.string(),
         category: v.string(),
@@ -97,6 +114,12 @@ export default defineSchema({
         proofOfPaymentUrl: v.optional(v.string()),
         naboopayCheckoutUrl: v.optional(v.string()),
         createdAt: v.number(),
+        buyerUserId: v.optional(v.string()),
+        referralCode: v.optional(v.string()),
+        referralDiscount: v.optional(v.number()),
+        couponDiscount: v.optional(v.number()),
+        couponApplied: v.optional(v.boolean()),
+        referralTracked: v.optional(v.boolean()),
     }),
     adminSessions: defineTable({
         token: v.string(),

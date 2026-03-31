@@ -93,6 +93,7 @@ export const addOrder = mutation({
       statusHistory: [{ status: initialStatus, timestamp: Date.now() }],
       proofOfPaymentUrl,
       createdAt: Date.now(),
+      referralTracked: false,
     });
 
     return orderId;
@@ -141,6 +142,22 @@ export const updateByNabooPayId = internalMutation({
       status = "Cancelled";
     }
     await ctx.db.patch(order._id, { status });
+
+    if (status === "Paid" && !order.referralTracked) {
+      await ctx.db.patch(order._id, { referralTracked: true });
+      if (order.referralCode) {
+        await ctx.runMutation(internal.referrals.trackReferral, {
+          referralCode: order.referralCode,
+          buyerUserId: order.buyerUserId,
+        });
+      }
+      if (order.couponApplied && order.buyerUserId) {
+        const buyerIdAsId = order.buyerUserId as any;
+        await ctx.runMutation(internal.referrals.redeemCoupon, {
+          userId: buyerIdAsId,
+        });
+      }
+    }
   },
 });
 
