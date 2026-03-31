@@ -214,11 +214,13 @@ export default function Checkout() {
               name: form.name,
               phone: form.phone.startsWith("+") ? form.phone : `+221${form.phone.replace(/\s/g, "")}`,
             },
-            items: lines.map(it => ({
-              name: it.name,
-              qty: it.qty,
-              price: it.price,
-            })),
+            items: (() => {
+              const totalDiscount = promoDiscount + referralDiscount + couponDiscount;
+              const nabooItems = lines.map(it => ({ name: it.name, qty: it.qty, price: it.price }));
+              if (logoFees > 0) nabooItems.push({ name: "Logo Customization", qty: 1, price: logoFees });
+              if (totalDiscount > 0) nabooItems.push({ name: "Discount", qty: 1, price: -totalDiscount });
+              return nabooItems;
+            })(),
             successUrl: `https://shop.daustgov.com/order/success/${orderId}`,
             errorUrl: `https://shop.daustgov.com/checkout?error=payment_failed`,
           });
