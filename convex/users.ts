@@ -1,6 +1,6 @@
-import { mutation, query, action } from "./_generated/server";
+import { mutation, query, action, internalQuery, internalMutation } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 
 declare const process: { env: Record<string, string | undefined> };
 
@@ -236,7 +236,7 @@ export const requestPasswordReset = action({
             return { sent: true }; // Silent — don't leak whether email exists
         }
 
-        const user = await ctx.runQuery(api.users.findByEmail, { email });
+        const user = await ctx.runQuery(internal.users.findByEmail, { email });
         if (!user) {
             return { sent: true }; // Silent
         }
@@ -248,7 +248,7 @@ export const requestPasswordReset = action({
 
         const token = generateSecureToken();
         const expiry = Date.now() + RESET_TOKEN_TTL_MS;
-        await ctx.runMutation(api.users.setResetToken, { userId: user._id, token, expiry });
+        await ctx.runMutation(internal.users.setResetToken, { userId: user._id, token, expiry });
 
         const resetUrl = `${APP_URL}/reset-password?token=${token}`;
         const resendKey = process.env.RESEND_API_KEY;
@@ -293,7 +293,7 @@ export const requestPasswordReset = action({
     },
 });
 
-export const findByEmail = query({
+export const findByEmail = internalQuery({
     args: { email: v.string() },
     handler: async (ctx, args) => {
         const user = await ctx.db
@@ -309,7 +309,7 @@ export const findByEmail = query({
     },
 });
 
-export const setResetToken = mutation({
+export const setResetToken = internalMutation({
     args: { userId: v.id("users"), token: v.string(), expiry: v.number() },
     handler: async (ctx, args) => {
         await ctx.db.patch(args.userId, {

@@ -12,10 +12,11 @@ interface AdminSession {
 
 // Generate a secure random token
 function generateToken(): string {
-    const timestamp = Date.now().toString(36);
-    const randomStr = Math.random().toString(36).substring(2, 15);
-    const randomStr2 = Math.random().toString(36).substring(2, 15);
-    return `${timestamp}-${randomStr}${randomStr2}`;
+    const bytes = crypto.getRandomValues(new Uint8Array(32));
+    const hex = Array.from(bytes)
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+    return hex;
 }
 
 // Simple rate limiting in memory (resets on server restart)
@@ -114,8 +115,6 @@ export const verifyToken = query({
 
         const now = Date.now();
         if (now > session.expiresAt) {
-            // Session expired, clean it up
-            await ctx.db.delete(session._id);
             return { valid: false, reason: "Session expired" };
         }
 

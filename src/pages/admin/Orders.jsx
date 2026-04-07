@@ -33,6 +33,7 @@ export default function AdminOrders() {
     const { adminToken, adminRole } = useAdmin();
     const isPartner = adminRole === "partner";
     const orders = useQuery(api.orders.list, adminToken ? { adminToken } : "skip");
+    const products = useQuery(api.products.list) || [];
     const updateStatus = useMutation(api.orders.updateStatus);
     const bulkUpdateStatusMutation = useMutation(api.orders.bulkUpdateStatus);
     const checkNabooStatus = useAction(api.naboopay.getTransaction);
@@ -76,32 +77,50 @@ export default function AdminOrders() {
     const paginatedOrders = filteredOrders.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
     const exportCSV = () => {
-        const headers = ["Order ID", "Date", "Customer Name", "Phone", "Location", "Payment Method", "Status", "Item", "Qty", "Unit Price", "Color", "Size", "Hoodie Type", "Crop Top", "Front Logo", "Back Logo", "Side Logo", "Subtotal", "Delivery Fee", "Discount", "Total"];
-        const rows = filteredOrders.flatMap(o =>
-            o.items.map((item, idx) => [
-                idx === 0 ? o.orderId : "",
-                idx === 0 ? new Date(o.createdAt).toLocaleDateString() : "",
-                idx === 0 ? o.customer.name : "",
-                idx === 0 ? o.customer.phone : "",
-                idx === 0 ? o.customer.location : "",
-                idx === 0 ? (o.paymentMethod || "") : "",
-                idx === 0 ? o.status : "",
-                item.isProductSet ? `[Bundle] ${item.name}` : item.name,
-                item.qty,
-                item.price,
-                item.color || "",
-                item.size || "",
-                item.hoodieType || "",
-                item.isCropTop ? "Yes" : "",
-                item.frontLogo || "",
-                item.backLogo || "",
-                item.sideLogo || "",
-                idx === 0 ? (o.subtotal || 0) : "",
-                idx === 0 ? (o.deliveryFee || 0) : "",
-                idx === 0 ? (o.discount || 0) : "",
-                idx === 0 ? (o.total || 0) : "",
-            ])
-        );
+        const productMap = {};
+        for (const p of products) {
+            productMap[p._id] = p;
+        }
+        const headers = ["Order ID", "Date", "Customer Name", "Phone", "Location", "Payment Method", "Status", "Item", "Qty", "Unit Price", "Buying Price", "Color", "Size", "Hoodie Type", "Crop Top", "Front Logo", "Back Logo", "Side Logo", "Subtotal", "Buying Subtotal", "Delivery Fee", "Discount", "Total", "Profit"];
+        const rows = filteredOrders.flatMap(o => {
+            let buyingSubtotal = 0;
+            o.items.forEach(item => {
+                const prod = item.productId ? productMap[item.productId] : null;
+                const buyingPrice = prod?.buyingPrice ?? 0;
+                buyingSubtotal += buyingPrice * item.qty;
+            });
+            const profit = (o.total || 0) - buyingSubtotal;
+            return o.items.map((item, idx) => {
+                const prod = item.productId ? productMap[item.productId] : null;
+                const buyingPrice = prod?.buyingPrice ?? "";
+                return [
+                    idx === 0 ? o.orderId : "",
+                    idx === 0 ? new Date(o.createdAt).toLocaleDateString() : "",
+                    idx === 0 ? o.customer.name : "",
+                    idx === 0 ? o.customer.phone : "",
+                    idx === 0 ? o.customer.location : "",
+                    idx === 0 ? (o.paymentMethod || "") : "",
+                    idx === 0 ? o.status : "",
+                    item.isProductSet ? `[Bundle] ${item.name}` : item.name,
+                    item.qty,
+                    item.price,
+                    buyingPrice,
+                    item.color || "",
+                    item.size || "",
+                    item.hoodieType || "",
+                    item.isCropTop ? "Yes" : "",
+                    item.frontLogo || "",
+                    item.backLogo || "",
+                    item.sideLogo || "",
+                    idx === 0 ? (o.subtotal || 0) : "",
+                    idx === 0 ? buyingSubtotal : "",
+                    idx === 0 ? (o.deliveryFee || 0) : "",
+                    idx === 0 ? (o.discount || 0) : "",
+                    idx === 0 ? (o.total || 0) : "",
+                    idx === 0 ? profit : "",
+                ];
+            });
+        });
         const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
         const blob = new Blob([csv], { type: "text/csv" });
         const url = URL.createObjectURL(blob);

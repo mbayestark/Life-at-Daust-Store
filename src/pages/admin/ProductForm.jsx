@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { X, Save, Trash2, Image as ImageIcon, AlertCircle, Plus } from "lucide-react";
+import { X, Save, Trash2, Image as ImageIcon, AlertCircle, Plus, FolderOpen } from "lucide-react";
 import Button from "../../components/ui/Button";
 import { optimizeImage, createPreviewUrl, revokePreviewUrl } from "../../utils/imageOptimizer";
 import { useAdmin } from "../../context/AdminContext";
+import MediaLibrary from "../../components/admin/MediaLibrary";
 
 export default function AdminProductForm({ product, onSave, onCancel }) {
     const { adminToken } = useAdmin();
@@ -33,6 +34,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
     const [imagePreview, setImagePreview] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [mediaLibraryOpen, setMediaLibraryOpen] = useState(false);
     const initializedForId = useRef(null);
 
     const [newColorName, setNewColorName] = useState("");
@@ -111,7 +113,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
 
     const handleUpload = async (fileToUpload) => {
         if (!fileToUpload) return formData.image;
-        const postUrl = await generateUploadUrl();
+        const postUrl = await generateUploadUrl({ adminToken });
         const result = await fetch(postUrl, {
             method: "POST",
             headers: { "Content-Type": fileToUpload.type },
@@ -119,6 +121,12 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
         });
         const { storageId } = await result.json();
         return storageId;
+    };
+
+    const handleMediaSelect = (media) => {
+        setImageFile(null);
+        setImagePreview(media.url);
+        setFormData({ ...formData, image: media.storageId });
     };
 
     const addColor = () => {
@@ -146,7 +154,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
             let imageStorageId = undefined;
             if (newLogoFile) {
                 const optimizedFile = await optimizeImage(newLogoFile);
-                const postUrl = await generateUploadUrl();
+                const postUrl = await generateUploadUrl({ adminToken });
                 const result = await fetch(postUrl, {
                     method: "POST",
                     headers: { "Content-Type": optimizedFile.type },
@@ -408,6 +416,13 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                     className="absolute inset-0 opacity-0 cursor-pointer"
                                 />
                             </div>
+                            <button
+                                type="button"
+                                onClick={() => setMediaLibraryOpen(true)}
+                                className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 text-brand-navy font-bold text-xs rounded-xl transition-colors border border-gray-200"
+                            >
+                                <FolderOpen size={14} /> Choose from Media Library
+                            </button>
                         </div>
 
                         {/* Logo Preview Section - Show near top for visibility */}
@@ -748,7 +763,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                     setComboUploading(true);
                                     try {
                                         const optimized = await optimizeImage(newComboFile);
-                                        const postUrl = await generateUploadUrl();
+                                        const postUrl = await generateUploadUrl({ adminToken });
                                         const result = await fetch(postUrl, { method: "POST", headers: { "Content-Type": optimized.type }, body: optimized });
                                         const { storageId } = await result.json();
                                         setLogoCombinations(prev => [...prev, { logoIds: [newComboLogoIds[0], newComboLogoIds[1]], image: storageId }]);
@@ -910,7 +925,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                                             const optimized = await optimizeImage(file);
                                                             const blobUrl = createPreviewUrl(optimized);
                                                             newBlobUrls.push(blobUrl);
-                                                            const postUrl = await generateUploadUrl();
+                                                            const postUrl = await generateUploadUrl({ adminToken });
                                                             const result = await fetch(postUrl, {
                                                                 method: "POST",
                                                                 headers: { "Content-Type": optimized.type },
@@ -1001,6 +1016,11 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                     </Button>
                 </div>
             </form>
+            <MediaLibrary
+                open={mediaLibraryOpen}
+                onClose={() => setMediaLibraryOpen(false)}
+                onSelect={handleMediaSelect}
+            />
         </div>
     );
 }

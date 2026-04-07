@@ -29,7 +29,7 @@ export default function HeroSettings() {
             const newItems = [];
             for (const file of files) {
                 const isVideo = file.type.startsWith("video/");
-                const postUrl = await generateUploadUrl();
+                const postUrl = await generateUploadUrl({ adminToken });
                 let body = file;
                 let contentType = file.type;
                 if (!isVideo) {
@@ -77,7 +77,7 @@ export default function HeroSettings() {
         try {
             const newIds = [];
             for (const file of files) {
-                const postUrl = await generateUploadUrl();
+                const postUrl = await generateUploadUrl({ adminToken });
                 const result = await fetch(postUrl, {
                     method: "POST",
                     headers: { "Content-Type": file.type },

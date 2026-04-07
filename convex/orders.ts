@@ -229,8 +229,9 @@ export const clearAllOrders = mutation({
     adminToken: v.string(),
   },
   handler: async (ctx, args) => {
-    if (args.adminToken !== (process.env.ADMIN_PASSWORD || "daust")) {
-      throw new Error("Unauthorized");
+    const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+    if (!isAuthorized) {
+      throw new Error("Unauthorized - Invalid or expired session");
     }
     const orders = await ctx.db.query("orders").collect();
     await Promise.all(orders.map((order) => ctx.db.delete(order._id)));

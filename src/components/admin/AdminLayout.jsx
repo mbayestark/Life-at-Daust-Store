@@ -12,7 +12,8 @@ import {
     ExternalLink,
     Layers,
     Tag,
-    Image
+    Image,
+    FolderOpen
 } from "lucide-react";
 import logo from "../../assets/logo.png";
 
@@ -35,6 +36,7 @@ export default function AdminLayout() {
         { icon: Layers, label: "Collections", path: "/admin/collections", managerOnly: true },
         { icon: ShoppingBag, label: "Orders", path: "/admin/orders", managerOnly: false },
         { icon: Image, label: "Hero", path: "/admin/hero", managerOnly: true },
+        { icon: FolderOpen, label: "Media", path: "/admin/media", managerOnly: true },
     ];
     const menuItems = isPartner ? allMenuItems.filter(i => !i.managerOnly) : allMenuItems;
 

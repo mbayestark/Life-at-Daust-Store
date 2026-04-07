@@ -127,6 +127,15 @@ export default defineSchema({
         createdAt: v.number(),
         role: v.optional(v.union(v.literal("manager"), v.literal("partner"))),
     }).index("by_token", ["token"]),
+    media: defineTable({
+        storageId: v.string(),
+        url: v.optional(v.string()),
+        name: v.string(),
+        type: v.union(v.literal("image"), v.literal("video")),
+        folder: v.optional(v.string()),
+        size: v.optional(v.number()),
+        uploadedAt: v.number(),
+    }).index("by_folder", ["folder"]),
     siteSettings: defineTable({
         heroMedia: v.optional(v.array(v.object({
             storageId: v.string(),

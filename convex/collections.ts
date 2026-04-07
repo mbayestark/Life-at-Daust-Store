@@ -69,8 +69,15 @@ export const addCollection = mutation({
     },
 });
 
-export const generateUploadUrl = mutation(async (ctx) => {
-    return await ctx.storage.generateUploadUrl();
+export const generateUploadUrl = mutation({
+    args: { adminToken: v.string() },
+    handler: async (ctx, args) => {
+        const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+        if (!isAuthorized) {
+            throw new Error("Unauthorized - Invalid or expired session");
+        }
+        return await ctx.storage.generateUploadUrl();
+    },
 });
 
 export const updateCollection = mutation({

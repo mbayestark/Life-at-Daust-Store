@@ -42,6 +42,7 @@ import AdminProductSets from "./pages/admin/ProductSets";
 import AdminCollections from "./pages/admin/Collections";
 import AdminOrders from "./pages/admin/Orders";
 import AdminHeroSettings from "./pages/admin/HeroSettings";
+import AdminMedia from "./pages/admin/Media";
 
 function ManagerOnlyRoute({ children }) {
   const { adminRole } = useAdmin();
@@ -97,6 +98,7 @@ export default function App() {
             <Route path="collections" element={<ManagerOnlyRoute><AdminCollections /></ManagerOnlyRoute>} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="hero" element={<ManagerOnlyRoute><AdminHeroSettings /></ManagerOnlyRoute>} />
+            <Route path="media" element={<ManagerOnlyRoute><AdminMedia /></ManagerOnlyRoute>} />
           </Route>
 
             <Route path="*" element={<NotFound />} />
