@@ -133,10 +133,12 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
             setFormData({ ...formData, image: media.storageId });
         } else if (mediaLibraryTarget === "logo") {
             const media = Array.isArray(mediaOrArray) ? mediaOrArray[0] : mediaOrArray;
-            setNewLogoFile(null);
             setNewLogoPreview(media.url);
-            // Store the storageId so addLogo can use it directly
             setNewLogoFile({ __fromMedia: true, storageId: media.storageId, url: media.url });
+        } else if (mediaLibraryTarget === "combo") {
+            const media = Array.isArray(mediaOrArray) ? mediaOrArray[0] : mediaOrArray;
+            setNewComboPreview(media.url);
+            setNewComboFile({ __fromMedia: true, storageId: media.storageId, url: media.url });
         } else if (mediaLibraryTarget.startsWith("color:")) {
             const colorName = mediaLibraryTarget.replace("color:", "");
             const items = Array.isArray(mediaOrArray) ? mediaOrArray : [mediaOrArray];
@@ -800,13 +802,23 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                         </button>
                                     </div>
                                 ) : (
-                                    <label className="flex items-center justify-center w-11 h-11 bg-white rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-dashed border-gray-300">
-                                        <ImageIcon size={18} className="text-gray-400" />
-                                        <input type="file" accept="image/*" className="hidden" onChange={e => {
-                                            const f = e.target.files[0];
-                                            if (f) { setNewComboFile(f); setNewComboPreview(createPreviewUrl(f)); }
-                                        }} />
-                                    </label>
+                                    <div className="flex gap-1">
+                                        <label className="flex items-center justify-center w-11 h-11 bg-white rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-dashed border-gray-300" title="Upload from computer">
+                                            <Upload size={16} className="text-gray-400" />
+                                            <input type="file" accept="image/*" className="hidden" onChange={e => {
+                                                const f = e.target.files[0];
+                                                if (f) { setNewComboFile(f); setNewComboPreview(createPreviewUrl(f)); }
+                                            }} />
+                                        </label>
+                                        <button
+                                            type="button"
+                                            onClick={() => openMediaFor("combo")}
+                                            className="flex items-center justify-center w-11 h-11 bg-white rounded-xl hover:bg-gray-100 transition-colors border border-dashed border-gray-300"
+                                            title="Choose from Media Library"
+                                        >
+                                            <FolderOpen size={16} className="text-gray-400" />
+                                        </button>
+                                    </div>
                                 )}
                             </div>
                             <button
@@ -816,10 +828,16 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                     if (!newComboFile || !newComboLogoIds[0] || !newComboLogoIds[1]) return;
                                     setComboUploading(true);
                                     try {
-                                        const optimized = await optimizeImage(newComboFile);
-                                        const postUrl = await generateUploadUrl({ adminToken });
-                                        const result = await fetch(postUrl, { method: "POST", headers: { "Content-Type": optimized.type }, body: optimized });
-                                        const { storageId } = await result.json();
+                                        let storageId;
+                                        if (newComboFile.__fromMedia) {
+                                            storageId = newComboFile.storageId;
+                                        } else {
+                                            const optimized = await optimizeImage(newComboFile);
+                                            const postUrl = await generateUploadUrl({ adminToken });
+                                            const result = await fetch(postUrl, { method: "POST", headers: { "Content-Type": optimized.type }, body: optimized });
+                                            const data = await result.json();
+                                            storageId = data.storageId;
+                                        }
                                         setLogoCombinations(prev => [...prev, { logoIds: [newComboLogoIds[0], newComboLogoIds[1]], image: storageId }]);
                                         setLogoCombinationsDisplay(prev => [...prev, { logoIds: [newComboLogoIds[0], newComboLogoIds[1]], image: newComboPreview }]);
                                         setNewComboLogoIds(["", ""]);
