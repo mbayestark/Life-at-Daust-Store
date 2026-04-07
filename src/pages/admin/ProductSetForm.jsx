@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { X, Save, Trash2, Image as ImageIcon, AlertCircle, Plus, Package, FolderOpen } from "lucide-react";
+import { X, Save, Trash2, Image as ImageIcon, AlertCircle, Plus, Package, FolderOpen, Upload } from "lucide-react";
 import Button from "../../components/ui/Button";
 import { useAdmin } from "../../context/AdminContext";
 import MediaLibrary from "../../components/admin/MediaLibrary";
@@ -23,6 +23,7 @@ export default function ProductSetForm({ productSet, onSave, onCancel }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [mediaLibraryOpen, setMediaLibraryOpen] = useState(false);
+    const imageInputRef = useRef(null);
 
     const generateUploadUrl = useMutation(api.products.generateUploadUrl);
     const addProductSet = useMutation(api.products.addProductSet);
@@ -282,7 +283,7 @@ export default function ProductSetForm({ productSet, onSave, onCancel }) {
                         <div>
                             <label className="block text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Bundle Image</label>
                             <div
-                                className={`relative aspect-video rounded-2xl md:rounded-3xl overflow-hidden border-2 border-dashed transition-all flex flex-col items-center justify-center p-3 md:p-4 bg-gray-50 ${imagePreview ? "border-transparent" : "border-gray-200 hover:border-brand-orange/40"}`}
+                                className={`relative aspect-video rounded-2xl md:rounded-3xl overflow-hidden border-2 border-dashed transition-all flex flex-col items-center justify-center p-3 md:p-4 bg-gray-50 ${imagePreview ? "border-transparent" : "border-gray-200"}`}
                             >
                                 {imagePreview ? (
                                     <>
@@ -296,28 +297,37 @@ export default function ProductSetForm({ productSet, onSave, onCancel }) {
                                         </button>
                                     </>
                                 ) : (
-                                    <div className="text-center">
-                                        <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-full bg-white mb-3 md:mb-4 shadow-sm text-gray-400">
+                                    <div className="text-center space-y-3">
+                                        <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-full bg-white mb-1 shadow-sm text-gray-400">
                                             <Package size={24} md:size={32} />
                                         </div>
-                                        <p className="text-xs md:text-sm font-bold text-gray-500 mb-1">Click to upload bundle image</p>
                                         <p className="text-[8px] md:text-[10px] text-gray-400 font-bold uppercase tracking-widest">Optional</p>
+                                        <div className="flex flex-col gap-2 w-full px-4">
+                                            <button
+                                                type="button"
+                                                onClick={() => imageInputRef.current?.click()}
+                                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-navy text-white font-bold text-xs rounded-xl hover:bg-brand-navy/90 transition-colors"
+                                            >
+                                                <Upload size={14} /> Upload from Computer
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setMediaLibraryOpen(true)}
+                                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-brand-navy font-bold text-xs rounded-xl hover:bg-gray-100 transition-colors border border-gray-200"
+                                            >
+                                                <FolderOpen size={14} /> Choose from Media Library
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                                 <input
+                                    ref={imageInputRef}
                                     type="file"
                                     accept="image/*"
                                     onChange={handleImageChange}
-                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                    className="hidden"
                                 />
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => setMediaLibraryOpen(true)}
-                                className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 text-brand-navy font-bold text-xs rounded-xl transition-colors border border-gray-200"
-                            >
-                                <FolderOpen size={14} /> Choose from Media Library
-                            </button>
                         </div>
 
                         {/* Active Toggle */}

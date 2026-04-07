@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { X, Upload, Image as ImageIcon, FolderOpen } from "lucide-react";
@@ -20,6 +20,7 @@ export default function CollectionForm({ collection, onClose, onSave }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [mediaLibraryOpen, setMediaLibraryOpen] = useState(false);
+    const imageInputRef = useRef(null);
 
     const addCollection = useMutation(api.collections.addCollection);
     const updateCollection = useMutation(api.collections.updateCollection);
@@ -236,36 +237,40 @@ export default function CollectionForm({ collection, onClose, onSave }) {
                                             </button>
                                         </div>
                                     ) : (
-                                        <>
+                                        <div className="space-y-3">
                                             <div className="mx-auto h-12 w-12 text-gray-400 bg-white rounded-xl flex items-center justify-center shadow-sm">
                                                 <ImageIcon size={24} />
-                                            </div>
-                                            <div className="flex text-sm text-gray-600">
-                                                <label className="relative cursor-pointer bg-white rounded-md font-bold text-brand-orange hover:text-brand-orange/80 focus-within:outline-none transition-colors">
-                                                    <span>Upload a file</span>
-                                                    <input
-                                                        type="file"
-                                                        className="sr-only"
-                                                        onChange={handleImageChange}
-                                                        accept="image/*"
-                                                    />
-                                                </label>
-                                                <p className="pl-1">or drag and drop</p>
                                             </div>
                                             <p className="text-xs text-gray-400 uppercase tracking-widest font-bold">
                                                 PNG, JPG, GIF up to 10MB
                                             </p>
-                                        </>
+                                            <div className="flex flex-col gap-2 w-full max-w-[240px] mx-auto">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => imageInputRef.current?.click()}
+                                                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-navy text-white font-bold text-xs rounded-xl hover:bg-brand-navy/90 transition-colors"
+                                                >
+                                                    <Upload size={14} /> Upload from Computer
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setMediaLibraryOpen(true)}
+                                                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-brand-navy font-bold text-xs rounded-xl hover:bg-gray-100 transition-colors border border-gray-200"
+                                                >
+                                                    <FolderOpen size={14} /> Choose from Media Library
+                                                </button>
+                                            </div>
+                                            <input
+                                                ref={imageInputRef}
+                                                type="file"
+                                                className="hidden"
+                                                onChange={handleImageChange}
+                                                accept="image/*"
+                                            />
+                                        </div>
                                     )}
                                 </div>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => setMediaLibraryOpen(true)}
-                                className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 text-brand-navy font-bold text-xs rounded-xl transition-colors border border-gray-200"
-                            >
-                                <FolderOpen size={14} /> Choose from Media Library
-                            </button>
                         </div>
                     </div>
 

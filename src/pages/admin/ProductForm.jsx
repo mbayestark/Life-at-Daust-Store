@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { X, Save, Trash2, Image as ImageIcon, AlertCircle, Plus, FolderOpen } from "lucide-react";
+import { X, Save, Trash2, Image as ImageIcon, AlertCircle, Plus, FolderOpen, Upload } from "lucide-react";
 import Button from "../../components/ui/Button";
 import { optimizeImage, createPreviewUrl, revokePreviewUrl } from "../../utils/imageOptimizer";
 import { useAdmin } from "../../context/AdminContext";
@@ -35,7 +35,9 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [mediaLibraryOpen, setMediaLibraryOpen] = useState(false);
+    const [mediaLibraryTarget, setMediaLibraryTarget] = useState("product"); // "product" | "logo" | "color:ColorName"
     const initializedForId = useRef(null);
+    const imageInputRef = useRef(null);
 
     const [newColorName, setNewColorName] = useState("");
     const [newColorHex, setNewColorHex] = useState("#000000");
@@ -123,10 +125,41 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
         return storageId;
     };
 
-    const handleMediaSelect = (media) => {
-        setImageFile(null);
-        setImagePreview(media.url);
-        setFormData({ ...formData, image: media.storageId });
+    const handleMediaSelect = (mediaOrArray) => {
+        if (mediaLibraryTarget === "product") {
+            const media = Array.isArray(mediaOrArray) ? mediaOrArray[0] : mediaOrArray;
+            setImageFile(null);
+            setImagePreview(media.url);
+            setFormData({ ...formData, image: media.storageId });
+        } else if (mediaLibraryTarget === "logo") {
+            const media = Array.isArray(mediaOrArray) ? mediaOrArray[0] : mediaOrArray;
+            setNewLogoFile(null);
+            setNewLogoPreview(media.url);
+            // Store the storageId so addLogo can use it directly
+            setNewLogoFile({ __fromMedia: true, storageId: media.storageId, url: media.url });
+        } else if (mediaLibraryTarget.startsWith("color:")) {
+            const colorName = mediaLibraryTarget.replace("color:", "");
+            const items = Array.isArray(mediaOrArray) ? mediaOrArray : [mediaOrArray];
+            const newStorageIds = items.map(m => m.storageId);
+            const newUrls = items.map(m => m.url);
+            setColorImages(prev => {
+                const base = prev || {};
+                const dm = { ...(base["_default"] || {}) };
+                dm[colorName] = [...(dm[colorName] || []), ...newStorageIds];
+                return { ...base, "_default": dm };
+            });
+            setColorImagesDisplay(prev => {
+                const base = prev || {};
+                const dm = { ...(base["_default"] || {}) };
+                dm[colorName] = [...(dm[colorName] || []), ...newUrls];
+                return { ...base, "_default": dm };
+            });
+        }
+    };
+
+    const openMediaFor = (target, multiple = false) => {
+        setMediaLibraryTarget(target);
+        setMediaLibraryOpen(true);
     };
 
     const addColor = () => {
@@ -152,7 +185,9 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
         setLogoUploading(true);
         try {
             let imageStorageId = undefined;
-            if (newLogoFile) {
+            if (newLogoFile && newLogoFile.__fromMedia) {
+                imageStorageId = newLogoFile.storageId;
+            } else if (newLogoFile) {
                 const optimizedFile = await optimizeImage(newLogoFile);
                 const postUrl = await generateUploadUrl({ adminToken });
                 const result = await fetch(postUrl, {
@@ -387,7 +422,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                         <div>
                             <label className="block text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Product Image</label>
                             <div
-                                className={`relative aspect-[3/4] rounded-2xl md:rounded-3xl overflow-hidden border-2 border-dashed transition-all flex flex-col items-center justify-center p-3 md:p-4 bg-gray-50 ${imagePreview ? "border-transparent" : "border-gray-200 hover:border-brand-orange/40"}`}
+                                className={`relative aspect-[3/4] rounded-2xl md:rounded-3xl overflow-hidden border-2 border-dashed transition-all flex flex-col items-center justify-center p-3 md:p-4 bg-gray-50 ${imagePreview ? "border-transparent" : "border-gray-200"}`}
                             >
                                 {imagePreview ? (
                                     <>
@@ -401,28 +436,37 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                         </button>
                                     </>
                                 ) : (
-                                    <div className="text-center">
-                                        <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-full bg-white mb-3 md:mb-4 shadow-sm text-gray-400">
+                                    <div className="text-center space-y-3">
+                                        <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-full bg-white mb-1 shadow-sm text-gray-400">
                                             <ImageIcon size={24} md:size={32} />
                                         </div>
-                                        <p className="text-xs md:text-sm font-bold text-gray-500 mb-1">Click to upload image</p>
                                         <p className="text-[8px] md:text-[10px] text-gray-400 font-bold uppercase tracking-widest">Recommended: 1200 x 1600px</p>
+                                        <div className="flex flex-col gap-2 w-full px-4">
+                                            <button
+                                                type="button"
+                                                onClick={() => imageInputRef.current?.click()}
+                                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-navy text-white font-bold text-xs rounded-xl hover:bg-brand-navy/90 transition-colors"
+                                            >
+                                                <Upload size={14} /> Upload from Computer
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => openMediaFor("product")}
+                                                className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white text-brand-navy font-bold text-xs rounded-xl hover:bg-gray-100 transition-colors border border-gray-200"
+                                            >
+                                                <FolderOpen size={14} /> Choose from Media Library
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                                 <input
+                                    ref={imageInputRef}
                                     type="file"
                                     accept="image/*"
                                     onChange={handleImageChange}
-                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                    className="hidden"
                                 />
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => setMediaLibraryOpen(true)}
-                                className="mt-2 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 text-brand-navy font-bold text-xs rounded-xl transition-colors border border-gray-200"
-                            >
-                                <FolderOpen size={14} /> Choose from Media Library
-                            </button>
                         </div>
 
                         {/* Logo Preview Section - Show near top for visibility */}
@@ -560,13 +604,23 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                     </button>
                                 </div>
                             ) : (
-                                <label className="flex items-center justify-center w-11 h-11 md:w-12 md:h-12 bg-white rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-dashed border-gray-300">
-                                    <ImageIcon size={18} className="text-gray-400" />
-                                    <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                                        const f = e.target.files[0];
-                                        if (f) { setNewLogoFile(f); setNewLogoPreview(createPreviewUrl(f)); }
-                                    }} />
-                                </label>
+                                <div className="flex gap-1">
+                                    <label className="flex items-center justify-center w-11 h-11 md:w-12 md:h-12 bg-white rounded-xl cursor-pointer hover:bg-gray-100 transition-colors border border-dashed border-gray-300" title="Upload from computer">
+                                        <Upload size={16} className="text-gray-400" />
+                                        <input type="file" accept="image/*" className="hidden" onChange={(e) => {
+                                            const f = e.target.files[0];
+                                            if (f) { setNewLogoFile(f); setNewLogoPreview(createPreviewUrl(f)); }
+                                        }} />
+                                    </label>
+                                    <button
+                                        type="button"
+                                        onClick={() => openMediaFor("logo")}
+                                        className="flex items-center justify-center w-11 h-11 md:w-12 md:h-12 bg-white rounded-xl hover:bg-gray-100 transition-colors border border-dashed border-gray-300"
+                                        title="Choose from Media Library"
+                                    >
+                                        <FolderOpen size={16} className="text-gray-400" />
+                                    </button>
+                                </div>
                             )}
                         </div>
                         <button
@@ -908,8 +962,8 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                                     </button>
                                                 </div>
                                             ))}
-                                            <label className="w-14 h-14 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-brand-orange/40 transition-colors bg-gray-50">
-                                                <Plus size={16} className="text-gray-400" />
+                                            <label className="w-14 h-14 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center cursor-pointer hover:border-brand-orange/40 transition-colors bg-gray-50" title="Upload from computer">
+                                                <Upload size={14} className="text-gray-400" />
                                                 <input
                                                     type="file"
                                                     accept="image/*"
@@ -950,6 +1004,14 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                                     }}
                                                 />
                                             </label>
+                                            <button
+                                                type="button"
+                                                onClick={() => openMediaFor(`color:${color.name}`, true)}
+                                                className="w-14 h-14 rounded-lg border-2 border-dashed border-gray-200 flex items-center justify-center hover:border-brand-orange/40 transition-colors bg-gray-50"
+                                                title="Choose from Media Library"
+                                            >
+                                                <FolderOpen size={14} className="text-gray-400" />
+                                            </button>
                                         </div>
                                     </div>
                                 );
@@ -1020,6 +1082,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                 open={mediaLibraryOpen}
                 onClose={() => setMediaLibraryOpen(false)}
                 onSelect={handleMediaSelect}
+                multiple={mediaLibraryTarget.startsWith("color:")}
             />
         </div>
     );
