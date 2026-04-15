@@ -104,6 +104,17 @@ export default function Checkout() {
         if (it.isProductSet) {
           line.isProductSet = true;
           line.productSetName = it.productSetName;
+          if (it.products?.length) {
+            line.setProducts = it.products.map((p) => {
+              const sel = it.variantSelections?.[p.productId];
+              const entry = { productName: p.productName || p.name || "Item", quantity: p.quantity || 1 };
+              const color = sel?.color || p.selectedColor;
+              const size = sel?.size || p.selectedSize;
+              if (color) entry.color = color;
+              if (size) entry.size = size;
+              return entry;
+            });
+          }
         }
         return line;
       }),
