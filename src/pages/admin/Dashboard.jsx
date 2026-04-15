@@ -121,14 +121,22 @@ export default function AdminDashboard() {
         if (!products) return [];
         const CONFIRMED = ["Paid", "Processing", "Shipped", "Delivered"];
         const soldMap = {};
-        const revenueMap = {};
+        const grossMap = {};
+        const actualMap = {};
 
         for (const order of ordersData) {
             if (!CONFIRMED.includes(order.status)) continue;
+            const totalDiscount = (order.discount || 0) + (order.referralDiscount || 0) + (order.couponDiscount || 0);
+            const orderSubtotal = order.subtotal || 0;
+
             for (const item of order.items || []) {
                 const key = item.name || "Unknown";
+                const itemTotal = (item.price || 0) * (item.qty || 1);
                 soldMap[key] = (soldMap[key] || 0) + (item.qty || 1);
-                revenueMap[key] = (revenueMap[key] || 0) + (item.price || 0) * (item.qty || 1);
+                grossMap[key] = (grossMap[key] || 0) + itemTotal;
+                // Distribute order-level discounts proportionally
+                const itemDiscount = orderSubtotal > 0 ? Math.round(totalDiscount * (itemTotal / orderSubtotal)) : 0;
+                actualMap[key] = (actualMap[key] || 0) + (itemTotal - itemDiscount);
             }
         }
 
@@ -139,7 +147,14 @@ export default function AdminDashboard() {
         }
 
         return Object.entries(soldMap)
-            .map(([name, qty]) => ({ name, qty, revenue: revenueMap[name] || 0, image: imageMap[name] }))
+            .map(([name, qty]) => ({
+                name,
+                qty,
+                gross: grossMap[name] || 0,
+                actual: actualMap[name] || 0,
+                discounted: (grossMap[name] || 0) - (actualMap[name] || 0),
+                image: imageMap[name],
+            }))
             .sort((a, b) => b.qty - a.qty);
     }, [products, ordersData]);
 
@@ -273,9 +288,14 @@ export default function AdminDashboard() {
                 <div className="flex items-center gap-4 mb-2">
                     <div className="w-1.5 h-8 bg-brand-navy rounded-full" />
                     <h2 className="text-2xl font-[900] text-brand-navy tracking-tight">Items Sold by Product</h2>
-                    <span className="ml-auto text-xs font-bold text-gray-400 uppercase tracking-widest">
-                        {itemsSoldByProduct.reduce((s, p) => s + p.qty, 0)} total units
-                    </span>
+                    <div className="ml-auto text-right">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest block">
+                            {itemsSoldByProduct.reduce((s, p) => s + p.qty, 0)} units
+                        </span>
+                        <span className="text-[10px] font-bold text-green-500 uppercase tracking-widest">
+                            {formatPrice(itemsSoldByProduct.reduce((s, p) => s + p.actual, 0))} collected
+                        </span>
+                    </div>
                 </div>
                 <p className="text-xs text-gray-400 font-medium mb-8 ml-6">Confirmed orders only (Paid, Processing, Shipped, Delivered)</p>
 
@@ -307,7 +327,9 @@ export default function AdminDashboard() {
                                             <div className="bg-brand-navy text-white text-xs font-bold px-4 py-3 rounded-xl shadow-xl space-y-1">
                                                 <p>{d.name}</p>
                                                 <p className="text-brand-orange">{d.qty} units sold</p>
-                                                <p className="text-brand-cream/60">{formatPrice(d.revenue)} revenue</p>
+                                                <p className="text-brand-cream/60">Full price: {formatPrice(d.gross)}</p>
+                                                <p className="text-green-400">Collected: {formatPrice(d.actual)}</p>
+                                                {d.discounted > 0 && <p className="text-red-400">Discounts: -{formatPrice(d.discounted)}</p>}
                                             </div>
                                         );
                                     }}
@@ -322,22 +344,26 @@ export default function AdminDashboard() {
 
                         {/* Full table below */}
                         <div className="mt-8 border border-gray-100 rounded-2xl overflow-hidden">
-                            <div className="grid grid-cols-12 gap-4 px-5 py-3 bg-brand-navy text-white text-[10px] font-black uppercase tracking-[0.15em]">
+                            <div className="grid grid-cols-12 gap-3 px-5 py-3 bg-brand-navy text-white text-[10px] font-black uppercase tracking-[0.15em]">
                                 <span className="col-span-1">#</span>
-                                <span className="col-span-5">Product</span>
-                                <span className="col-span-3 text-right">Units Sold</span>
-                                <span className="col-span-3 text-right">Revenue</span>
+                                <span className="col-span-3">Product</span>
+                                <span className="col-span-2 text-right">Sold</span>
+                                <span className="col-span-2 text-right">Full Price</span>
+                                <span className="col-span-2 text-right">Discounts</span>
+                                <span className="col-span-2 text-right">Collected</span>
                             </div>
                             <div className="divide-y divide-gray-50 max-h-[400px] overflow-y-auto">
                                 {itemsSoldByProduct.map((p, i) => (
-                                    <div key={p.name} className="grid grid-cols-12 gap-4 px-5 py-3.5 items-center hover:bg-gray-50 transition-colors">
+                                    <div key={p.name} className="grid grid-cols-12 gap-3 px-5 py-3.5 items-center hover:bg-gray-50 transition-colors">
                                         <span className="col-span-1 text-xs font-black text-gray-300">{i + 1}</span>
-                                        <div className="col-span-5 flex items-center gap-3 min-w-0">
+                                        <div className="col-span-3 flex items-center gap-3 min-w-0">
                                             {p.image && <img src={p.image} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />}
                                             <span className="text-sm font-bold text-brand-navy truncate">{p.name}</span>
                                         </div>
-                                        <span className="col-span-3 text-right text-sm font-black text-brand-navy">{p.qty}</span>
-                                        <span className="col-span-3 text-right text-sm font-bold text-gray-500">{formatPrice(p.revenue)}</span>
+                                        <span className="col-span-2 text-right text-sm font-black text-brand-navy">{p.qty}</span>
+                                        <span className="col-span-2 text-right text-sm font-bold text-gray-400 line-through">{formatPrice(p.gross)}</span>
+                                        <span className="col-span-2 text-right text-sm font-bold text-red-400">{p.discounted > 0 ? `-${formatPrice(p.discounted)}` : "—"}</span>
+                                        <span className="col-span-2 text-right text-sm font-black text-green-600">{formatPrice(p.actual)}</span>
                                     </div>
                                 ))}
                             </div>
