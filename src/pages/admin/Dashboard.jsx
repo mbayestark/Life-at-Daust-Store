@@ -12,7 +12,8 @@ import {
     Users,
     Layers,
     AlertTriangle,
-    ArrowUpRight
+    ArrowUpRight,
+    Download
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { formatPrice } from "../../utils/format.js";
@@ -158,6 +159,23 @@ export default function AdminDashboard() {
             .sort((a, b) => b.qty - a.qty);
     }, [products, ordersData]);
 
+    const exportItemsSoldCSV = () => {
+        const headers = ["Product", "Qty Sold", "Gross Revenue (CFA)", "Discounts (CFA)", "Actual Revenue (CFA)"];
+        const rows = itemsSoldByProduct.map(p => [
+            p.name, p.qty, p.gross, p.discounted, p.actual
+        ]);
+        const csv = [headers, ...rows]
+            .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
+            .join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `items-sold-by-product-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
     if (isLoading) {
         return (
             <div className="h-full flex flex-col items-center justify-center space-y-4">
@@ -288,13 +306,23 @@ export default function AdminDashboard() {
                 <div className="flex items-center gap-4 mb-2">
                     <div className="w-1.5 h-8 bg-brand-navy rounded-full" />
                     <h2 className="text-2xl font-[900] text-brand-navy tracking-tight">Items Sold by Product</h2>
-                    <div className="ml-auto text-right">
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest block">
-                            {itemsSoldByProduct.reduce((s, p) => s + p.qty, 0)} units
-                        </span>
-                        <span className="text-[10px] font-bold text-green-500 uppercase tracking-widest">
-                            {formatPrice(itemsSoldByProduct.reduce((s, p) => s + p.actual, 0))} collected
-                        </span>
+                    <div className="ml-auto flex items-center gap-4">
+                        <button
+                            onClick={exportItemsSoldCSV}
+                            disabled={itemsSoldByProduct.length === 0}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-brand-navy bg-brand-navy/5 hover:bg-brand-navy/10 rounded-lg border border-brand-navy/10 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                            title="Export items sold as CSV"
+                        >
+                            <Download size={12} /> CSV
+                        </button>
+                        <div className="text-right">
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest block">
+                                {itemsSoldByProduct.reduce((s, p) => s + p.qty, 0)} units
+                            </span>
+                            <span className="text-[10px] font-bold text-green-500 uppercase tracking-widest">
+                                {formatPrice(itemsSoldByProduct.reduce((s, p) => s + p.actual, 0))} collected
+                            </span>
+                        </div>
                     </div>
                 </div>
                 <p className="text-xs text-gray-400 font-medium mb-8 ml-6">Confirmed orders only (Paid, Processing, Shipped, Delivered)</p>
