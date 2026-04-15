@@ -66,6 +66,12 @@ export const addOrder = mutation({
       sideLogo: v.optional(v.string()),
       isProductSet: v.optional(v.boolean()),
       productSetName: v.optional(v.string()),
+      setProducts: v.optional(v.array(v.object({
+        productName: v.string(),
+        quantity: v.number(),
+        color: v.optional(v.string()),
+        size: v.optional(v.string()),
+      }))),
     })),
     subtotal: v.number(),
     deliveryFee: v.number(),

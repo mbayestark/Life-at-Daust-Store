@@ -186,8 +186,8 @@ export default function AdminOrders() {
 <div class="section">Items</div>
 <table><thead><tr><th>Item</th><th>Details</th><th>Qty</th><th>Price</th></tr></thead><tbody>
 ${order.items.map(item => `<tr>
-  <td>${item.name}</td>
-  <td style="color:#999;font-size:11px">${[item.size ? `Size: ${item.size}` : "", item.color ? `Color: ${item.color}` : "", item.hoodieType ? `Type: ${item.hoodieType}` : "", item.isCropTop ? "Crop Top" : "", item.frontLogo ? `Front: ${item.frontLogo}` : ""].filter(Boolean).join(" · ") || "—"}</td>
+  <td>${item.isProductSet ? "<strong style='color:#FF6B00'>[Bundle]</strong> " : ""}${item.name}</td>
+  <td style="color:#999;font-size:11px">${[item.size ? `Size: ${item.size}` : "", item.color ? `Color: ${item.color}` : "", item.hoodieType ? `Type: ${item.hoodieType}` : "", item.isCropTop ? "Crop Top" : "", item.frontLogo ? `Front: ${item.frontLogo}` : ""].filter(Boolean).join(" · ") || "—"}${item.isProductSet && item.setProducts?.length ? "<br>" + item.setProducts.map(sp => `<span style="color:#666;font-size:10px">&nbsp;&nbsp;${sp.quantity}x ${sp.productName}${sp.color ? " · " + sp.color : ""}${sp.size ? " · " + sp.size : ""}</span>`).join("<br>") : ""}</td>
   <td>${item.qty}</td>
   <td>${((item.price || 0) * (item.qty || 1)).toLocaleString()} CFA</td>
 </tr>`).join("")}
@@ -637,10 +637,24 @@ ${order.items.map(item => `<tr>
                                             {selectedOrder.items.map((item, i) => (
                                                 <div key={i} className="p-4 flex items-center justify-between gap-4">
                                                     <div className="flex-1 min-w-0">
-                                                        <p className="text-sm font-bold text-brand-navy truncate">{item.name}</p>
+                                                        <p className="text-sm font-bold text-brand-navy truncate">
+                                                            {item.isProductSet && <span className="text-brand-orange mr-1">[Bundle]</span>}
+                                                            {item.name}
+                                                        </p>
                                                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
                                                             QTY: {item.qty} {item?.size ? `• Size: ${item.size}` : ""} {item?.color ? `• ${item.color}` : ""} {item?.hoodieType ? `• Type: ${item.hoodieType}` : ""} {item?.frontLogo ? `• Front: ${item.frontLogo}` : ""} {item?.backLogo ? `• Back: ${item.backLogo}` : ""} {item?.sideLogo ? `• Side: ${item.sideLogo}` : ""} {item?.logo ? `• Logo: ${item.logo}${item.logoPosition ? ` (${item.logoPosition})` : ""}` : ""}
                                                         </p>
+                                                        {item.isProductSet && item.setProducts?.length > 0 && (
+                                                            <div className="mt-2 ml-2 pl-3 border-l-2 border-brand-orange/20 space-y-1">
+                                                                {item.setProducts.map((sp, j) => (
+                                                                    <p key={j} className="text-[10px] font-bold text-gray-500 tracking-wide">
+                                                                        {sp.quantity}x {sp.productName}
+                                                                        {sp.color ? ` · ${sp.color}` : ""}
+                                                                        {sp.size ? ` · ${sp.size}` : ""}
+                                                                    </p>
+                                                                ))}
+                                                            </div>
+                                                        )}
                                                     </div>
                                                     <p className="font-black text-brand-navy text-sm">{formatPrice((item.price || 0) * (item.qty || 1))}</p>
                                                 </div>
