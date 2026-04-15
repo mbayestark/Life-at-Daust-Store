@@ -21,7 +21,8 @@ import {
     ChevronsRight,
     Printer,
     MessageCircle,
-    History
+    History,
+    Gift
 } from "lucide-react";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { formatPrice } from "../../utils/format.js";
@@ -41,6 +42,7 @@ export default function AdminOrders() {
     const refundNabooTransaction = useAction(api.naboopay.refundTransaction);
     const [refunding, setRefunding] = useState(false);
     const deleteOrderMutation = useMutation(api.orders.deleteOrder);
+    const toggleGiftMutation = useMutation(api.orders.toggleGift);
     const [selectedOrderId, setSelectedOrderId] = useState(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
@@ -376,6 +378,11 @@ ${order.items.map(item => `<tr>
                                             <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${getStatusColor(order.status)}`}>
                                                 {order.status}
                                             </span>
+                                            {order.isGift && (
+                                                <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-pink-50 text-pink-500">
+                                                    <Gift size={10} className="inline -mt-0.5 mr-0.5" />Gift
+                                                </span>
+                                            )}
                                         </div>
                                         <p className="text-xs font-bold text-gray-500">{order.customer.name}</p>
                                         <p className="text-[10px] text-gray-400 mt-1">{new Date(order.createdAt).toLocaleDateString()}</p>
@@ -537,6 +544,25 @@ ${order.items.map(item => `<tr>
                                         }`}
                                 >
                                     <Clock size={16} /> Pending Payment
+                                </button>
+                            </div>
+
+                            {/* Gift Toggle */}
+                            <div className={`p-4 rounded-2xl border flex items-center justify-between ${selectedOrder.isGift ? "bg-pink-50 border-pink-200" : "bg-gray-50 border-gray-100"}`}>
+                                <div className="flex items-center gap-3">
+                                    <Gift size={18} className={selectedOrder.isGift ? "text-pink-500" : "text-gray-400"} />
+                                    <div>
+                                        <p className={`text-xs font-black uppercase tracking-widest ${selectedOrder.isGift ? "text-pink-600" : "text-gray-500"}`}>
+                                            {selectedOrder.isGift ? "Marked as Gift" : "Mark as Gift"}
+                                        </p>
+                                        <p className="text-[10px] text-gray-400 font-medium mt-0.5">Gift orders are excluded from revenue & profit stats</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => toggleGiftMutation({ id: selectedOrder._id, isGift: !selectedOrder.isGift, adminToken })}
+                                    className={`relative w-12 h-6 rounded-full transition-colors ${selectedOrder.isGift ? "bg-pink-500" : "bg-gray-300"}`}
+                                >
+                                    <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${selectedOrder.isGift ? "translate-x-6" : "translate-x-0.5"}`} />
                                 </button>
                             </div>
 

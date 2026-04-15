@@ -126,6 +126,7 @@ export default defineSchema({
         couponDiscount: v.optional(v.number()),
         couponApplied: v.optional(v.boolean()),
         referralTracked: v.optional(v.boolean()),
+        isGift: v.optional(v.boolean()),
     }),
     adminSessions: defineTable({
         token: v.string(),

@@ -216,6 +216,21 @@ export const bulkUpdateStatus = mutation({
   },
 });
 
+export const toggleGift = mutation({
+  args: {
+    id: v.id("orders"),
+    isGift: v.boolean(),
+    adminToken: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+    if (!isAuthorized) {
+      throw new Error("Unauthorized - Invalid or expired session");
+    }
+    await ctx.db.patch(args.id, { isGift: args.isGift });
+  },
+});
+
 export const deleteOrder = mutation({
   args: {
     id: v.id("orders"),

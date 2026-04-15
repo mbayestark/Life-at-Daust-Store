@@ -44,7 +44,7 @@ export default function AdminDashboard() {
         let totalCost = 0;
 
         for (const order of ordersData) {
-            if (!CONFIRMED_STATUSES.includes(order.status)) continue;
+            if (!CONFIRMED_STATUSES.includes(order.status) || order.isGift) continue;
             totalRevenue += order.total || 0;
             for (const item of order.items || []) {
                 const cost = buyingByName[item.name?.toLowerCase()] ?? 0;
@@ -61,7 +61,7 @@ export default function AdminDashboard() {
         if (!products) return [];
 
         const CONFIRMED_STATUSES = ["Paid", "Processing", "Shipped", "Delivered"];
-        const totalRevenue = ordersData.filter(o => CONFIRMED_STATUSES.includes(o.status)).reduce((sum, order) => sum + (order?.total || 0), 0);
+        const totalRevenue = ordersData.filter(o => CONFIRMED_STATUSES.includes(o.status) && !o.isGift).reduce((sum, order) => sum + (order?.total || 0), 0);
         const activeOrders = ordersData.filter(o => o.status === "Processing" || o.status === "Shipped").length;
         const totalProducts = products.length;
         const completedOrders = ordersData.filter(o => o.status === "Delivered").length;
@@ -97,7 +97,7 @@ export default function AdminDashboard() {
             const dayEnd = dayStart + 86400000;
             const CONFIRMED = ["Paid", "Processing", "Shipped", "Delivered"];
             const revenue = ordersData
-                .filter(o => o.createdAt >= dayStart && o.createdAt < dayEnd && CONFIRMED.includes(o.status))
+                .filter(o => o.createdAt >= dayStart && o.createdAt < dayEnd && CONFIRMED.includes(o.status) && !o.isGift)
                 .reduce((sum, o) => sum + (o.total || 0), 0);
             return {
                 day: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
@@ -125,7 +125,7 @@ export default function AdminDashboard() {
         const actualMap = {};
 
         for (const order of ordersData) {
-            if (!CONFIRMED.includes(order.status)) continue;
+            if (!CONFIRMED.includes(order.status) || order.isGift) continue;
             const totalDiscount = (order.discount || 0) + (order.referralDiscount || 0) + (order.couponDiscount || 0);
             const orderSubtotal = order.subtotal || 0;
 
@@ -252,7 +252,7 @@ export default function AdminDashboard() {
                     <div className="bg-gray-50 rounded-[2rem] p-7 space-y-2">
                         <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Total Revenue</p>
                         <p className="text-3xl font-[900] text-brand-navy tracking-tighter">
-                            {formatPrice(ordersData.filter(o => ["Paid","Processing","Shipped","Delivered"].includes(o.status)).reduce((s,o) => s + (o.total||0), 0))}
+                            {formatPrice(ordersData.filter(o => ["Paid","Processing","Shipped","Delivered"].includes(o.status) && !o.isGift).reduce((s,o) => s + (o.total||0), 0))}
                         </p>
                         <p className="text-xs text-gray-400 font-bold">Selling price × qty</p>
                     </div>
