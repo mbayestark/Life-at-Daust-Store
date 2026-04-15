@@ -117,6 +117,32 @@ export default function AdminDashboard() {
         return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 4);
     }, [products]);
 
+    const itemsSoldByProduct = useMemo(() => {
+        if (!products) return [];
+        const CONFIRMED = ["Paid", "Processing", "Shipped", "Delivered"];
+        const soldMap = {};
+        const revenueMap = {};
+
+        for (const order of ordersData) {
+            if (!CONFIRMED.includes(order.status)) continue;
+            for (const item of order.items || []) {
+                const key = item.name || "Unknown";
+                soldMap[key] = (soldMap[key] || 0) + (item.qty || 1);
+                revenueMap[key] = (revenueMap[key] || 0) + (item.price || 0) * (item.qty || 1);
+            }
+        }
+
+        // Match with product images
+        const imageMap = {};
+        for (const p of products) {
+            imageMap[p.name] = p.image;
+        }
+
+        return Object.entries(soldMap)
+            .map(([name, qty]) => ({ name, qty, revenue: revenueMap[name] || 0, image: imageMap[name] }))
+            .sort((a, b) => b.qty - a.qty);
+    }, [products, ordersData]);
+
     if (isLoading) {
         return (
             <div className="h-full flex flex-col items-center justify-center space-y-4">
@@ -239,6 +265,91 @@ export default function AdminDashboard() {
                     <p className="mt-6 text-xs text-gray-400 font-bold bg-yellow-50 border border-yellow-100 rounded-xl px-4 py-3">
                         Tip: Add buying prices to your products in the Products section to see accurate profit calculations.
                     </p>
+                )}
+            </div>
+
+            {/* Items Sold by Product */}
+            <div className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-2xl shadow-black/[0.02]">
+                <div className="flex items-center gap-4 mb-2">
+                    <div className="w-1.5 h-8 bg-brand-navy rounded-full" />
+                    <h2 className="text-2xl font-[900] text-brand-navy tracking-tight">Items Sold by Product</h2>
+                    <span className="ml-auto text-xs font-bold text-gray-400 uppercase tracking-widest">
+                        {itemsSoldByProduct.reduce((s, p) => s + p.qty, 0)} total units
+                    </span>
+                </div>
+                <p className="text-xs text-gray-400 font-medium mb-8 ml-6">Confirmed orders only (Paid, Processing, Shipped, Delivered)</p>
+
+                {itemsSoldByProduct.length > 0 ? (
+                    <>
+                        {/* Bar chart for top 10 */}
+                        <ResponsiveContainer width="100%" height={Math.min(itemsSoldByProduct.length, 10) * 48 + 20}>
+                            <BarChart
+                                data={itemsSoldByProduct.slice(0, 10)}
+                                layout="vertical"
+                                barCategoryGap="20%"
+                                margin={{ left: 0, right: 20 }}
+                            >
+                                <XAxis type="number" hide />
+                                <YAxis
+                                    dataKey="name"
+                                    type="category"
+                                    width={160}
+                                    tick={{ fontSize: 11, fontWeight: 700, fill: "#0A192F" }}
+                                    axisLine={false}
+                                    tickLine={false}
+                                />
+                                <Tooltip
+                                    cursor={{ fill: "rgba(10,25,47,0.03)", radius: 8 }}
+                                    content={({ active, payload }) => {
+                                        if (!active || !payload?.length) return null;
+                                        const d = payload[0].payload;
+                                        return (
+                                            <div className="bg-brand-navy text-white text-xs font-bold px-4 py-3 rounded-xl shadow-xl space-y-1">
+                                                <p>{d.name}</p>
+                                                <p className="text-brand-orange">{d.qty} units sold</p>
+                                                <p className="text-brand-cream/60">{formatPrice(d.revenue)} revenue</p>
+                                            </div>
+                                        );
+                                    }}
+                                />
+                                <Bar dataKey="qty" radius={[0, 6, 6, 0]} minPointSize={4}>
+                                    {itemsSoldByProduct.slice(0, 10).map((_, i) => (
+                                        <Cell key={i} fill={i === 0 ? "#f97316" : "#0A192F"} />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+
+                        {/* Full table below */}
+                        <div className="mt-8 border border-gray-100 rounded-2xl overflow-hidden">
+                            <div className="grid grid-cols-12 gap-4 px-5 py-3 bg-brand-navy text-white text-[10px] font-black uppercase tracking-[0.15em]">
+                                <span className="col-span-1">#</span>
+                                <span className="col-span-5">Product</span>
+                                <span className="col-span-3 text-right">Units Sold</span>
+                                <span className="col-span-3 text-right">Revenue</span>
+                            </div>
+                            <div className="divide-y divide-gray-50 max-h-[400px] overflow-y-auto">
+                                {itemsSoldByProduct.map((p, i) => (
+                                    <div key={p.name} className="grid grid-cols-12 gap-4 px-5 py-3.5 items-center hover:bg-gray-50 transition-colors">
+                                        <span className="col-span-1 text-xs font-black text-gray-300">{i + 1}</span>
+                                        <div className="col-span-5 flex items-center gap-3 min-w-0">
+                                            {p.image && <img src={p.image} alt="" className="w-8 h-8 rounded-lg object-cover flex-shrink-0" />}
+                                            <span className="text-sm font-bold text-brand-navy truncate">{p.name}</span>
+                                        </div>
+                                        <span className="col-span-3 text-right text-sm font-black text-brand-navy">{p.qty}</span>
+                                        <span className="col-span-3 text-right text-sm font-bold text-gray-500">{formatPrice(p.revenue)}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </>
+                ) : (
+                    <div className="text-center py-20 bg-gray-50/50 rounded-[2rem] border border-dashed border-gray-200">
+                        <div className="inline-flex p-5 bg-white rounded-2xl shadow-sm mb-4">
+                            <ShoppingBag size={28} className="text-gray-300" />
+                        </div>
+                        <p className="text-gray-400 font-black uppercase tracking-[0.2em] text-xs">No confirmed sales yet</p>
+                    </div>
                 )}
             </div>
 
