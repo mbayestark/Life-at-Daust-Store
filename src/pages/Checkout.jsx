@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
-import { Shield, ChevronLeft, Lock, Info, AlertCircle, Package, Tag, ChevronUp } from "lucide-react";
+import { Shield, ChevronLeft, Lock, Info, AlertCircle, Package, ChevronUp } from "lucide-react";
 import { formatPrice } from "../utils/format.js";
 import Button from "../components/ui/Button";
 
@@ -69,17 +69,10 @@ export default function Checkout() {
     return loc ? loc.fee : 0;
   }, [form.location]);
 
-  const discountInfo = useQuery(api.orders.getDiscountEligibility, { phone: form.phone || "" });
-
   const baseTotal = subtotal + deliveryFee + logoFees;
-  const setSubtotal = items.filter(i => i.isProductSet).reduce((s, i) => s + i.price * i.qty, 0);
-  const regularBase = baseTotal - setSubtotal;
-  const regularDiscount = discountInfo?.eligible ? Math.round(regularBase * 0.15) : 0;
-  const setDiscount = discountInfo?.eligible ? Math.round(setSubtotal * 0.05) : 0;
-  const discountAmount = regularDiscount + setDiscount;
   const referralDiscount = appliedReferral?.discount || 0;
   const couponDiscount = couponResult?.discount || 0;
-  const total = baseTotal - discountAmount - referralDiscount - couponDiscount;
+  const total = baseTotal - referralDiscount - couponDiscount;
 
   // Separate product sets and regular items
   const productSetItems = items.filter(item => item.isProductSet);
@@ -197,7 +190,6 @@ export default function Checkout() {
         deliveryFee,
         total,
         paymentMethod: "naboopay",
-        ...(discountAmount > 0 ? { discount: discountAmount } : {}),
         ...(session?.userId ? { buyerUserId: session.userId } : {}),
         ...(appliedReferral ? { referralCode: appliedReferral.code || referralInput.trim().toUpperCase(), referralDiscount } : {}),
         ...(couponApplied ? { couponApplied: true, couponDiscount } : {}),
@@ -219,11 +211,6 @@ export default function Checkout() {
                 qty: it.qty,
                 price: it.price,
               })),
-              ...(discountAmount > 0 ? [{
-                name: "Early Customer Discount (-15%)",
-                qty: 1,
-                price: -discountAmount,
-              }] : []),
               ...(referralDiscount > 0 ? [{
                 name: "Referral Discount (-7%)",
                 qty: 1,
@@ -293,23 +280,6 @@ export default function Checkout() {
             <div className="mb-8 sm:mb-10 p-4 sm:p-5 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 sm:gap-4 text-red-700 text-xs sm:text-sm font-bold animate-in bounce-in duration-500">
               <AlertCircle size={20} className="flex-shrink-0" />
               <span>{error}</span>
-            </div>
-          )}
-
-          {discountInfo?.eligible && (
-            <div className="mb-8 sm:mb-10 p-4 sm:p-5 bg-green-50 border border-green-200 rounded-2xl flex items-center gap-3 sm:gap-4 animate-in slide-in-from-top-3 duration-500">
-              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                <Tag size={18} className="text-green-600" />
-              </div>
-              <div>
-                <p className="font-black text-sm text-green-800 uppercase tracking-wide">Early Customer Discount Applied!</p>
-                <p className="text-xs text-green-600 font-medium mt-0.5">
-                  You save {fmt(discountAmount)} on this order.
-                  {discountInfo?.slotsRemaining <= 3 && (
-                    <span className="ml-1 font-black text-brand-orange">Only {discountInfo.slotsRemaining} spot{discountInfo.slotsRemaining !== 1 ? "s" : ""} left!</span>
-                  )}
-                </p>
-              </div>
             </div>
           )}
 
@@ -581,13 +551,6 @@ export default function Checkout() {
                 </div>
               )}
 
-              {discountInfo?.eligible && (
-                <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/20 rounded-xl px-3 py-2 mb-4">
-                  <Tag size={14} className="text-green-400 flex-shrink-0" />
-                  <p className="text-[11px] font-black text-green-400 uppercase tracking-wider">Early Customer Discount Applied!</p>
-                </div>
-              )}
-
               <div className="space-y-3 sm:space-y-4 text-xs sm:text-sm font-medium border-t border-white/10 pt-5 sm:pt-6 mt-5 sm:mt-6">
                 <div className="flex justify-between items-center text-brand-cream/60">
                   <span>Subtotal</span>
@@ -609,18 +572,6 @@ export default function Checkout() {
                   <span>Shipping</span>
                   <span className="text-brand-orange uppercase text-[10px] font-black tracking-widest">Free</span>
                 </div>
-                {discountInfo?.eligible && regularBase > 0 && (
-                  <div className="flex justify-between items-center text-green-400 font-black">
-                    <span>15% Discount</span>
-                    <span>-{fmt(regularDiscount)}</span>
-                  </div>
-                )}
-                {discountInfo?.eligible && setSubtotal > 0 && (
-                  <div className="flex justify-between items-center text-green-400 font-black">
-                    <span>5% Discount (Bundles)</span>
-                    <span>-{fmt(setDiscount)}</span>
-                  </div>
-                )}
                 {referralDiscount > 0 && (
                   <div className="flex justify-between items-center text-green-400 font-black">
                     <span>Referral Discount (7%)</span>

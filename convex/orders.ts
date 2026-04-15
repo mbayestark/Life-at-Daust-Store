@@ -27,23 +27,6 @@ export const getById = query({
   },
 });
 
-// Public query — no auth required
-export const getDiscountEligibility = query({
-  args: { phone: v.string() },
-  handler: async (ctx, args) => {
-    const allOrders = await ctx.db.query("orders").collect();
-    const confirmedStatuses = ["Paid", "Processing", "Shipped", "Delivered"];
-    const discountedOrders = allOrders.filter(o => o.discount && o.discount > 0 && confirmedStatuses.includes(o.status));
-    const slotsUsed = discountedOrders.length;
-
-    return {
-      slotsUsed,
-      slotsRemaining: Math.max(0, 10 - slotsUsed),
-      eligible: slotsUsed < 10,
-    };
-  },
-});
-
 export const addOrder = mutation({
   args: {
     orderId: v.string(),
@@ -80,7 +63,6 @@ export const addOrder = mutation({
     paymentStorageId: v.optional(v.id("_storage")),
     naboopayOrderId: v.optional(v.string()),
     naboopayCheckoutUrl: v.optional(v.string()),
-    discount: v.optional(v.number()),
     buyerUserId: v.optional(v.string()),
     referralCode: v.optional(v.string()),
     referralDiscount: v.optional(v.number()),
@@ -88,15 +70,6 @@ export const addOrder = mutation({
     couponApplied: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
-    if (args.discount && args.discount > 0) {
-      const confirmedStatuses = ["Paid", "Processing", "Shipped", "Delivered"];
-      const allOrders = await ctx.db.query("orders").collect();
-      const discountedOrders = allOrders.filter(o => o.discount && o.discount > 0 && confirmedStatuses.includes(o.status));
-      if (discountedOrders.length >= 10) {
-        throw new Error("Sorry, the early customer discount is no longer available.");
-      }
-    }
-
     const proofOfPaymentUrl = args.paymentStorageId ? (await ctx.storage.getUrl(args.paymentStorageId)) ?? undefined : undefined;
     const initialStatus = args.paymentMethod === "naboopay" ? "Pending Payment" : "Pending Verification";
     const orderId = await ctx.db.insert("orders", {
