@@ -210,12 +210,12 @@ ${order.items.map(item => `<tr>
         switch (status) {
             case "Pending Verification": return "bg-purple-50 text-purple-600";
             case "Pending Payment": return "bg-yellow-50 text-yellow-600";
-            case "Paid": return "bg-green-50 text-green-600 font-bold";
-            case "Processing": return "bg-brand-orange/10 text-brand-orange";
-            case "Shipped": return "bg-blue-50 text-blue-600";
-            case "Delivered": return "bg-green-50 text-green-600";
+            case "Paid": return "bg-emerald-50 text-emerald-600 font-bold";
+            case "Processing": return "bg-indigo-50 text-indigo-600";
+            case "Shipped": return "bg-cyan-50 text-cyan-600";
+            case "Delivered": return "bg-teal-50 text-teal-600";
             case "Cancelled": return "bg-red-50 text-red-600";
-            case "Refunded": return "bg-purple-50 text-purple-600";
+            case "Refunded": return "bg-rose-50 text-rose-600";
             default: return "bg-gray-100 text-gray-600";
         }
     };
@@ -472,7 +472,7 @@ ${order.items.map(item => `<tr>
                                     <button
                                         onClick={handleRefund}
                                         disabled={refunding}
-                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 text-purple-600 hover:bg-purple-600 hover:text-white font-bold text-xs uppercase tracking-widest transition-all disabled:opacity-50"
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white font-bold text-xs uppercase tracking-widest transition-all disabled:opacity-50"
                                     >
                                         <RotateCcw size={14} className={refunding ? "animate-spin" : ""} />
                                         {refunding ? "Refunding..." : "Refund"}
@@ -498,21 +498,21 @@ ${order.items.map(item => `<tr>
                             <div className="flex flex-wrap gap-3">
                                 <button
                                     onClick={() => handleStatusUpdate(selectedOrder._id, "Processing")}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${selectedOrder.status === "Processing" ? "bg-brand-orange text-white shadow-lg shadow-brand-orange/20" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${selectedOrder.status === "Processing" ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/20" : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
                                         }`}
                                 >
                                     <Clock size={16} /> Processing
                                 </button>
                                 <button
                                     onClick={() => handleStatusUpdate(selectedOrder._id, "Shipped")}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${selectedOrder.status === "Shipped" ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${selectedOrder.status === "Shipped" ? "bg-cyan-600 text-white shadow-lg shadow-cyan-600/20" : "bg-cyan-50 text-cyan-600 hover:bg-cyan-100"
                                         }`}
                                 >
                                     <Truck size={16} /> Shipped
                                 </button>
                                 <button
                                     onClick={() => handleStatusUpdate(selectedOrder._id, "Delivered")}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${selectedOrder.status === "Delivered" ? "bg-green-600 text-white shadow-lg shadow-green-600/20" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all ${selectedOrder.status === "Delivered" ? "bg-teal-600 text-white shadow-lg shadow-teal-600/20" : "bg-teal-50 text-teal-600 hover:bg-teal-100"
                                         }`}
                                 >
                                     <CheckCircle2 size={16} /> Delivered
