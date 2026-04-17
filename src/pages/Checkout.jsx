@@ -103,8 +103,14 @@ export default function Checkout() {
               const entry = { productName: p.productName || p.name || "Item", quantity: p.quantity || 1 };
               const color = sel?.color || p.selectedColor;
               const size = sel?.size || p.selectedSize;
+              const frontLogo = sel?.frontLogo;
+              const backLogo = sel?.backLogo;
+              const sideLogo = sel?.sideLogo;
               if (color) entry.color = color;
               if (size) entry.size = size;
+              if (frontLogo) entry.frontLogo = frontLogo;
+              if (backLogo) entry.backLogo = backLogo;
+              if (sideLogo) entry.sideLogo = sideLogo;
               return entry;
             });
           }
@@ -504,6 +510,9 @@ export default function Checkout() {
                                   {p.quantity}x {p.productName}
                                   {color ? ` · ${color}` : ""}
                                   {size ? ` · ${size}` : ""}
+                                  {sel?.frontLogo ? ` · Front: ${sel.frontLogo}` : ""}
+                                  {sel?.backLogo ? ` · Back: ${sel.backLogo}` : ""}
+                                  {sel?.sideLogo ? ` · Side: ${sel.sideLogo}` : ""}
                                 </p>
                               );
                             })}

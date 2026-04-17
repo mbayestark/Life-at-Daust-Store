@@ -308,17 +308,15 @@ ${order.items.map(item => `<tr>
                                 className="w-full bg-gray-50 border border-gray-100 rounded-xl pl-9 pr-4 py-2.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-brand-orange/20"
                             />
                         </div>
-                        <div className="flex gap-2 flex-wrap">
+                        <select
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="w-full bg-gray-50 border border-gray-100 rounded-xl px-3 py-2.5 text-xs font-black uppercase tracking-widest text-brand-navy focus:outline-none focus:ring-2 focus:ring-brand-orange/20 appearance-none bg-[url('data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236b7280%22%20stroke-width%3D%222.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[length:14px] bg-[right_12px_center] bg-no-repeat"
+                        >
                             {ALL_STATUSES.map(s => (
-                                <button
-                                    key={s}
-                                    onClick={() => setStatusFilter(s)}
-                                    className={`text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full transition-all ${statusFilter === s ? "bg-brand-navy text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"}`}
-                                >
-                                    {s}
-                                </button>
+                                <option key={s} value={s}>{s}</option>
                             ))}
-                        </div>
+                        </select>
 
                         {selectedIds.size > 0 && (
                             <div className="flex items-center gap-2 p-3 bg-brand-navy/5 rounded-xl border border-brand-navy/10 animate-in fade-in duration-200">
@@ -677,6 +675,9 @@ ${order.items.map(item => `<tr>
                                                                         {sp.quantity}x {sp.productName}
                                                                         {sp.color ? ` · ${sp.color}` : ""}
                                                                         {sp.size ? ` · ${sp.size}` : ""}
+                                                                        {sp.frontLogo ? ` · Front: ${sp.frontLogo}` : ""}
+                                                                        {sp.backLogo ? ` · Back: ${sp.backLogo}` : ""}
+                                                                        {sp.sideLogo ? ` · Side: ${sp.sideLogo}` : ""}
                                                                     </p>
                                                                 ))}
                                                             </div>
