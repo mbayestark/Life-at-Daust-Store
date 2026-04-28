@@ -3,8 +3,6 @@ import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { verifyAdminToken } from "./auth";
 
-declare const process: { env: Record<string, string | undefined> };
-
 export const list = query({
   args: { adminToken: v.string() },
   handler: async (ctx, args) => {
@@ -54,6 +52,9 @@ export const addOrder = mutation({
         quantity: v.number(),
         color: v.optional(v.string()),
         size: v.optional(v.string()),
+        frontLogo: v.optional(v.string()),
+        backLogo: v.optional(v.string()),
+        sideLogo: v.optional(v.string()),
       }))),
     })),
     subtotal: v.number(),
@@ -70,6 +71,16 @@ export const addOrder = mutation({
     couponApplied: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("orders")
+      .withIndex("by_orderId", (q) => q.eq("orderId", args.orderId))
+      .first();
+    if (existing) {
+      return existing._id;
+    }
+    if (args.referralCode && args.couponApplied) {
+      throw new Error("Cannot use both a referral code and a coupon on the same order.");
+    }
     const proofOfPaymentUrl = args.paymentStorageId ? (await ctx.storage.getUrl(args.paymentStorageId)) ?? undefined : undefined;
     const initialStatus = args.paymentMethod === "naboopay" ? "Pending Payment" : "Pending Verification";
     const orderId = await ctx.db.insert("orders", {
@@ -94,7 +105,7 @@ export const updateNabooPayDetails = mutation({
   handler: async (ctx, args) => {
     const order = await ctx.db
       .query("orders")
-      .filter((q) => q.eq(q.field("orderId"), args.orderId))
+      .withIndex("by_orderId", (q) => q.eq("orderId", args.orderId))
       .first();
     if (!order) {
       throw new Error("Order not found");
@@ -107,6 +118,26 @@ export const updateNabooPayDetails = mutation({
   },
 });
 
+export const cancelFailedOrder = mutation({
+  args: { orderId: v.string() },
+  handler: async (ctx, args) => {
+    const order = await ctx.db
+      .query("orders")
+      .withIndex("by_orderId", (q) => q.eq("orderId", args.orderId))
+      .first();
+    if (!order) return;
+    if (order.status !== "Pending Payment") return;
+    if (order.naboopayOrderId) return;
+    await ctx.db.patch(order._id, {
+      status: "Failed",
+      statusHistory: [
+        ...(order.statusHistory ?? []),
+        { status: "Failed", timestamp: Date.now() },
+      ],
+    });
+  },
+});
+
 export const updateByNabooPayId = internalMutation({
   args: {
     naboopayOrderId: v.string(),
@@ -115,9 +146,12 @@ export const updateByNabooPayId = internalMutation({
   handler: async (ctx, args) => {
     const order = await ctx.db
       .query("orders")
-      .filter((q) => q.eq(q.field("naboopayOrderId"), args.naboopayOrderId))
+      .withIndex("by_naboopayOrderId", (q) => q.eq("naboopayOrderId", args.naboopayOrderId))
       .first();
     if (!order) {
+      return;
+    }
+    if (order.status === "Expired" || order.status === "Failed") {
       return;
     }
     let status = "Pending Payment";
@@ -126,7 +160,11 @@ export const updateByNabooPayId = internalMutation({
     } else if (args.status === "cancelled") {
       status = "Cancelled";
     }
-    await ctx.db.patch(order._id, { status });
+    const history = order.statusHistory ?? [];
+    await ctx.db.patch(order._id, {
+      status,
+      statusHistory: [...history, { status, timestamp: Date.now() }],
+    });
 
     if (status === "Paid" && !order.referralTracked) {
       await ctx.db.patch(order._id, { referralTracked: true });
@@ -237,5 +275,48 @@ export const getOrderCount = query({
   handler: async (ctx) => {
     const orders = await ctx.db.query("orders").collect();
     return orders.length;
+  },
+});
+
+export const getByOrderIdPublic = query({
+  args: { orderId: v.string() },
+  handler: async (ctx, args) => {
+    const order = await ctx.db
+      .query("orders")
+      .withIndex("by_orderId", (q) => q.eq("orderId", args.orderId))
+      .first();
+    if (!order) return null;
+    return {
+      orderId: order.orderId,
+      status: order.status,
+      total: order.total,
+      createdAt: order.createdAt,
+    };
+  },
+});
+
+export const expireStaleOrders = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const oneHourAgo = Date.now() - 60 * 60 * 1000;
+    const pendingOrders = await ctx.db
+      .query("orders")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("status"), "Pending Payment"),
+          q.lt(q.field("createdAt"), oneHourAgo)
+        )
+      )
+      .collect();
+    for (const order of pendingOrders) {
+      await ctx.db.patch(order._id, {
+        status: "Expired",
+        statusHistory: [
+          ...(order.statusHistory ?? []),
+          { status: "Expired", timestamp: Date.now() },
+        ],
+      });
+    }
+    return { expired: pendingOrders.length };
   },
 });

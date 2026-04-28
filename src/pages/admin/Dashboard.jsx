@@ -48,8 +48,15 @@ export default function AdminDashboard() {
             if (!CONFIRMED_STATUSES.includes(order.status) || order.isGift) continue;
             totalRevenue += order.total || 0;
             for (const item of order.items || []) {
-                const cost = buyingByName[item.name?.toLowerCase()] ?? 0;
-                totalCost += cost * (item.qty || 1);
+                if (item.isProductSet && item.setProducts) {
+                    for (const sp of item.setProducts) {
+                        const spCost = buyingByName[sp.productName?.toLowerCase()] ?? 0;
+                        totalCost += spCost * (sp.quantity || 1) * (item.qty || 1);
+                    }
+                } else {
+                    const cost = buyingByName[item.name?.toLowerCase()] ?? 0;
+                    totalCost += cost * (item.qty || 1);
+                }
             }
         }
 

@@ -43,6 +43,7 @@ import AdminCollections from "./pages/admin/Collections";
 import AdminOrders from "./pages/admin/Orders";
 import AdminHeroSettings from "./pages/admin/HeroSettings";
 import AdminMedia from "./pages/admin/Media";
+import SalesDashboard from "./pages/SalesDashboard";
 
 function ManagerOnlyRoute({ children }) {
   const { adminRole } = useAdmin();
@@ -88,6 +89,9 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/referral" element={<ProtectedRoute><Referral /></ProtectedRoute>} />
+
+          {/* POS Sales Dashboard */}
+          <Route path="/pos" element={<SalesDashboard />} />
 
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />

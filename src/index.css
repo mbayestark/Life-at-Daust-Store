@@ -512,3 +512,10 @@ textarea:focus {
     background: rgba(249, 115, 22, 0.18);
     color: var(--color-brand-navy);
 }
+
+/* ===== POS Dashboard ===== */
+
+.pos-bg {
+    background: #09090b;
+    color: #fafafa;
+}

@@ -54,6 +54,7 @@ export default function Checkout() {
 
   const addOrder = useMutation(api.orders.addOrder);
   const updateNabooPayDetails = useMutation(api.orders.updateNabooPayDetails);
+  const cancelFailedOrder = useMutation(api.orders.cancelFailedOrder);
   const createNabooPayTransaction = useAction(api.naboopay.createTransaction);
   const applyReferralCodeMutation = useMutation(api.referrals.applyReferralCode);
   const applyCouponMutation = useMutation(api.referrals.applyCoupon);
@@ -127,7 +128,7 @@ export default function Checkout() {
     try {
       const result = await applyReferralCodeMutation({
         code: referralInput.trim().toUpperCase(),
-        buyerUserId: session?.userId || undefined,
+        buyerUserId: session.userId,
         cartItems: items.map((it) => ({ name: it.name, price: it.price, qty: it.qty })),
       });
       setAppliedReferral({ ...result, code: referralInput.trim().toUpperCase() });
@@ -182,8 +183,10 @@ export default function Checkout() {
       return;
     }
 
+    if (loading) return;
     setLoading(true);
     try {
+      // 1. Create DB order first so the webhook always has a record to find
       await addOrder({
         orderId,
         customer: {
@@ -201,63 +204,71 @@ export default function Checkout() {
         ...(couponApplied ? { couponApplied: true, couponDiscount } : {}),
       });
 
-      // Create NabooPay transaction
+      // 2. Create NabooPay transaction — order exists so webhook can find it
+      let nabooResponse;
       try {
-        const nabooResponse = await createNabooPayTransaction({
-            orderId,
-            customer: {
-              name: form.name,
-              phone: form.phone.startsWith("+")
-                ? form.phone.replace(/\s/g, "")
-                : `+221${form.phone.replace(/\s/g, "")}`,
-            },
-            items: [
-              ...lines.map(it => ({
-                name: it.name,
-                qty: it.qty,
-                price: it.price,
-              })),
-              ...(referralDiscount > 0 ? [{
-                name: "Referral Discount (-7%)",
-                qty: 1,
-                price: -referralDiscount,
-              }] : []),
-              ...(couponDiscount > 0 ? [{
-                name: `Coupon Discount (-${couponResult?.coupon_percent}%)`,
-                qty: 1,
-                price: -couponDiscount,
-              }] : []),
-            ],
-            successUrl: `https://shop.daustgov.com/order/success/${orderId}`,
-            errorUrl: `https://shop.daustgov.com/checkout?error=payment_failed`,
-          });
-
-        if (nabooResponse && nabooResponse.checkout_url) {
-          await updateNabooPayDetails({
-            orderId,
-            naboopayOrderId: nabooResponse.order_id,
-            naboopayCheckoutUrl: nabooResponse.checkout_url,
-          });
-          window.location.href = nabooResponse.checkout_url;
-          return;
-        } else {
-          throw new Error("Failed to get checkout URL from NabooPay");
-        }
+        nabooResponse = await createNabooPayTransaction({
+          orderId,
+          customer: {
+            name: form.name,
+            phone: form.phone.startsWith("+")
+              ? form.phone.replace(/\s/g, "")
+              : `+221${form.phone.replace(/\s/g, "")}`,
+          },
+          items: [
+            ...lines.map(it => ({
+              name: it.name,
+              qty: it.qty,
+              price: it.price,
+            })),
+            ...(logoFees > 0 ? [{
+              name: "Additional Logo Fees",
+              qty: 1,
+              price: logoFees,
+            }] : []),
+            ...(referralDiscount > 0 ? [{
+              name: "Referral Discount (-7%)",
+              qty: 1,
+              price: -referralDiscount,
+            }] : []),
+            ...(couponDiscount > 0 ? [{
+              name: `Coupon Discount (-${couponResult?.coupon_percent}%)`,
+              qty: 1,
+              price: -couponDiscount,
+            }] : []),
+          ],
+          successUrl: `https://shop.daustgov.com/order/success/${orderId}`,
+          errorUrl: `https://shop.daustgov.com/checkout?error=payment_failed`,
+        });
       } catch (nabooErr) {
-        // Handle payment service errors gracefully - don't expose internal errors to users
-        const errorMessage = nabooErr.message || "";
-        if (errorMessage.includes("NABOOPAY_TOKEN") ||
-          errorMessage.includes("not set") ||
-          errorMessage.includes("environment") ||
-          errorMessage.includes("API")) {
-          setError("Online payment is temporarily unavailable. Please contact support.");
-          setLoading(false);
-          return;
-        }
+        // NabooPay failed — mark the order as failed so it doesn't sit as "Pending Payment"
+        await cancelFailedOrder({ orderId });
         throw nabooErr;
       }
-    } catch {
-      setError("Could not secure the transaction. Check your internet or try again.");
+
+      if (!nabooResponse?.checkout_url) {
+        await cancelFailedOrder({ orderId });
+        throw new Error("Failed to get checkout URL from NabooPay");
+      }
+
+      // 3. Link NabooPay details to the order
+      await updateNabooPayDetails({
+        orderId,
+        naboopayOrderId: nabooResponse.order_id,
+        naboopayCheckoutUrl: nabooResponse.checkout_url,
+      });
+
+      window.location.href = nabooResponse.checkout_url;
+    } catch (err) {
+      const errorMessage = err.message || "";
+      if (errorMessage.includes("NABOOPAY_TOKEN") ||
+        errorMessage.includes("not set") ||
+        errorMessage.includes("environment") ||
+        errorMessage.includes("API")) {
+        setError("Online payment is temporarily unavailable. Please contact support.");
+      } else {
+        setError("Could not secure the transaction. Check your internet or try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -350,7 +361,11 @@ export default function Checkout() {
             {/* Referral Code */}
             <div className="border border-gray-200 rounded-2xl p-5 sm:p-6 space-y-4">
               <h3 className="text-sm font-black text-brand-navy uppercase tracking-wider">Referral Code</h3>
-              {!session ? (
+              {couponApplied ? (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs text-gray-500 font-medium">Referral codes cannot be combined with a coupon.</p>
+                </div>
+              ) : !session ? (
                 <div className="flex items-center justify-between bg-gray-50 rounded-xl p-4">
                   <p className="text-xs text-gray-500 font-medium">Have a referral code? Sign in to use it.</p>
                   <Link to="/login" state={{ from: { pathname: "/checkout" } }} className="text-xs font-black text-brand-orange hover:underline">
@@ -382,8 +397,8 @@ export default function Checkout() {
               {referralError && <p className="text-xs text-red-500 font-bold">{referralError}</p>}
             </div>
 
-            {/* Coupon */}
-            {session && userCoupon?.hasActiveCoupon && !couponApplied && (
+            {/* Coupon — hidden when referral is applied */}
+            {session && userCoupon?.hasActiveCoupon && !couponApplied && !appliedReferral && (
               <div className="border border-green-200 bg-green-50 rounded-2xl p-5 sm:p-6 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>

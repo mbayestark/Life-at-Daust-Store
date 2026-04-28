@@ -130,7 +130,9 @@ export default defineSchema({
         couponApplied: v.optional(v.boolean()),
         referralTracked: v.optional(v.boolean()),
         isGift: v.optional(v.boolean()),
-    }),
+    })
+        .index("by_orderId", ["orderId"])
+        .index("by_naboopayOrderId", ["naboopayOrderId"]),
     adminSessions: defineTable({
         token: v.string(),
         expiresAt: v.number(),

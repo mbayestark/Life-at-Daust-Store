@@ -87,7 +87,7 @@ export const redeemCoupon = internalMutation({
 export const applyReferralCode = mutation({
     args: {
         code: v.string(),
-        buyerUserId: v.optional(v.id("users")),
+        buyerUserId: v.id("users"),
         cartItems: v.array(v.object({ name: v.string(), price: v.number(), qty: v.number() })),
     },
     handler: async (ctx, args) => {
@@ -101,24 +101,22 @@ export const applyReferralCode = mutation({
             throw new ConvexError("Invalid referral code.");
         }
 
-        if (args.buyerUserId && args.buyerUserId === referrer._id) {
+        if (args.buyerUserId === referrer._id) {
             throw new ConvexError("You cannot use your own referral code.");
         }
 
-        if (args.buyerUserId) {
-            const previousUse = await ctx.db
-                .query("orders")
-                .filter((q) =>
-                    q.and(
-                        q.eq(q.field("buyerUserId"), args.buyerUserId as string),
-                        q.eq(q.field("referralCode"), args.code.toUpperCase()),
-                        q.eq(q.field("referralTracked"), true)
-                    )
+        const previousUse = await ctx.db
+            .query("orders")
+            .filter((q) =>
+                q.and(
+                    q.eq(q.field("buyerUserId"), args.buyerUserId as string),
+                    q.eq(q.field("referralCode"), args.code.toUpperCase()),
+                    q.eq(q.field("referralTracked"), true)
                 )
-                .first();
-            if (previousUse) {
-                throw new ConvexError("You've already used this referral code on a previous order.");
-            }
+            )
+            .first();
+        if (previousUse) {
+            throw new ConvexError("You've already used this referral code on a previous order.");
         }
 
         const eligibleTotal = args.cartItems
