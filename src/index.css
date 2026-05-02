@@ -519,3 +519,12 @@ textarea:focus {
     background: #09090b;
     color: #fafafa;
 }
+
+.animate-slide-up {
+    animation: slideUp 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
