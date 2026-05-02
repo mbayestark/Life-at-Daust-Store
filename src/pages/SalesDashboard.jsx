@@ -22,6 +22,21 @@ const PAYMENT_METHODS = [
   { id: "free_money", label: "Free Money", icon: Smartphone },
 ];
 
+function useOnlineStatus() {
+  const [online, setOnline] = useState(navigator.onLine);
+  useEffect(() => {
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
+  return online;
+}
+
 function loadJSON(key, fallback) {
   try {
     const raw = localStorage.getItem(key);
@@ -96,16 +111,24 @@ function TabletSetup({ onComplete }) {
 
 // --------------- Inventory Setup Screen ---------------
 function InventorySetup({ onComplete }) {
-  const [tab, setTab] = useState("import"); // "manual" | "import"
+  const isOnline = useOnlineStatus();
+  const [tab, setTab] = useState(isOnline ? "import" : "manual");
   const [manualItems, setManualItems] = useState([
     { id: crypto.randomUUID(), name: "", price: "", stock: "" },
   ]);
   const [selectedConvex, setSelectedConvex] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [loadTimedOut, setLoadTimedOut] = useState(false);
 
   const convexProducts = useQuery(api.products.list);
   const isLoading = convexProducts === undefined;
+
+  useEffect(() => {
+    if (!isLoading) return;
+    const timer = setTimeout(() => setLoadTimedOut(true), 6000);
+    return () => clearTimeout(timer);
+  }, [isLoading]);
 
   const categories = useMemo(() => {
     if (!convexProducts) return [];
@@ -286,7 +309,7 @@ function InventorySetup({ onComplete }) {
             </div>
 
             {/* Product Grid */}
-            {isLoading ? (
+            {isLoading && !loadTimedOut && isOnline ? (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div key={i} className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-4 h-44 animate-pulse">
@@ -295,6 +318,25 @@ function InventorySetup({ onComplete }) {
                     <div className="bg-zinc-800 rounded h-4 w-1/2" />
                   </div>
                 ))}
+              </div>
+            ) : isLoading && (!isOnline || loadTimedOut) ? (
+              <div className="text-center py-16">
+                <div className="text-zinc-500 text-4xl mb-3">
+                  {isOnline ? "⏳" : "📡"}
+                </div>
+                <p className="text-zinc-300 font-semibold mb-1">
+                  {isOnline ? "Could not load products" : "You're offline"}
+                </p>
+                <p className="text-zinc-500 text-sm mb-4">
+                  Switch to Manual Entry to add items without internet.
+                </p>
+                <button
+                  onClick={() => setTab("manual")}
+                  className="bg-[var(--color-brand-orange)] hover:bg-[var(--color-brand-orange-light)]
+                             text-white font-semibold text-sm rounded-xl px-5 py-2.5 transition-all"
+                >
+                  Use Manual Entry
+                </button>
               </div>
             ) : filteredProducts.length === 0 ? (
               <div className="text-center text-zinc-500 py-16">
