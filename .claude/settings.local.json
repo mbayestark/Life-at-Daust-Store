@@ -3,7 +3,9 @@
     "allow": [
       "Bash(npm run:*)",
       "Bash(rm:*)",
-      "Bash(npx convex:*)"
+      "Bash(npx convex:*)",
+      "Bash(npm ls *)",
+      "Bash(grep \"pwa\" package.json)"
     ]
   }
 }

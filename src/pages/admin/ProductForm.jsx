@@ -247,7 +247,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
         });
     };
 
-    const defaultSizes = ["XS", "S", "M", "L", "XL", "XXL"];
+    const defaultSizes = ["XS", "S", "M", "L", "XL", "XXL", "3XL"];
 
     // Keep storage IDs ("kg...") and Convex storage URLs ("https://")
     const sanitizeLogoImages = (logoImages) => {
