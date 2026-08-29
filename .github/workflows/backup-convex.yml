@@ -1,0 +1,31 @@
+name: Weekly Convex Backup
+
+on:
+  schedule:
+    - cron: "0 3 * * 0" # Every Sunday at 3am UTC
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Export Convex data
+        env:
+          CONVEX_DEPLOY_KEY: ${{ secrets.CONVEX_DEPLOY_KEY }}
+        run: npx convex export --include-file-storage --path convex-backup.zip
+
+      - name: Upload as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: convex-backup-${{ github.run_id }}
+          path: convex-backup.zip
+          retention-days: 90
