@@ -93,7 +93,7 @@ export function AdminProvider({ children }) {
 
     const logout = async () => {
         if (adminToken) {
-            try { await logoutMutation({ token: adminToken }); } catch {}
+            try { await logoutMutation({ token: adminToken }); } catch { /* ignore */ }
         }
         setAdminToken(null);
         setSessionExpiry(null);

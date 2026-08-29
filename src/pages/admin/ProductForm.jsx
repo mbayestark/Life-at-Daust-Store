@@ -174,7 +174,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
         }
     };
 
-    const openMediaFor = (target, multiple = false) => {
+    const openMediaFor = (target) => {
         setMediaLibraryTarget(target);
         setMediaLibraryOpen(true);
     };
@@ -307,7 +307,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                 image: imageToSave,
                 colors: formData.colors,
                 sizes: formData.sizes,
-                logos: formData.logos.map(({ displayImage, ...logo }) => logo),
+                logos: formData.logos.map((logo) => { const { displayImage: _DI, ...rest } = logo; return rest; }),
                 logoImages: sanitizeLogoImages(colorImages),
                 collection: formData.collection || undefined,
                 stock: formData.stock !== "" ? parseInt(formData.stock) : undefined,

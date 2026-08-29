@@ -24,7 +24,7 @@ export default function ProductDetails() {
     const [isCropTop, setIsCropTop] = useState(false);
     const [quantity, setQuantity] = useState(1);
     const [logoPreview, setLogoPreview] = useState(null);
-    const [showAddedAnimation, setShowAddedAnimation] = useState(false);
+    const [showAddedAnimation] = useState(false);
 
     // Scroll to top when navigating to product details
     useEffect(() => {

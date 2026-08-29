@@ -25,21 +25,7 @@ async function main() {
 
   // Check what's already in media library to avoid duplicates
   const existingMedia = await client.query(api.media.list, {});
-  const existingStorageIds = new Set(existingMedia.map((m) => m.storageId));
   console.log(`Media library already has ${existingMedia.length} items\n`);
-
-  // Collect all storage IDs with names and folders
-  const entries = []; // { storageId, name, folder }
-  const seen = new Set();
-
-  function add(storageId, name, folder) {
-    if (!storageId || typeof storageId !== "string") return;
-    // Skip URLs (already resolved), only want raw storage IDs
-    if (storageId.startsWith("http")) return;
-    if (seen.has(storageId) || existingStorageIds.has(storageId)) return;
-    seen.add(storageId);
-    entries.push({ storageId, name, folder });
-  }
 
   // Fetch current data
   const products = await client.query(api.products.list, {});

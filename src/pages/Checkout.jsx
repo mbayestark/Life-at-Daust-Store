@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useCart } from "../context/CartContext.jsx";
 import { Shield, ChevronLeft, Lock, Info, AlertCircle, Package, ChevronUp } from "lucide-react";
 import { formatPrice } from "../utils/format.js";
@@ -8,9 +8,6 @@ import Button from "../components/ui/Button";
 import { useMutation, useAction, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useAuth } from "../context/AuthContext.jsx";
-
-const QUARTER_ZIP_RE = /quarter.?zip/i;
-const isQuarterZip = (name) => QUARTER_ZIP_RE.test(name);
 
 const fmt = (n) => formatPrice(n);
 
@@ -26,7 +23,7 @@ const locations = [
 ];
 
 export default function Checkout() {
-  const { items, subtotal, clear, totalSavings, logoFees } = useCart();
+  const { items, subtotal, totalSavings, logoFees } = useCart();
   const { session } = useAuth();
   const [orderId] = useState(makeOrderId());
   const [loading, setLoading] = useState(false);
@@ -38,8 +35,6 @@ export default function Checkout() {
       ? "Your payment was not completed. Please try again."
       : ""
   );
-  const nav = useNavigate();
-
   // Referral code state
   const [referralInput, setReferralInput] = useState("");
   const [appliedReferral, setAppliedReferral] = useState(null);

@@ -42,12 +42,6 @@ function parseCsvLine(line) {
   return fields;
 }
 
-function parseDate(dateStr) {
-  // Format: DD/MM/YYYY
-  const [day, month, year] = dateStr.split("/").map(Number);
-  return new Date(year, month - 1, day).getTime();
-}
-
 async function main() {
   console.log(`Connecting to ${convexUrl}...\n`);
   const { token: adminToken } = await client.mutation(api.auth.login, { password: PASSWORD });
@@ -56,7 +50,7 @@ async function main() {
   // Parse CSV
   const raw = readFileSync(CSV_PATH, "utf-8");
   const lines = raw.split("\n").filter((l) => l.trim());
-  const headers = parseCsvLine(lines[0]);
+  parseCsvLine(lines[0]);
   console.log(`CSV has ${lines.length - 1} rows\n`);
 
   // Group rows into orders (continuation rows have empty Order ID)

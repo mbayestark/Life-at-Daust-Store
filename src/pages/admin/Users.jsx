@@ -228,7 +228,7 @@ export default function AdminUsers() {
                 <UserFormModal
                     user={editingUser}
                     adminToken={adminToken}
-                    onClose={(saved) => { setShowForm(false); setEditingUser(null); }}
+                    onClose={() => { setShowForm(false); setEditingUser(null); }}
                 />
             )}
         </div>

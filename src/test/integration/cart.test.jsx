@@ -36,12 +36,13 @@ vi.mock('convex/react', () => ({
     useAction: vi.fn(() => vi.fn()),
 }));
 
-function renderPage(Page) {
+// eslint-disable-next-line no-unused-vars
+function renderPage(PageComponent) {
     return render(
         <BrowserRouter>
             <AuthProvider>
                 <CartProvider>
-                    <Page />
+                    <PageComponent />
                 </CartProvider>
             </AuthProvider>
         </BrowserRouter>
