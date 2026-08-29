@@ -255,14 +255,17 @@ export default function Checkout() {
 
       window.location.href = nabooResponse.checkout_url;
     } catch (err) {
-      const errorMessage = err.message || "";
-      if (errorMessage.includes("NABOOPAY_TOKEN") ||
-        errorMessage.includes("not set") ||
-        errorMessage.includes("environment") ||
-        errorMessage.includes("API")) {
+      const msg = err.message || "";
+      if (!navigator.onLine) {
+        setError("You appear to be offline. Please check your internet connection and try again.");
+      } else if (msg.includes("NABOOPAY_TOKEN") || msg.includes("not set") || msg.includes("environment") || msg.includes("API")) {
         setError("Online payment is temporarily unavailable. Please contact support.");
+      } else if (msg.includes("Failed to fetch") || msg.includes("NetworkError") || msg.includes("WebSocket")) {
+        setError("Connection to our servers failed. Please check your internet and try again.");
+      } else if (msg.includes("checkout_url") || msg.includes("NabooPay")) {
+        setError("Payment service is temporarily unavailable. Please try again in a few minutes.");
       } else {
-        setError("Could not secure the transaction. Check your internet or try again.");
+        setError("Could not complete your order. Please try again or contact support.");
       }
     } finally {
       setLoading(false);

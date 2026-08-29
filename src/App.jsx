@@ -10,6 +10,7 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 
 import ErrorBoundary from "./components/ErrorBoundary.jsx";
+import ConvexStatus from "./components/ConvexStatus.jsx";
 import Layout from "./components/Layout.jsx";
 import Home from "./pages/Home.jsx";
 import Shop from "./pages/Shop.jsx";
@@ -60,6 +61,7 @@ export default function App() {
 
   return (
     <ErrorBoundary>
+      <ConvexStatus />
       <AuthProvider>
       <ScrollToTop />
       <AdminProvider>
