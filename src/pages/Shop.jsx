@@ -29,7 +29,7 @@ export default function Shop() {
   }, [location.search]);
 
   const convexProducts = useQuery(api.products.list);
-  const PRODUCTS = convexProducts || [];
+  const PRODUCTS = useMemo(() => (convexProducts || []).filter(p => p.isActive !== false), [convexProducts]);
   const isLoading = convexProducts === undefined;
   
   // Fetch product sets
@@ -52,9 +52,10 @@ export default function Shop() {
     }
 
     // Apply sorting
+    const effectivePrice = (p) => (p.salePrice != null && p.salePrice < p.price) ? p.salePrice : p.price;
     let sorted = [...filtered];
-    if (sort === "Price: Low to High") sorted.sort((a, b) => a.price - b.price);
-    if (sort === "Price: High to Low") sorted.sort((a, b) => b.price - a.price);
+    if (sort === "Price: Low to High") sorted.sort((a, b) => effectivePrice(a) - effectivePrice(b));
+    if (sort === "Price: High to Low") sorted.sort((a, b) => effectivePrice(b) - effectivePrice(a));
     if (sort === "Newest Arrivals") sorted.sort((a, b) => b._id.localeCompare(a._id));
 
     // Group by collection

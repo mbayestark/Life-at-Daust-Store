@@ -11,7 +11,9 @@ import {
     Copy,
     Filter,
     Package,
-    AlertCircle
+    AlertCircle,
+    ToggleLeft,
+    ToggleRight,
 } from "lucide-react";
 import Button from "../../components/ui/Button";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
@@ -21,13 +23,18 @@ import { useAdmin } from "../../context/AdminContext";
 import AdminProductForm from "./ProductForm";
 
 export default function AdminProducts() {
-    const { adminToken } = useAdmin();
+    const { adminToken, adminRole } = useAdmin();
     const products = useQuery(api.products.list);
     const removeProduct = useMutation(api.products.removeProduct);
+    const toggleActive = useMutation(api.products.toggleActive);
+    const bulkToggleActive = useMutation(api.products.bulkToggleActive);
+    const bulkDeleteProducts = useMutation(api.products.bulkDeleteProducts);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterCategory, setFilterCategory] = useState("All");
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
+    const [selectedIds, setSelectedIds] = useState(new Set());
+    const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
     const isLoading = products === undefined;
 
@@ -38,6 +45,14 @@ export default function AdminProducts() {
     }) || [];
 
     const categories = ["All", ...new Set(products?.map(p => p.category) || [])];
+
+    const handleToggleActive = async (id, currentActive) => {
+        try {
+            await toggleActive({ id, isActive: !currentActive, adminToken });
+        } catch {
+            alert("Failed to toggle product status.");
+        }
+    };
 
     const handleDelete = async (id) => {
         if (window.confirm("Are you sure you want to delete this product? This action cannot be undone.")) {
@@ -123,23 +138,98 @@ export default function AdminProducts() {
                 </div>
             </div>
 
+            {/* Bulk Actions */}
+            {selectedIds.size > 0 && (
+                <div className="flex items-center gap-3 p-4 bg-brand-navy/5 rounded-2xl border border-brand-navy/10 animate-in fade-in duration-200">
+                    <span className="text-xs font-black text-brand-navy">{selectedIds.size} selected</span>
+                    <button
+                        onClick={async () => {
+                            setIsBulkUpdating(true);
+                            try { await bulkToggleActive({ ids: [...selectedIds], isActive: true, adminToken }); setSelectedIds(new Set()); } catch { alert("Failed"); }
+                            finally { setIsBulkUpdating(false); }
+                        }}
+                        disabled={isBulkUpdating}
+                        className="px-3 py-1.5 bg-green-50 text-green-600 text-xs font-black rounded-xl hover:bg-green-600 hover:text-white transition-all disabled:opacity-40"
+                    >
+                        Activate All
+                    </button>
+                    <button
+                        onClick={async () => {
+                            setIsBulkUpdating(true);
+                            try { await bulkToggleActive({ ids: [...selectedIds], isActive: false, adminToken }); setSelectedIds(new Set()); } catch { alert("Failed"); }
+                            finally { setIsBulkUpdating(false); }
+                        }}
+                        disabled={isBulkUpdating}
+                        className="px-3 py-1.5 bg-gray-100 text-gray-600 text-xs font-black rounded-xl hover:bg-gray-600 hover:text-white transition-all disabled:opacity-40"
+                    >
+                        Deactivate All
+                    </button>
+                    {adminRole !== "partner" && (
+                        <button
+                            onClick={async () => {
+                                if (!window.confirm(`Delete ${selectedIds.size} products? This cannot be undone.`)) return;
+                                setIsBulkUpdating(true);
+                                try { await bulkDeleteProducts({ ids: [...selectedIds], adminToken }); setSelectedIds(new Set()); } catch { alert("Failed"); }
+                                finally { setIsBulkUpdating(false); }
+                            }}
+                            disabled={isBulkUpdating}
+                            className="px-3 py-1.5 bg-red-50 text-red-600 text-xs font-black rounded-xl hover:bg-red-600 hover:text-white transition-all disabled:opacity-40"
+                        >
+                            Delete All
+                        </button>
+                    )}
+                    <button onClick={() => setSelectedIds(new Set())} className="text-xs text-gray-400 hover:text-red-500 font-bold transition-colors ml-auto">
+                        Clear
+                    </button>
+                </div>
+            )}
+
             {/* Product List */}
             <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left">
                         <thead>
                             <tr className="bg-gray-50/50 border-b border-gray-50/50">
+                                <th className="pl-6 py-5 w-10">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedIds.size === filteredProducts.length && filteredProducts.length > 0}
+                                        onChange={() => {
+                                            if (selectedIds.size === filteredProducts.length) setSelectedIds(new Set());
+                                            else setSelectedIds(new Set(filteredProducts.map(p => p._id)));
+                                        }}
+                                        className="w-3.5 h-3.5 rounded accent-brand-orange cursor-pointer"
+                                    />
+                                </th>
                                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Product</th>
                                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 md:table-cell hidden">Category</th>
                                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Price</th>
                                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Stock</th>
+                                <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Active</th>
                                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 lg:table-cell hidden">Rating</th>
                                 <th className="px-8 py-5 text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-50">
-                            {filteredProducts.map((p) => (
-                                <tr key={p._id} className="hover:bg-gray-50/30 transition-colors group">
+                            {filteredProducts.map((p) => {
+                                const isActive = p.isActive !== false;
+                                const isOnSale = p.salePrice != null && p.salePrice < p.price;
+                                return (
+                                <tr key={p._id} className={`hover:bg-gray-50/30 transition-colors group ${!isActive ? 'opacity-50' : ''}`}>
+                                    <td className="pl-6 py-6 w-10">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedIds.has(p._id)}
+                                            onChange={() => {
+                                                setSelectedIds(prev => {
+                                                    const next = new Set(prev);
+                                                    next.has(p._id) ? next.delete(p._id) : next.add(p._id);
+                                                    return next;
+                                                });
+                                            }}
+                                            className="w-3.5 h-3.5 rounded accent-brand-orange cursor-pointer"
+                                        />
+                                    </td>
                                     <td className="px-8 py-6">
                                         <div className="flex items-center gap-4">
                                             <div className="w-12 h-16 bg-gray-50 rounded-lg overflow-hidden flex-shrink-0">
@@ -157,7 +247,14 @@ export default function AdminProducts() {
                                         </span>
                                     </td>
                                     <td className="px-8 py-6">
-                                        <p className="font-black text-brand-navy text-sm">{formatPrice(p.price)}</p>
+                                        <div className="flex flex-col gap-0.5">
+                                            <p className={`font-black text-sm ${isOnSale ? 'text-red-500' : 'text-brand-navy'}`}>
+                                                {formatPrice(isOnSale ? p.salePrice : p.price)}
+                                            </p>
+                                            {isOnSale && (
+                                                <p className="text-[10px] text-gray-400 line-through">{formatPrice(p.price)}</p>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="px-8 py-6">
                                         <div className="flex flex-col gap-1">
@@ -168,6 +265,19 @@ export default function AdminProducts() {
                                                 <span className="text-[8px] font-black uppercase tracking-widest text-orange-400">Low Stock</span>
                                             )}
                                         </div>
+                                    </td>
+                                    <td className="px-8 py-6">
+                                        <button
+                                            onClick={() => handleToggleActive(p._id, isActive)}
+                                            className="transition-colors"
+                                            title={isActive ? "Click to deactivate" : "Click to activate"}
+                                        >
+                                            {isActive ? (
+                                                <ToggleRight size={28} className="text-green-500" />
+                                            ) : (
+                                                <ToggleLeft size={28} className="text-gray-300" />
+                                            )}
+                                        </button>
                                     </td>
                                     <td className="px-8 py-6 lg:table-cell hidden">
                                         <div className="flex items-center gap-1">
@@ -204,12 +314,13 @@ export default function AdminProducts() {
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                                );
+                            })}
 
 
                             {filteredProducts.length === 0 && (
                                 <tr>
-                                    <td colSpan="5" className="px-8 py-32 text-center">
+                                    <td colSpan="8" className="px-8 py-32 text-center">
                                         <div className="flex flex-col items-center">
                                             <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mb-6">
                                                 <Package className="h-8 w-8 text-gray-200" />

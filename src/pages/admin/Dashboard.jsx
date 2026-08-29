@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -25,17 +25,38 @@ export default function AdminDashboard() {
     const products = useQuery(api.products.list);
     const orders = useQuery(api.orders.list, adminToken ? { adminToken } : "skip");
 
+    const [period, setPeriod] = useState("all");
+
     const isLoading = products === undefined || (adminToken ? orders === undefined : false);
-    // If no admin token (or orders query was skipped), treat as empty 
-    const ordersData = orders ?? [];
+    // If no admin token (or orders query was skipped), treat as empty
+    const allOrders = orders ?? [];
+
+    const periodStart = useMemo(() => {
+        const now = new Date();
+        if (period === "week") { const d = new Date(now); d.setDate(d.getDate() - 7); d.setHours(0,0,0,0); return d.getTime(); }
+        if (period === "month") { const d = new Date(now.getFullYear(), now.getMonth(), 1); return d.getTime(); }
+        return 0;
+    }, [period]);
+
+    const ordersData = useMemo(() =>
+        periodStart === 0 ? allOrders : allOrders.filter(o => o.createdAt >= periodStart),
+        [allOrders, periodStart]
+    );
+
+    const activeProducts = useMemo(() =>
+        (products || []).filter(p => p.isActive !== false),
+        [products]
+    );
 
     const profitData = useMemo(() => {
         if (!products) return { totalProfit: 0, totalCost: 0, margin: 0 };
 
-        // Build a lookup: productName -> buyingPrice
+        // Build lookups by ID and name (fallback for older orders without productId)
+        const buyingById = {};
         const buyingByName = {};
         for (const p of products) {
             if (p.buyingPrice != null) {
+                buyingById[p._id] = p.buyingPrice;
                 buyingByName[p.name.toLowerCase()] = p.buyingPrice;
             }
         }
@@ -50,11 +71,11 @@ export default function AdminDashboard() {
             for (const item of order.items || []) {
                 if (item.isProductSet && item.setProducts) {
                     for (const sp of item.setProducts) {
-                        const spCost = buyingByName[sp.productName?.toLowerCase()] ?? 0;
+                        const spCost = (sp.productId && buyingById[sp.productId]) ?? buyingByName[sp.productName?.toLowerCase()] ?? 0;
                         totalCost += spCost * (sp.quantity || 1) * (item.qty || 1);
                     }
                 } else {
-                    const cost = buyingByName[item.name?.toLowerCase()] ?? 0;
+                    const cost = (item.productId && buyingById[item.productId]) ?? buyingByName[item.name?.toLowerCase()] ?? 0;
                     totalCost += cost * (item.qty || 1);
                 }
             }
@@ -71,7 +92,7 @@ export default function AdminDashboard() {
         const CONFIRMED_STATUSES = ["Paid", "Processing", "Shipped", "Delivered"];
         const totalRevenue = ordersData.filter(o => CONFIRMED_STATUSES.includes(o.status) && !o.isGift).reduce((sum, order) => sum + (order?.total || 0), 0);
         const activeOrders = ordersData.filter(o => o.status === "Processing" || o.status === "Shipped").length;
-        const totalProducts = products.length;
+        const totalProducts = activeProducts.length;
         const completedOrders = ordersData.filter(o => o.status === "Delivered").length;
 
         return [
@@ -81,18 +102,17 @@ export default function AdminDashboard() {
             { label: "Catalog Size", value: totalProducts.toString(), icon: Package, color: "bg-blue-50 text-blue-600" },
             { label: "Fulfillment Rate", value: ordersData.length > 0 ? `${Math.round((completedOrders / ordersData.length) * 100)}%` : "0%", icon: CheckCircle2, color: "bg-purple-50 text-purple-600" },
         ];
-    }, [products, ordersData, profitData]);
+    }, [activeProducts, ordersData, profitData]);
 
     const recentOrders = useMemo(() => {
         return ordersData.slice(0, 5);
     }, [ordersData]);
 
     const lowStockProducts = useMemo(() => {
-        if (!products) return [];
-        return products
+        return activeProducts
             .filter(p => p.stock !== undefined && p.stock !== null && p.stock <= 5)
             .sort((a, b) => (a.stock ?? 0) - (b.stock ?? 0));
-    }, [products]);
+    }, [activeProducts]);
 
     const revenueByDay = useMemo(() => {
         const days = 14;
@@ -116,14 +136,14 @@ export default function AdminDashboard() {
     }, [ordersData]);
 
     const topCategories = useMemo(() => {
-        if (!products) return [];
+        if (!activeProducts.length) return [];
         const counts = {};
-        products.forEach(p => {
+        activeProducts.forEach(p => {
             const cat = p.category || "Uncategorized";
             counts[cat] = (counts[cat] || 0) + 1;
         });
         return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 4);
-    }, [products]);
+    }, [activeProducts]);
 
     const itemsSoldByProduct = useMemo(() => {
         if (!products) return [];
@@ -131,6 +151,7 @@ export default function AdminDashboard() {
         const soldMap = {};
         const grossMap = {};
         const actualMap = {};
+        const nameMap = {};
 
         for (const order of ordersData) {
             if (!CONFIRMED.includes(order.status) || order.isGift) continue;
@@ -138,31 +159,33 @@ export default function AdminDashboard() {
             const orderSubtotal = order.subtotal || 0;
 
             for (const item of order.items || []) {
-                const key = item.name || "Unknown";
+                const key = item.productId || item.name || "Unknown";
+                if (!nameMap[key]) nameMap[key] = item.name || "Unknown";
                 const itemTotal = (item.price || 0) * (item.qty || 1);
                 soldMap[key] = (soldMap[key] || 0) + (item.qty || 1);
                 grossMap[key] = (grossMap[key] || 0) + itemTotal;
-                // Distribute order-level discounts proportionally
                 const itemDiscount = orderSubtotal > 0 ? Math.round(totalDiscount * (itemTotal / orderSubtotal)) : 0;
                 actualMap[key] = (actualMap[key] || 0) + (itemTotal - itemDiscount);
             }
         }
 
-        // Match with product images
-        const imageMap = {};
+        const productById = {};
         for (const p of products) {
-            imageMap[p.name] = p.image;
+            productById[p._id] = p;
         }
 
         return Object.entries(soldMap)
-            .map(([name, qty]) => ({
-                name,
-                qty,
-                gross: grossMap[name] || 0,
-                actual: actualMap[name] || 0,
-                discounted: (grossMap[name] || 0) - (actualMap[name] || 0),
-                image: imageMap[name],
-            }))
+            .map(([key, qty]) => {
+                const prod = productById[key];
+                return {
+                    name: prod?.name || nameMap[key] || key,
+                    qty,
+                    gross: grossMap[key] || 0,
+                    actual: actualMap[key] || 0,
+                    discounted: (grossMap[key] || 0) - (actualMap[key] || 0),
+                    image: prod?.image,
+                };
+            })
             .sort((a, b) => b.qty - a.qty);
     }, [products, ordersData]);
 
@@ -200,9 +223,18 @@ export default function AdminDashboard() {
                     <h1 className="text-4xl font-[900] text-brand-navy tracking-tight mb-2">Workspace Overview</h1>
                     <p className="text-gray-400 font-medium italic text-lg">&ldquo;Excellence is not an act, but a habit.&rdquo;</p>
                 </div>
-                <div className="flex items-center gap-3 bg-brand-navy/5 px-6 py-4 rounded-2xl border border-brand-navy/5">
-                    <Clock size={18} className="text-brand-navy/30" />
-                    <span className="text-sm font-bold text-brand-navy/60 uppercase tracking-widest">{new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
+                <div className="flex items-center gap-3">
+                    <div className="flex bg-gray-100 rounded-xl p-1">
+                        {[["week", "This Week"], ["month", "This Month"], ["all", "All Time"]].map(([key, label]) => (
+                            <button
+                                key={key}
+                                onClick={() => setPeriod(key)}
+                                className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${period === key ? "bg-brand-navy text-white shadow-sm" : "text-gray-500 hover:text-brand-navy"}`}
+                            >
+                                {label}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </div>
 
@@ -489,7 +521,7 @@ export default function AdminDashboard() {
                                     <div className="h-2 bg-white/5 rounded-full overflow-hidden border border-white/5">
                                         <div
                                             className="h-full bg-gradient-to-r from-brand-orange to-orange-400 rounded-full transition-all duration-[1.5s] ease-out shadow-[0_0_12px_rgba(255,107,0,0.3)]"
-                                            style={{ width: `${(count / products.length) * 100}%` }}
+                                            style={{ width: `${(count / (activeProducts.length || 1)) * 100}%` }}
                                         />
                                     </div>
                                 </div>

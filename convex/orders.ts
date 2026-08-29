@@ -1,7 +1,21 @@
 import { query, mutation, internalMutation } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
-import { verifyAdminToken } from "./auth";
+import { verifyAdminToken, verifyManagerToken, logAudit } from "./auth";
+
+// ponytail: in-memory rate limit, resets on deploy. DB-backed if spam becomes a real problem.
+const orderRateLimit = new Map<string, { count: number; resetAt: number }>();
+function checkOrderRateLimit(phone: string): { allowed: boolean } {
+  const now = Date.now();
+  const entry = orderRateLimit.get(phone);
+  if (!entry || now > entry.resetAt) {
+    orderRateLimit.set(phone, { count: 1, resetAt: now + 10 * 60 * 1000 });
+    return { allowed: true };
+  }
+  if (entry.count >= 10) return { allowed: false };
+  entry.count++;
+  return { allowed: true };
+}
 
 export const list = query({
   args: { adminToken: v.string() },
@@ -71,6 +85,9 @@ export const addOrder = mutation({
     couponApplied: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    if (!checkOrderRateLimit(args.customer.phone).allowed) {
+      throw new Error("Too many orders. Please wait a few minutes before trying again.");
+    }
     const existing = await ctx.db
       .query("orders")
       .withIndex("by_orderId", (q) => q.eq("orderId", args.orderId))
@@ -81,10 +98,71 @@ export const addOrder = mutation({
     if (args.referralCode && args.couponApplied) {
       throw new Error("Cannot use both a referral code and a coupon on the same order.");
     }
+
+    // Server-side price validation: look up real prices from DB
+    const QUARTER_ZIP_RE = /quarter.?zip/i;
+    const validatedItems = await Promise.all(
+      args.items.map(async (item) => {
+        if (item.isProductSet && item.productId) {
+          // Product set: validate against specialPrice
+          const set = await ctx.db.get(item.productId as any);
+          if (!set) throw new Error(`Product set not found: ${item.name}`);
+          const serverPrice = (set as any).specialPrice;
+          return { ...item, price: serverPrice };
+        } else if (item.productId) {
+          // Regular product: use salePrice if on sale, else price
+          const product = await ctx.db.get(item.productId as any);
+          if (!product) throw new Error(`Product not found: ${item.name}`);
+          const p = product as any;
+          const serverPrice =
+            p.salePrice != null && p.salePrice < p.price
+              ? p.salePrice
+              : p.price;
+          return { ...item, price: serverPrice };
+        }
+        return item;
+      })
+    );
+
+    let verifiedSubtotal = validatedItems.reduce(
+      (sum, item) => sum + item.price * item.qty,
+      0
+    );
+
+    // Recompute discounts server-side
+    let verifiedReferralDiscount = 0;
+    if (args.referralCode) {
+      const eligibleTotal = validatedItems
+        .filter((it) => !QUARTER_ZIP_RE.test(it.name))
+        .reduce((sum, it) => sum + it.price * it.qty, 0);
+      verifiedReferralDiscount = Math.round(eligibleTotal * 0.07);
+    }
+
+    let verifiedCouponDiscount = 0;
+    if (args.couponApplied && args.buyerUserId) {
+      const user = await ctx.db.get(args.buyerUserId as any);
+      if (user && (user as any).coupon_percent > 0 && !(user as any).coupon_used) {
+        const eligibleTotal = validatedItems
+          .filter((it) => !QUARTER_ZIP_RE.test(it.name))
+          .reduce((sum, it) => sum + it.price * it.qty, 0);
+        verifiedCouponDiscount = Math.round(
+          eligibleTotal * ((user as any).coupon_percent / 100)
+        );
+      }
+    }
+
+    const verifiedTotal =
+      verifiedSubtotal + args.deliveryFee - verifiedReferralDiscount - verifiedCouponDiscount;
+
     const proofOfPaymentUrl = args.paymentStorageId ? (await ctx.storage.getUrl(args.paymentStorageId)) ?? undefined : undefined;
     const initialStatus = args.paymentMethod === "naboopay" ? "Pending Payment" : "Pending Verification";
     const orderId = await ctx.db.insert("orders", {
       ...args,
+      items: validatedItems,
+      subtotal: verifiedSubtotal,
+      total: verifiedTotal,
+      ...(args.referralCode ? { referralDiscount: verifiedReferralDiscount } : {}),
+      ...(args.couponApplied ? { couponDiscount: verifiedCouponDiscount } : {}),
       status: initialStatus,
       statusHistory: [{ status: initialStatus, timestamp: Date.now() }],
       proofOfPaymentUrl,
@@ -152,6 +230,13 @@ export const updateByNabooPayId = internalMutation({
       return;
     }
     if (order.status === "Expired" || order.status === "Failed") {
+      await ctx.db.insert("auditLogs", {
+        action: "webhook.payment_after_" + order.status.toLowerCase(),
+        actor: "system",
+        target: order.orderId,
+        details: `NabooPay status "${args.status}" received for ${order.status} order`,
+        timestamp: Date.now(),
+      });
       return;
     }
     let status = "Pending Payment";
@@ -201,6 +286,7 @@ export const updateStatus = mutation({
       status: args.status,
       statusHistory: [...history, { status: args.status, timestamp: Date.now() }],
     });
+    await logAudit(ctx, args.adminToken, "order.status", order?.orderId ?? args.id, `${order?.status} → ${args.status}`);
   },
 });
 
@@ -224,6 +310,7 @@ export const bulkUpdateStatus = mutation({
         statusHistory: [...history, { status: args.status, timestamp: now }],
       });
     }));
+    await logAudit(ctx, args.adminToken, "order.bulk_status", `${args.ids.length} orders`, `→ ${args.status}`);
   },
 });
 
@@ -238,7 +325,57 @@ export const toggleGift = mutation({
     if (!isAuthorized) {
       throw new Error("Unauthorized - Invalid or expired session");
     }
+    const order = await ctx.db.get(args.id);
     await ctx.db.patch(args.id, { isGift: args.isGift });
+    await logAudit(ctx, args.adminToken, args.isGift ? "order.mark_gift" : "order.unmark_gift", order?.orderId ?? args.id);
+  },
+});
+
+export const updateOrderItems = mutation({
+  args: {
+    id: v.id("orders"),
+    adminToken: v.string(),
+    items: v.array(v.object({
+      productId: v.optional(v.string()),
+      name: v.string(),
+      qty: v.number(),
+      price: v.number(),
+      hoodieType: v.optional(v.string()),
+      isCropTop: v.optional(v.boolean()),
+      color: v.optional(v.string()),
+      size: v.optional(v.string()),
+      frontLogo: v.optional(v.string()),
+      backLogo: v.optional(v.string()),
+      sideLogo: v.optional(v.string()),
+      isProductSet: v.optional(v.boolean()),
+      productSetName: v.optional(v.string()),
+      setProducts: v.optional(v.array(v.object({
+        productName: v.string(),
+        quantity: v.number(),
+        color: v.optional(v.string()),
+        size: v.optional(v.string()),
+        frontLogo: v.optional(v.string()),
+        backLogo: v.optional(v.string()),
+        sideLogo: v.optional(v.string()),
+      }))),
+    })),
+  },
+  handler: async (ctx, args) => {
+    const isAuthorized = await verifyManagerToken(ctx, args.adminToken);
+    if (!isAuthorized) {
+      throw new Error("Unauthorized - Manager access required");
+    }
+    const order = await ctx.db.get(args.id);
+    if (!order) throw new Error("Order not found");
+    const newSubtotal = args.items.reduce((sum, it) => sum + it.price * it.qty, 0);
+    const discount = (order.referralDiscount || 0) + (order.couponDiscount || 0);
+    const newTotal = newSubtotal + (order.deliveryFee || 0) - discount;
+    await ctx.db.patch(args.id, {
+      items: args.items,
+      subtotal: newSubtotal,
+      total: newTotal,
+    });
+    await logAudit(ctx, args.adminToken, "order.edit_items", order.orderId, `${args.items.length} items, new total ${newTotal}`);
   },
 });
 
@@ -248,11 +385,13 @@ export const deleteOrder = mutation({
     adminToken: v.string(),
   },
   handler: async (ctx, args) => {
-    const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+    const isAuthorized = await verifyManagerToken(ctx, args.adminToken);
     if (!isAuthorized) {
-      throw new Error("Unauthorized - Invalid or expired session");
+      throw new Error("Unauthorized - Manager access required");
     }
+    const order = await ctx.db.get(args.id);
     await ctx.db.delete(args.id);
+    await logAudit(ctx, args.adminToken, "order.delete", order?.orderId ?? args.id);
   },
 });
 
@@ -261,20 +400,13 @@ export const clearAllOrders = mutation({
     adminToken: v.string(),
   },
   handler: async (ctx, args) => {
-    const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+    const isAuthorized = await verifyManagerToken(ctx, args.adminToken);
     if (!isAuthorized) {
-      throw new Error("Unauthorized - Invalid or expired session");
+      throw new Error("Unauthorized - Manager access required");
     }
     const orders = await ctx.db.query("orders").collect();
     await Promise.all(orders.map((order) => ctx.db.delete(order._id)));
-  },
-});
-
-export const getOrderCount = query({
-  args: {},
-  handler: async (ctx) => {
-    const orders = await ctx.db.query("orders").collect();
-    return orders.length;
+    await logAudit(ctx, args.adminToken, "order.clear_all", `${orders.length} orders`, "Cleared all orders");
   },
 });
 

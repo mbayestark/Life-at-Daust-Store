@@ -4,13 +4,19 @@ import { renderWithProviders } from '../test/utils';
 import ProductCard from './ProductCard';
 
 const mockProduct = {
-    id: 1,
+    _id: 'prod_1',
     name: 'DAUST Water Bottle',
-    price: 29.99,
+    price: 5000,
     image: '/test-image.jpg',
     category: 'Accessories',
     rating: 4.5,
-    colors: ['Blue', 'Red'],
+};
+
+const mockProductWithSpecs = {
+    ...mockProduct,
+    _id: 'prod_2',
+    name: 'DAUST Hoodie',
+    colors: [{ name: 'Blue', hex: '#00f' }],
     sizes: ['S', 'M', 'L'],
 };
 
@@ -19,7 +25,7 @@ describe('ProductCard Component', () => {
         renderWithProviders(<ProductCard product={mockProduct} />);
 
         expect(screen.getByText('DAUST Water Bottle')).toBeInTheDocument();
-        expect(screen.getByText(/30 CFA/i)).toBeInTheDocument();
+        expect(screen.getByText(/5.000.CFA/)).toBeInTheDocument();
         expect(screen.getByText('Accessories')).toBeInTheDocument();
     });
 
@@ -35,22 +41,25 @@ describe('ProductCard Component', () => {
         renderWithProviders(<ProductCard product={mockProduct} />);
 
         const links = screen.getAllByRole('link');
-        expect(links[0]).toHaveAttribute('href', '/product/1');
-        expect(links[1]).toHaveAttribute('href', '/product/1');
+        expect(links[0]).toHaveAttribute('href', '/product/prod_1');
     });
 
-    it('displays rating stars', () => {
+    it('displays rating', () => {
         renderWithProviders(<ProductCard product={mockProduct} />);
 
         expect(screen.getByText('4.5')).toBeInTheDocument();
     });
 
-    it('shows quick add button on desktop', () => {
+    it('shows Quick Add for products without specs', () => {
         renderWithProviders(<ProductCard product={mockProduct} />);
 
-        expect(screen.getByText(/quick add/i)).toBeInTheDocument();
+        expect(screen.getByText(/Quick Add/i)).toBeInTheDocument();
+    });
 
-        expect(screen.getAllByLabelText(/add to cart/i).length).toBeGreaterThan(0);
+    it('shows Select Options for products with specs', () => {
+        renderWithProviders(<ProductCard product={mockProductWithSpecs} />);
+
+        expect(screen.getByText(/Select Options/i)).toBeInTheDocument();
     });
 
     it('displays badge if product has one', () => {
@@ -60,18 +69,13 @@ describe('ProductCard Component', () => {
         expect(screen.getByText('New Arrival')).toBeInTheDocument();
     });
 
-    it('handles products without colors or sizes', () => {
-        const simpleProduct = {
-            id: 2,
-            name: 'Simple Product',
-            price: 19.99,
-            image: '/simple.jpg',
-            category: 'Test',
-            rating: 5,
-        };
+    it('shows sale price when on sale', () => {
+        const saleProduct = { ...mockProduct, salePrice: 3500 };
+        renderWithProviders(<ProductCard product={saleProduct} />);
 
-        renderWithProviders(<ProductCard product={simpleProduct} />);
-        expect(screen.getByText('Simple Product')).toBeInTheDocument();
+        expect(screen.getByText(/3.500.CFA/)).toBeInTheDocument();
+        expect(screen.getByText(/5.000.CFA/)).toBeInTheDocument();
+        expect(screen.getByText('Solde')).toBeInTheDocument();
     });
 
     it('returns null when product is undefined', () => {

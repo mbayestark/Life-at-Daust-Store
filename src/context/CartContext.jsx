@@ -96,7 +96,7 @@ export function CartProvider({ children }) {
       return [...prev, {
         id: product._id,
         name: product.name,
-        price: product.price,
+        price: (product.salePrice != null && product.salePrice < product.price) ? product.salePrice : product.price,
         image: product.image,
         qty: Math.min(qty, 99),
         selectedColor: color,

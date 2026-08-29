@@ -22,7 +22,10 @@ import {
     Printer,
     MessageCircle,
     History,
-    Gift
+    Gift,
+    Edit2,
+    Save,
+    X
 } from "lucide-react";
 import LoadingSpinner from "../../components/ui/LoadingSpinner";
 import { formatPrice } from "../../utils/format.js";
@@ -43,7 +46,10 @@ export default function AdminOrders() {
     const [refunding, setRefunding] = useState(false);
     const deleteOrderMutation = useMutation(api.orders.deleteOrder);
     const toggleGiftMutation = useMutation(api.orders.toggleGift);
+    const updateOrderItemsMutation = useMutation(api.orders.updateOrderItems);
     const [selectedOrderId, setSelectedOrderId] = useState(null);
+    const [editingItems, setEditingItems] = useState(null);
+    const [editSaving, setEditSaving] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
@@ -260,6 +266,19 @@ ${order.items.map(item => `<tr>
         }
     };
 
+    const handleSaveEditedItems = async () => {
+        if (!editingItems || !selectedOrder) return;
+        setEditSaving(true);
+        try {
+            await updateOrderItemsMutation({ id: selectedOrder._id, adminToken, items: editingItems });
+            setEditingItems(null);
+        } catch {
+            alert("Failed to save order changes.");
+        } finally {
+            setEditSaving(false);
+        }
+    };
+
     const handleDeleteOrder = async () => {
         try {
             await deleteOrderMutation({ id: selectedOrder._id, adminToken });
@@ -358,7 +377,7 @@ ${order.items.map(item => `<tr>
                         {paginatedOrders.map((order) => (
                             <div
                                 key={order._id}
-                                onClick={() => setSelectedOrderId(order._id)}
+                                onClick={() => { setSelectedOrderId(order._id); setEditingItems(null); }}
                                 className={`w-full text-left p-6 hover:bg-gray-50 transition-all flex items-center gap-3 group cursor-pointer ${selectedOrder?._id === order._id ? "bg-gray-50 ring-1 ring-inset ring-brand-orange/10" : ""
                                     }`}
                             >
@@ -466,6 +485,31 @@ ${order.items.map(item => `<tr>
                                 >
                                     <Printer size={14} /> Print
                                 </button>
+                                {!isPartner && !editingItems && (
+                                    <button
+                                        onClick={() => setEditingItems(selectedOrder.items.map(it => ({ ...it })))}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white font-bold text-xs uppercase tracking-widest transition-all"
+                                    >
+                                        <Edit2 size={14} /> Edit Items
+                                    </button>
+                                )}
+                                {editingItems && (
+                                    <>
+                                        <button
+                                            onClick={handleSaveEditedItems}
+                                            disabled={editSaving}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-green-50 text-green-600 hover:bg-green-600 hover:text-white font-bold text-xs uppercase tracking-widest transition-all disabled:opacity-50"
+                                        >
+                                            <Save size={14} /> {editSaving ? "Saving..." : "Save"}
+                                        </button>
+                                        <button
+                                            onClick={() => setEditingItems(null)}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-100 text-gray-600 hover:bg-gray-200 font-bold text-xs uppercase tracking-widest transition-all"
+                                        >
+                                            <X size={14} /> Cancel
+                                        </button>
+                                    </>
+                                )}
                                 {selectedOrder.naboopayOrderId && selectedOrder.status === "Paid" && (
                                     <button
                                         onClick={handleRefund}
@@ -655,32 +699,67 @@ ${order.items.map(item => `<tr>
 
                                 {/* Items Summary */}
                                 <div className="space-y-6">
-                                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">Order Items</h3>
-                                    <div className="bg-gray-50 rounded-2xl overflow-hidden">
+                                    <h3 className="text-xs font-black uppercase tracking-[0.2em] text-gray-400">
+                                        {editingItems ? "Editing Order Items" : "Order Items"}
+                                    </h3>
+                                    <div className={`bg-gray-50 rounded-2xl overflow-hidden ${editingItems ? "ring-2 ring-blue-200" : ""}`}>
                                         <div className="divide-y divide-gray-100">
-                                            {selectedOrder.items.map((item, i) => (
+                                            {(editingItems || selectedOrder.items).map((item, i) => (
                                                 <div key={i} className="p-4 flex items-center justify-between gap-4">
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-sm font-bold text-brand-navy truncate">
                                                             {item.isProductSet && <span className="text-brand-orange mr-1">[Bundle]</span>}
                                                             {item.name}
                                                         </p>
-                                                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                                                            QTY: {item.qty} {item?.size ? `• Size: ${item.size}` : ""} {item?.color ? `• ${item.color}` : ""} {item?.hoodieType ? `• Type: ${item.hoodieType}` : ""} {item?.frontLogo ? `• Front: ${item.frontLogo}` : ""} {item?.backLogo ? `• Back: ${item.backLogo}` : ""} {item?.sideLogo ? `• Side: ${item.sideLogo}` : ""} {item?.logo ? `• Logo: ${item.logo}${item.logoPosition ? ` (${item.logoPosition})` : ""}` : ""}
-                                                        </p>
-                                                        {item.isProductSet && item.setProducts?.length > 0 && (
-                                                            <div className="mt-2 ml-2 pl-3 border-l-2 border-brand-orange/20 space-y-1">
-                                                                {item.setProducts.map((sp, j) => (
-                                                                    <p key={j} className="text-[10px] font-bold text-gray-500 tracking-wide">
-                                                                        {sp.quantity}x {sp.productName}
-                                                                        {sp.color ? ` · ${sp.color}` : ""}
-                                                                        {sp.size ? ` · ${sp.size}` : ""}
-                                                                        {sp.frontLogo ? ` · Front: ${sp.frontLogo}` : ""}
-                                                                        {sp.backLogo ? ` · Back: ${sp.backLogo}` : ""}
-                                                                        {sp.sideLogo ? ` · Side: ${sp.sideLogo}` : ""}
-                                                                    </p>
-                                                                ))}
+                                                        {editingItems ? (
+                                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                                <label className="text-[10px] font-black text-gray-400 flex items-center gap-1">
+                                                                    QTY:
+                                                                    <input type="number" min="1" value={item.qty}
+                                                                        onChange={e => { const v = [...editingItems]; v[i] = { ...v[i], qty: Math.max(1, parseInt(e.target.value) || 1) }; setEditingItems(v); }}
+                                                                        className="w-14 bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-bold text-brand-navy" />
+                                                                </label>
+                                                                {item.size !== undefined && (
+                                                                    <label className="text-[10px] font-black text-gray-400 flex items-center gap-1">
+                                                                        Size:
+                                                                        <input type="text" value={item.size || ""}
+                                                                            onChange={e => { const v = [...editingItems]; v[i] = { ...v[i], size: e.target.value }; setEditingItems(v); }}
+                                                                            className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-bold text-brand-navy" />
+                                                                    </label>
+                                                                )}
+                                                                {item.color !== undefined && (
+                                                                    <label className="text-[10px] font-black text-gray-400 flex items-center gap-1">
+                                                                        Color:
+                                                                        <input type="text" value={item.color || ""}
+                                                                            onChange={e => { const v = [...editingItems]; v[i] = { ...v[i], color: e.target.value }; setEditingItems(v); }}
+                                                                            className="w-20 bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-bold text-brand-navy" />
+                                                                    </label>
+                                                                )}
+                                                                <button onClick={() => setEditingItems(editingItems.filter((_, j) => j !== i))}
+                                                                    className="text-red-400 hover:text-red-600 transition-colors ml-1" title="Remove item">
+                                                                    <Trash2 size={14} />
+                                                                </button>
                                                             </div>
+                                                        ) : (
+                                                            <>
+                                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                                                                    QTY: {item.qty} {item?.size ? `• Size: ${item.size}` : ""} {item?.color ? `• ${item.color}` : ""} {item?.hoodieType ? `• Type: ${item.hoodieType}` : ""} {item?.frontLogo ? `• Front: ${item.frontLogo}` : ""} {item?.backLogo ? `• Back: ${item.backLogo}` : ""} {item?.sideLogo ? `• Side: ${item.sideLogo}` : ""} {item?.logo ? `• Logo: ${item.logo}${item.logoPosition ? ` (${item.logoPosition})` : ""}` : ""}
+                                                                </p>
+                                                                {item.isProductSet && item.setProducts?.length > 0 && (
+                                                                    <div className="mt-2 ml-2 pl-3 border-l-2 border-brand-orange/20 space-y-1">
+                                                                        {item.setProducts.map((sp, j) => (
+                                                                            <p key={j} className="text-[10px] font-bold text-gray-500 tracking-wide">
+                                                                                {sp.quantity}x {sp.productName}
+                                                                                {sp.color ? ` · ${sp.color}` : ""}
+                                                                                {sp.size ? ` · ${sp.size}` : ""}
+                                                                                {sp.frontLogo ? ` · Front: ${sp.frontLogo}` : ""}
+                                                                                {sp.backLogo ? ` · Back: ${sp.backLogo}` : ""}
+                                                                                {sp.sideLogo ? ` · Side: ${sp.sideLogo}` : ""}
+                                                                            </p>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </>
                                                         )}
                                                     </div>
                                                     <p className="font-black text-brand-navy text-sm">{formatPrice((item.price || 0) * (item.qty || 1))}</p>

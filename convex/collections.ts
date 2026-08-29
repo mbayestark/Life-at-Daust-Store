@@ -1,6 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { verifyAdminToken } from "./auth";
+import { verifyAdminToken, logAudit } from "./auth";
 
 declare const process: { env: Record<string, string | undefined> };
 
@@ -65,6 +65,7 @@ export const addCollection = mutation({
         }
         const { adminToken: _adminToken, ...collectionArgs } = args;
         const collectionId = await ctx.db.insert("collections", collectionArgs);
+        await logAudit(ctx, args.adminToken, "collection.create", args.name);
         return collectionId;
     },
 });
@@ -95,7 +96,9 @@ export const updateCollection = mutation({
             throw new Error("Unauthorized - Invalid or expired session");
         }
         const { id, adminToken: _adminToken, ...fields } = args;
+        const col = await ctx.db.get(id);
         await ctx.db.patch(id, fields);
+        await logAudit(ctx, args.adminToken, "collection.update", col?.name ?? id, `Fields: ${Object.keys(fields).join(", ")}`);
     },
 });
 
@@ -119,5 +122,6 @@ export const removeCollection = mutation({
         }
 
         await ctx.db.delete(args.id);
+        await logAudit(ctx, args.adminToken, "collection.delete", collection?.name ?? args.id);
     },
 });

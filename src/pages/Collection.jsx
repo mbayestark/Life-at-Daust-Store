@@ -16,7 +16,7 @@ export default function Collection() {
   // Optimize product filtering with useMemo to prevent lag on re-renders
   const filteredProducts = useMemo(() => {
     if (!allProducts || !collection) return [];
-    return allProducts.filter((p) => p.collection === collection.name);
+    return allProducts.filter((p) => p.isActive !== false && p.collection === collection.name);
   }, [allProducts, collection]);
 
   if (isLoading) {

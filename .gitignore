@@ -28,3 +28,19 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# Debug / scratch / test output
+debug_output*
+**/debug*.test.*
+*.txt
+!README.txt
+lint_*.json
+test_results*.json
+
+# Data exports and backups
+*.zip
+prod-backup/
+
+# Misc binaries
+*.msi
+*.exe

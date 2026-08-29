@@ -1,6 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { verifyAdminToken } from "./auth";
+import { verifyAdminToken, logAudit } from "./auth";
 
 const mediaItem = v.object({
     storageId: v.string(),
@@ -79,6 +79,7 @@ export const updateReelVideos = mutation({
         } else {
             await ctx.db.insert("siteSettings", { reelVideos: args.reelVideos });
         }
+        await logAudit(ctx, args.adminToken, "settings.reel_videos", undefined, `${args.reelVideos.length} videos`);
     },
 });
 
@@ -96,5 +97,6 @@ export const updateHeroMedia = mutation({
         } else {
             await ctx.db.insert("siteSettings", { heroMedia: args.heroMedia });
         }
+        await logAudit(ctx, args.adminToken, "settings.hero_media", undefined, `${args.heroMedia.length} items`);
     },
 });

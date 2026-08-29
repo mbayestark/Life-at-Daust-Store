@@ -1,6 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { verifyAdminToken } from "./auth";
+import { verifyAdminToken, logAudit } from "./auth";
 
 export const list = query({
     args: { folder: v.optional(v.string()) },
@@ -44,6 +44,7 @@ export const upload = mutation({
             url: url || undefined,
             uploadedAt: Date.now(),
         });
+        await logAudit(ctx, adminToken, "media.upload", args.name, `Type: ${args.type}`);
         return id;
     },
 });
@@ -77,6 +78,7 @@ export const remove = mutation({
         if (item) {
             await ctx.storage.delete(item.storageId);
             await ctx.db.delete(args.id);
+            await logAudit(ctx, args.adminToken, "media.delete", item.name);
         }
     },
 });

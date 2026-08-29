@@ -175,7 +175,8 @@ function TestimonialMarquee() {
 export default function Home() {
   const collections = useQuery(api.collections.list);
   const scrollRef = useRef(null);
-  const products = useQuery(api.products.list);
+  const rawProducts = useQuery(api.products.list);
+  const products = useMemo(() => (rawProducts || []).filter(p => p.isActive !== false), [rawProducts]);
   const heroMedia = useQuery(api.settings.getHeroMedia) || [];
   const reelVideos = useQuery(api.settings.getReelVideos) || [];
   const [heroIdx, setHeroIdx] = useState(0);
@@ -193,14 +194,13 @@ export default function Home() {
   const currentSlide = heroMedia.length > 0 ? heroMedia[heroIdx] : null;
 
   const featuredProduct = useMemo(() => {
-    if (!products) return null;
+    if (products.length === 0) return null;
     return products.find(p => p.category === "Hoodies" && p.rating >= 4.8) ||
       products.find(p => p.category === "Hoodies") ||
       products[0] || null;
   }, [products]);
 
   const trendingProducts = useMemo(() => {
-    if (!products) return [];
     return [...products].sort((a, b) => b.rating - a.rating).slice(0, 8);
   }, [products]);
 

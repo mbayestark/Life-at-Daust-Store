@@ -1,6 +1,6 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { verifyAdminToken } from "./auth";
+import { verifyAdminToken, verifyManagerToken, logAudit } from "./auth";
 
 declare const process: { env: Record<string, string | undefined> };
 
@@ -74,7 +74,7 @@ export const getById = query({
     args: { id: v.id("products") },
     handler: async (ctx, args) => {
         const product = await ctx.db.get(args.id);
-        if (!product) return null;
+        if (!product || product.isActive === false) return null;
         let imageUrl = product.image;
         if (imageUrl && imageUrl.startsWith("kg")) {
             imageUrl = await ctx.storage.getUrl(imageUrl) || product.image;
@@ -116,7 +116,7 @@ export const listProductSets = query({
     args: {},
     handler: async (ctx) => {
         const productSets = await ctx.db.query("productSets").collect();
-        return await Promise.all(productSets.map(async (set) => {
+        const results = await Promise.all(productSets.map(async (set) => {
             let imageUrl = set.image;
             if (imageUrl && imageUrl.startsWith("kg")) {
                 imageUrl = await ctx.storage.getUrl(imageUrl) || set.image;
@@ -125,7 +125,7 @@ export const listProductSets = query({
             const resolvedProducts = await Promise.all(
                 set.products.map(async (item) => {
                     const product = await ctx.db.get(item.productId);
-                    if (!product) return null;
+                    if (!product || product.isActive === false) return null;
                     let productImage = product.image;
                     if (productImage && productImage.startsWith("kg")) {
                         productImage = await ctx.storage.getUrl(productImage) || product.image;
@@ -142,11 +142,13 @@ export const listProductSets = query({
                         }));
                     }
 
+                    const effectivePrice = (product.salePrice != null && product.salePrice < product.price) ? product.salePrice : product.price;
                     return {
                         ...item,
                         productName: product.name,
                         productImage,
                         productPrice: product.price,
+                        productEffectivePrice: effectivePrice,
                         productBuyingPrice: product.buyingPrice,
                         colors: product.colors || [],
                         sizes: product.sizes || [],
@@ -154,9 +156,11 @@ export const listProductSets = query({
                     };
                 })
             );
+            // If any product in the set is inactive/missing, exclude the entire set
+            if (resolvedProducts.some(p => p === null)) return null;
             const validProducts = resolvedProducts.filter(p => p !== null);
             const originalPrice = validProducts.reduce(
-                (sum, item) => sum + (item?.productPrice || 0) * (item?.quantity || 1),
+                (sum, item) => sum + (item?.productEffectivePrice || item?.productPrice || 0) * (item?.quantity || 1),
                 0
             );
             const costOfGoods = validProducts.reduce(
@@ -174,6 +178,7 @@ export const listProductSets = query({
                 hasBuyingPrices: validProducts.some(p => p?.productBuyingPrice != null),
             };
         }));
+        return results.filter(s => s !== null);
     },
 });
 
@@ -189,7 +194,7 @@ export const getProductSetById = query({
         const resolvedProducts = await Promise.all(
             productSet.products.map(async (item) => {
                 const product = await ctx.db.get(item.productId);
-                if (!product) return null;
+                if (!product || product.isActive === false) return null;
                 let productImage = product.image;
                 if (productImage && productImage.startsWith("kg")) {
                     productImage = await ctx.storage.getUrl(productImage) || product.image;
@@ -205,11 +210,13 @@ export const getProductSetById = query({
                         return logo;
                     }));
                 }
+                const effectivePrice = (product.salePrice != null && product.salePrice < product.price) ? product.salePrice : product.price;
                 return {
                     ...item,
                     productName: product.name,
                     productImage,
                     productPrice: product.price,
+                    productEffectivePrice: effectivePrice,
                     productBuyingPrice: product.buyingPrice,
                     colors: product.colors || [],
                     sizes: product.sizes || [],
@@ -217,9 +224,10 @@ export const getProductSetById = query({
                 };
             })
         );
+        if (resolvedProducts.some(p => p === null)) return null;
         const validProducts = resolvedProducts.filter(p => p !== null);
         const originalPrice = validProducts.reduce(
-            (sum, item) => sum + (item?.productPrice || 0) * (item?.quantity || 1),
+            (sum, item) => sum + (item?.productEffectivePrice || item?.productPrice || 0) * (item?.quantity || 1),
             0
         );
         const costOfGoods = validProducts.reduce(
@@ -269,6 +277,8 @@ export const addProduct = mutation({
         hoodieTypes: v.optional(v.array(v.string())),
         hasCropTopOption: v.optional(v.boolean()),
         buyingPrice: v.optional(v.number()),
+        isActive: v.optional(v.boolean()),
+        salePrice: v.optional(v.union(v.number(), v.null())),
         logoCombinations: v.optional(v.array(v.object({
             logoIds: v.array(v.string()),
             image: v.string(),
@@ -282,6 +292,7 @@ export const addProduct = mutation({
         }
         const { adminToken, ...productArgs } = args;
         const productId = await ctx.db.insert("products", productArgs);
+        await logAudit(ctx, adminToken, "product.create", args.name, `Price: ${args.price}`);
         return productId;
     },
 });
@@ -310,6 +321,7 @@ export const addProductSet = mutation({
         }
         const { adminToken, ...setArgs } = args;
         const setId = await ctx.db.insert("productSets", setArgs);
+        await logAudit(ctx, adminToken, "product_set.create", args.name, `Price: ${args.specialPrice}`);
         return setId;
     },
 });
@@ -345,6 +357,8 @@ export const updateProduct = mutation({
         hoodieTypes: v.optional(v.array(v.string())),
         hasCropTopOption: v.optional(v.boolean()),
         buyingPrice: v.optional(v.number()),
+        isActive: v.optional(v.boolean()),
+        salePrice: v.optional(v.union(v.number(), v.null())),
         logoCombinations: v.optional(v.array(v.object({
             logoIds: v.array(v.string()),
             image: v.string(),
@@ -357,7 +371,26 @@ export const updateProduct = mutation({
             throw new Error("Unauthorized - Invalid or expired session");
         }
         const { id, adminToken, ...fields } = args;
+        const product = await ctx.db.get(id);
         await ctx.db.patch(id, fields);
+        await logAudit(ctx, adminToken, "product.update", product?.name ?? id, `Fields: ${Object.keys(fields).join(", ")}`);
+    },
+});
+
+export const toggleActive = mutation({
+    args: {
+        id: v.id("products"),
+        isActive: v.boolean(),
+        adminToken: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+        if (!isAuthorized) {
+            throw new Error("Unauthorized - Invalid or expired session");
+        }
+        const product = await ctx.db.get(args.id);
+        await ctx.db.patch(args.id, { isActive: args.isActive });
+        await logAudit(ctx, args.adminToken, args.isActive ? "product.activate" : "product.deactivate", product?.name ?? args.id);
     },
 });
 
@@ -385,29 +418,62 @@ export const updateProductSet = mutation({
             throw new Error("Unauthorized - Invalid or expired session");
         }
         const { id, adminToken, ...fields } = args;
+        const set = await ctx.db.get(id);
         await ctx.db.patch(id, fields);
+        await logAudit(ctx, adminToken, "product_set.update", set?.name ?? id, `Fields: ${Object.keys(fields).join(", ")}`);
+    },
+});
+
+export const bulkToggleActive = mutation({
+    args: {
+        ids: v.array(v.id("products")),
+        isActive: v.boolean(),
+        adminToken: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+        if (!isAuthorized) throw new Error("Unauthorized");
+        await Promise.all(args.ids.map(id => ctx.db.patch(id, { isActive: args.isActive })));
+        await logAudit(ctx, args.adminToken, args.isActive ? "product.bulk_activate" : "product.bulk_deactivate", `${args.ids.length} products`);
+    },
+});
+
+export const bulkDeleteProducts = mutation({
+    args: {
+        ids: v.array(v.id("products")),
+        adminToken: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const isAuthorized = await verifyManagerToken(ctx, args.adminToken);
+        if (!isAuthorized) throw new Error("Unauthorized - Manager access required");
+        await Promise.all(args.ids.map(id => ctx.db.delete(id)));
+        await logAudit(ctx, args.adminToken, "product.bulk_delete", `${args.ids.length} products`);
     },
 });
 
 export const removeProduct = mutation({
     args: { id: v.id("products"), adminToken: v.string() },
     handler: async (ctx, args) => {
-        const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+        const isAuthorized = await verifyManagerToken(ctx, args.adminToken);
         if (!isAuthorized) {
-            throw new Error("Unauthorized - Invalid or expired session");
+            throw new Error("Unauthorized - Manager access required");
         }
+        const product = await ctx.db.get(args.id);
         await ctx.db.delete(args.id);
+        await logAudit(ctx, args.adminToken, "product.delete", product?.name ?? args.id);
     },
 });
 
 export const removeProductSet = mutation({
     args: { id: v.id("productSets"), adminToken: v.string() },
     handler: async (ctx, args) => {
-        const isAuthorized = await verifyAdminToken(ctx, args.adminToken);
+        const isAuthorized = await verifyManagerToken(ctx, args.adminToken);
         if (!isAuthorized) {
-            throw new Error("Unauthorized - Invalid or expired session");
+            throw new Error("Unauthorized - Manager access required");
         }
+        const set = await ctx.db.get(args.id);
         await ctx.db.delete(args.id);
+        await logAudit(ctx, args.adminToken, "product_set.delete", set?.name ?? args.id);
     },
 });
 

@@ -43,6 +43,8 @@ import AdminCollections from "./pages/admin/Collections";
 import AdminOrders from "./pages/admin/Orders";
 import AdminHeroSettings from "./pages/admin/HeroSettings";
 import AdminMedia from "./pages/admin/Media";
+import AdminUsers from "./pages/admin/Users";
+import AuditLog from "./pages/admin/AuditLog";
 import SalesDashboard from "./pages/SalesDashboard";
 
 function ManagerOnlyRoute({ children }) {
@@ -103,6 +105,8 @@ export default function App() {
             <Route path="orders" element={<AdminOrders />} />
             <Route path="hero" element={<ManagerOnlyRoute><AdminHeroSettings /></ManagerOnlyRoute>} />
             <Route path="media" element={<ManagerOnlyRoute><AdminMedia /></ManagerOnlyRoute>} />
+            <Route path="users" element={<ManagerOnlyRoute><AdminUsers /></ManagerOnlyRoute>} />
+            <Route path="audit" element={<ManagerOnlyRoute><AuditLog /></ManagerOnlyRoute>} />
           </Route>
 
             <Route path="*" element={<NotFound />} />

@@ -6,7 +6,6 @@ const AdminContext = createContext(null);
 
 export function AdminProvider({ children }) {
     const [adminToken, setAdminToken] = useState(() => {
-        // Load token from sessionStorage
         return sessionStorage.getItem("admin_token") || null;
     });
 
@@ -19,11 +18,20 @@ export function AdminProvider({ children }) {
         return sessionStorage.getItem("admin_role") || null;
     });
 
+    const [permissions, setPermissions] = useState(() => {
+        try {
+            return JSON.parse(sessionStorage.getItem("admin_permissions") || "null");
+        } catch { return null; }
+    });
+
+    const [userName, setUserName] = useState(() => {
+        return sessionStorage.getItem("admin_user_name") || null;
+    });
+
     const loginMutation = useMutation(api.auth.login);
     const logoutMutation = useMutation(api.auth.logout);
     const refreshMutation = useMutation(api.auth.refreshSession);
 
-    // Verify token validity
     const tokenVerification = useQuery(
         api.auth.verifyToken,
         adminToken ? { token: adminToken } : "skip"
@@ -31,104 +39,98 @@ export function AdminProvider({ children }) {
 
     const isAdmin = tokenVerification?.valid || false;
     const verifiedRole = tokenVerification?.role ?? adminRole;
+    const verifiedPermissions = tokenVerification?.permissions ?? permissions;
 
-    // Auto-logout on session expiry
     useEffect(() => {
         if (!sessionExpiry || !adminToken) return;
-
         const checkExpiry = () => {
-            if (Date.now() > sessionExpiry) {
-                logout();
-            }
+            if (Date.now() > sessionExpiry) logout();
         };
-
-        // Check immediately
         checkExpiry();
-
-        // Check every minute
         const interval = setInterval(checkExpiry, 60000);
         return () => clearInterval(interval);
     }, [sessionExpiry, adminToken]);
 
-    // Auto-refresh session before expiry (5 minutes before)
     useEffect(() => {
         if (!sessionExpiry || !adminToken || !isAdmin) return;
-
         const timeUntilExpiry = sessionExpiry - Date.now();
-        const refreshTime = timeUntilExpiry - 5 * 60 * 1000; // 5 minutes before expiry
-
+        const refreshTime = timeUntilExpiry - 5 * 60 * 1000;
         if (refreshTime <= 0) {
-            // Already past refresh time, try to refresh immediately
             refreshSession();
             return;
         }
-
-        const timeout = setTimeout(() => {
-            refreshSession();
-        }, refreshTime);
-
+        const timeout = setTimeout(() => refreshSession(), refreshTime);
         return () => clearTimeout(timeout);
     }, [sessionExpiry, adminToken, isAdmin]);
 
-    const login = async (password) => {
+    const login = async (password, email) => {
         try {
-            const result = await loginMutation({ password });
+            const args = { password };
+            if (email) args.email = email;
+            const result = await loginMutation(args);
 
             if (result && result.token) {
                 setAdminToken(result.token);
                 setSessionExpiry(result.expiresAt);
                 setAdminRole(result.role);
+                setPermissions(result.permissions || null);
+                setUserName(result.userName || null);
 
-                // Persist to sessionStorage
                 sessionStorage.setItem("admin_token", result.token);
                 sessionStorage.setItem("admin_expiry", result.expiresAt.toString());
                 sessionStorage.setItem("admin_role", result.role);
+                if (result.permissions) sessionStorage.setItem("admin_permissions", JSON.stringify(result.permissions));
+                if (result.userName) sessionStorage.setItem("admin_user_name", result.userName);
 
                 return { success: true };
             }
 
             return { success: false, error: "Invalid response from server" };
         } catch (error) {
-            const errorMessage = error.message || "Login failed";
-            return { success: false, error: errorMessage };
+            return { success: false, error: error.message || "Login failed" };
         }
     };
 
     const logout = async () => {
         if (adminToken) {
-            try {
-                await logoutMutation({ token: adminToken });
-            } catch (error) {
-                console.error("Logout error:", error);
-            }
+            try { await logoutMutation({ token: adminToken }); } catch {}
         }
-
         setAdminToken(null);
         setSessionExpiry(null);
         setAdminRole(null);
+        setPermissions(null);
+        setUserName(null);
         sessionStorage.removeItem("admin_token");
         sessionStorage.removeItem("admin_expiry");
         sessionStorage.removeItem("admin_role");
+        sessionStorage.removeItem("admin_permissions");
+        sessionStorage.removeItem("admin_user_name");
     };
 
     const refreshSession = async () => {
         if (!adminToken) return;
-
         try {
             const result = await refreshMutation({ token: adminToken });
             if (result && result.expiresAt) {
                 setSessionExpiry(result.expiresAt);
                 sessionStorage.setItem("admin_expiry", result.expiresAt.toString());
             }
-        } catch (error) {
-            console.error("Session refresh failed:", error);
-            // Session might be expired, logout
+        } catch {
             logout();
         }
     };
 
+    const hasPermission = (perm) => {
+        if (verifiedRole === "manager") return true;
+        return verifiedPermissions?.includes(perm) ?? false;
+    };
+
     return (
-        <AdminContext.Provider value={{ isAdmin, adminToken, adminRole: verifiedRole, login, logout, sessionExpiry }}>
+        <AdminContext.Provider value={{
+            isAdmin, adminToken, adminRole: verifiedRole,
+            permissions: verifiedPermissions, userName,
+            login, logout, sessionExpiry, hasPermission,
+        }}>
             {children}
         </AdminContext.Provider>
     );
@@ -137,8 +139,6 @@ export function AdminProvider({ children }) {
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAdmin = () => {
     const context = useContext(AdminContext);
-    if (!context) {
-        throw new Error("useAdmin must be used within an AdminProvider");
-    }
+    if (!context) throw new Error("useAdmin must be used within an AdminProvider");
     return context;
 };

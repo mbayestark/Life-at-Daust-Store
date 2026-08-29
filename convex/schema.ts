@@ -52,6 +52,8 @@ export default defineSchema({
         hoodieTypes: v.optional(v.array(v.string())),
         hasCropTopOption: v.optional(v.boolean()),
         buyingPrice: v.optional(v.number()),
+        isActive: v.optional(v.boolean()),
+        salePrice: v.optional(v.union(v.number(), v.null())),
     }),
     productSets: defineTable({
         name: v.string(),
@@ -133,12 +135,31 @@ export default defineSchema({
     })
         .index("by_orderId", ["orderId"])
         .index("by_naboopayOrderId", ["naboopayOrderId"]),
+    adminUsers: defineTable({
+        email: v.string(),
+        name: v.string(),
+        passwordHash: v.string(),
+        permissions: v.array(v.string()),
+        isActive: v.optional(v.boolean()),
+        createdAt: v.number(),
+        createdBy: v.optional(v.string()),
+    }).index("by_email", ["email"]),
     adminSessions: defineTable({
         token: v.string(),
         expiresAt: v.number(),
         createdAt: v.number(),
         role: v.optional(v.union(v.literal("manager"), v.literal("partner"))),
+        adminUserId: v.optional(v.id("adminUsers")),
+        permissions: v.optional(v.array(v.string())),
     }).index("by_token", ["token"]),
+    auditLogs: defineTable({
+        action: v.string(),
+        actor: v.string(),
+        actorEmail: v.optional(v.string()),
+        target: v.optional(v.string()),
+        details: v.optional(v.string()),
+        timestamp: v.number(),
+    }).index("by_timestamp", ["timestamp"]),
     media: defineTable({
         storageId: v.string(),
         url: v.optional(v.string()),

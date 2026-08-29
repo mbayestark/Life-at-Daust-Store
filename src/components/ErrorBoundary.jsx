@@ -1,4 +1,5 @@
 import React from 'react';
+import * as Sentry from '@sentry/react';
 import { AlertCircle, RefreshCw, Home } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Button from './ui/Button';
@@ -15,6 +16,7 @@ class ErrorBoundary extends React.Component {
 
     componentDidCatch(error, errorInfo) {
         this.setState({ errorInfo });
+        Sentry.captureException(error, { extra: { componentStack: errorInfo?.componentStack } });
     }
 
     handleReset = () => {

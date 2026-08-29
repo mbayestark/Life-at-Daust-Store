@@ -1,11 +1,24 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
-import { X, Save, Trash2, Image as ImageIcon, AlertCircle, Plus, FolderOpen, Upload } from "lucide-react";
+import { X, Save, Trash2, Image as ImageIcon, AlertCircle, Plus, FolderOpen, Upload, ChevronDown } from "lucide-react";
 import Button from "../../components/ui/Button";
 import { optimizeImage, createPreviewUrl, revokePreviewUrl } from "../../utils/imageOptimizer";
 import { useAdmin } from "../../context/AdminContext";
 import MediaLibrary from "../../components/admin/MediaLibrary";
+
+function Section({ title, defaultOpen = false, children }) {
+    const [open, setOpen] = useState(defaultOpen);
+    return (
+        <div className="bg-gray-50 rounded-2xl md:rounded-3xl overflow-hidden border border-gray-100">
+            <button type="button" onClick={() => setOpen(o => !o)} className="w-full flex items-center justify-between p-4 md:p-6 hover:bg-gray-100/50 transition-colors">
+                <h3 className="font-black text-brand-navy text-sm md:text-base">{title}</h3>
+                <ChevronDown size={18} className={`text-gray-400 transition-transform duration-200 ${open ? "rotate-180" : ""}`} />
+            </button>
+            {open && <div className="px-4 md:px-6 pb-4 md:pb-6 pt-0">{children}</div>}
+        </div>
+    );
+}
 
 export default function AdminProductForm({ product, onSave, onCancel }) {
     const { adminToken } = useAdmin();
@@ -26,6 +39,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
         hoodieTypes: [],
         hasCropTopOption: false,
         buyingPrice: "",
+        salePrice: "",
     });
     const [colorImages, setColorImages] = useState(null); // raw storage IDs — used for saving
     const [colorImagesDisplay, setColorImagesDisplay] = useState(null); // resolved URLs — used for thumbnails
@@ -85,6 +99,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                 hoodieTypes: product.hoodieTypes || [],
                 hasCropTopOption: product.hasCropTopOption || false,
                 buyingPrice: product.buyingPrice?.toString() || "",
+                salePrice: product.salePrice?.toString() || "",
             });
             setColorImages(product.logoImagesRaw || null);
             setColorImagesDisplay(product.logoImages || null);
@@ -300,6 +315,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                 hoodieTypes: formData.hoodieTypes,
                 hasCropTopOption: formData.hasCropTopOption || undefined,
                 buyingPrice: formData.buyingPrice !== "" ? parseFloat(formData.buyingPrice) : undefined,
+                salePrice: formData.salePrice !== "" ? parseFloat(formData.salePrice) : null,
                 logoCombinations: logoCombinations.length > 0 ? logoCombinations : undefined,
             };
 
@@ -360,7 +376,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                 <label className="block text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Selling Price (XOF)</label>
                                 <input
                                     type="number"
-                                    step="100"
+                                    step="any"
                                     required
                                     value={formData.price}
                                     onChange={(e) => setFormData({ ...formData, price: e.target.value })}
@@ -370,17 +386,31 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                             </div>
                         </div>
 
-                        <div>
-                            <label className="block text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Buying Price / Cost (XOF) <span className="normal-case font-medium text-gray-300">— admin only, used for profit tracking</span></label>
-                            <input
-                                type="number"
-                                step="any"
-                                min="0"
-                                value={formData.buyingPrice}
-                                onChange={(e) => setFormData({ ...formData, buyingPrice: e.target.value })}
-                                className="w-full bg-orange-50 border border-orange-100 rounded-xl md:rounded-2xl px-4 md:px-5 py-3 md:py-4 text-sm md:text-base text-brand-navy font-bold focus:ring-2 focus:ring-brand-orange/20 transition-all"
-                                placeholder="e.g. 4000"
-                            />
+                        <div className="grid grid-cols-2 gap-3 md:gap-4">
+                            <div>
+                                <label className="block text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Buying Price (XOF) <span className="normal-case font-medium text-gray-300">— admin only</span></label>
+                                <input
+                                    type="number"
+                                    step="any"
+                                    min="0"
+                                    value={formData.buyingPrice}
+                                    onChange={(e) => setFormData({ ...formData, buyingPrice: e.target.value })}
+                                    className="w-full bg-orange-50 border border-orange-100 rounded-xl md:rounded-2xl px-4 md:px-5 py-3 md:py-4 text-sm md:text-base text-brand-navy font-bold focus:ring-2 focus:ring-brand-orange/20 transition-all"
+                                    placeholder="e.g. 4000"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] md:text-xs font-black uppercase tracking-widest text-gray-400 mb-2 ml-1">Sale Price (XOF) <span className="normal-case font-medium text-gray-300">— leave empty = no sale</span></label>
+                                <input
+                                    type="number"
+                                    step="any"
+                                    min="0"
+                                    value={formData.salePrice}
+                                    onChange={(e) => setFormData({ ...formData, salePrice: e.target.value })}
+                                    className="w-full bg-red-50 border border-red-100 rounded-xl md:rounded-2xl px-4 md:px-5 py-3 md:py-4 text-sm md:text-base text-brand-navy font-bold focus:ring-2 focus:ring-red-200/30 transition-all"
+                                    placeholder="e.g. 5000"
+                                />
+                            </div>
                         </div>
 
                         <div>
@@ -509,49 +539,35 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                     </div>
                 </div>
 
-                <div className="bg-gray-50 rounded-2xl md:rounded-3xl p-4 md:p-8">
-                    <h3 className="font-black text-brand-navy mb-3 md:mb-4 text-sm md:text-base">Colors</h3>
+                <Section title={`Colors${formData.colors.length ? ` (${formData.colors.length})` : ""}`} defaultOpen={formData.colors.length > 0}>
                     <div className="flex flex-wrap gap-2 md:gap-3 mb-3 md:mb-4">
                         {formData.colors.map((color, index) => (
                             <div key={index} className="flex items-center gap-2 bg-white px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl shadow-sm">
                                 <span className="w-4 h-4 md:w-5 md:h-5 rounded-full border border-gray-200" style={{ backgroundColor: color.hex }} />
                                 <span className="text-xs md:text-sm font-bold text-brand-navy">{color.name}</span>
                                 <button type="button" onClick={() => removeColor(index)} className="text-gray-400 hover:text-red-500">
-                                    <X size={12} md:size={14} />
+                                    <X size={12} />
                                 </button>
                             </div>
                         ))}
                     </div>
                     <div className="flex gap-2 md:gap-3 items-end">
                         <div className="flex-1">
-                            <input
-                                type="text"
-                                value={newColorName}
-                                onChange={(e) => setNewColorName(e.target.value)}
-                                placeholder="Color name"
-                                className="w-full bg-white border-none rounded-xl px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm font-bold"
-                            />
+                            <input type="text" value={newColorName} onChange={(e) => setNewColorName(e.target.value)} placeholder="Color name"
+                                className="w-full bg-white border-none rounded-xl px-3 md:px-4 py-2.5 md:py-3 text-xs md:text-sm font-bold" />
                         </div>
                         <div>
-                            <input
-                                type="color"
-                                value={newColorHex}
-                                onChange={(e) => setNewColorHex(e.target.value)}
-                                className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl cursor-pointer border-none"
-                            />
+                            <input type="color" value={newColorHex} onChange={(e) => setNewColorHex(e.target.value)}
+                                className="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl cursor-pointer border-none" />
                         </div>
-                        <button
-                            type="button"
-                            onClick={addColor}
-                            className="bg-brand-navy text-white px-3 md:px-4 py-2.5 md:py-3 rounded-lg md:rounded-xl font-bold text-xs md:text-sm hover:bg-brand-navy/90"
-                        >
-                            <Plus size={18} md:size={20} />
+                        <button type="button" onClick={addColor}
+                            className="bg-brand-navy text-white px-3 md:px-4 py-2.5 md:py-3 rounded-lg md:rounded-xl font-bold text-xs md:text-sm hover:bg-brand-navy/90">
+                            <Plus size={18} />
                         </button>
                     </div>
-                </div>
+                </Section>
 
-                <div className="bg-gray-50 rounded-2xl md:rounded-3xl p-4 md:p-8">
-                    <h3 className="font-black text-brand-navy mb-3 md:mb-4 text-sm md:text-base">Logo Types</h3>
+                <Section title={`Logo Types${formData.logos.length ? ` (${formData.logos.length})` : ""}`} defaultOpen={formData.logos.length > 0}>
                     <div className="flex flex-wrap gap-2 md:gap-3 mb-3 md:mb-4">
                         {formData.logos.map((logo, index) => (
                             <div key={index} className="flex items-center gap-2 bg-white px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl shadow-sm">
@@ -634,7 +650,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                             {logoUploading ? "..." : <Plus size={18} />}
                         </button>
                     </div>
-                </div>
+                </Section>
 
                 {/* Import Logos & Combinations from another product */}
                 <div className="bg-gray-50 rounded-2xl md:rounded-3xl p-4 md:p-8">
@@ -739,9 +755,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
 
                 {/* Logo Combinations Section */}
                 {formData.logos.length >= 2 && (
-                    <div className="bg-gray-50 rounded-2xl md:rounded-3xl p-4 md:p-8">
-                        <h3 className="font-black text-brand-navy mb-1 text-sm md:text-base">Logo Combinations</h3>
-                        <p className="text-[10px] text-gray-400 font-bold mb-4">Upload a combined image shown when two back logos are selected together.</p>
+                    <Section title={`Logo Combinations (${logoCombinations.length})`}>
 
                         {/* Existing combinations */}
                         {logoCombinations.length > 0 && (
@@ -851,11 +865,10 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                 {comboUploading ? "..." : <Plus size={18} />}
                             </button>
                         </div>
-                    </div>
+                    </Section>
                 )}
 
-                <div className="bg-gray-50 rounded-2xl md:rounded-3xl p-4 md:p-8">
-                    <h3 className="font-black text-brand-navy mb-3 md:mb-4 text-sm md:text-base">Sizes</h3>
+                <Section title={`Sizes (${formData.sizes.length})`}>
                     <div className="flex flex-wrap gap-2 md:gap-3 mb-3 md:mb-4">
                         {formData.sizes.map((size, index) => (
                             <div key={index} className="flex items-center gap-2 bg-white px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl shadow-sm">
@@ -882,11 +895,9 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                             </button>
                         ))}
                     </div>
-                </div>
+                </Section>
 
-                <div className="bg-gray-50 rounded-2xl md:rounded-3xl p-4 md:p-8">
-                    <h3 className="font-black text-brand-navy mb-1 text-sm md:text-base">Hoodie Types</h3>
-                    <p className="text-[10px] text-gray-400 font-bold mb-4">Add style variants like Zipped, No Zip, Pullover, etc. Leave empty if not applicable.</p>
+                <Section title={`Hoodie Types (${formData.hoodieTypes.length})`}>
                     <div className="flex flex-wrap gap-2 md:gap-3 mb-3 md:mb-4">
                         {formData.hoodieTypes.map((ht, index) => (
                             <div key={index} className="flex items-center gap-2 bg-white px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl shadow-sm">
@@ -917,14 +928,11 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                             </button>
                         ))}
                     </div>
-                </div>
+                </Section>
 
-                <div className="bg-gray-50 rounded-2xl md:rounded-3xl p-4 md:p-8">
+                <Section title={`Crop Top Option${formData.hasCropTopOption ? " — ON" : ""}`}>
                     <div className="flex items-center justify-between">
-                        <div>
-                            <h3 className="font-black text-brand-navy mb-1 text-sm md:text-base">Crop Top Option</h3>
-                            <p className="text-[10px] text-gray-400 font-bold">Allow customers to choose a crop top version of this product.</p>
-                        </div>
+                        <p className="text-[10px] text-gray-400 font-bold">Allow customers to choose a crop top version of this product.</p>
                         <button
                             type="button"
                             onClick={() => setFormData({ ...formData, hasCropTopOption: !formData.hasCropTopOption })}
@@ -933,13 +941,11 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                             <span className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform duration-300 ${formData.hasCropTopOption ? "translate-x-5" : ""}`} />
                         </button>
                     </div>
-                </div>
+                </Section>
 
                 {/* Variant Images Section - per color only */}
                 {formData.colors.length > 0 && (
-                    <div className="bg-gray-50 rounded-2xl md:rounded-3xl p-4 md:p-8">
-                        <h3 className="font-black text-brand-navy mb-1 text-sm md:text-base">Color Images</h3>
-                        <p className="text-[10px] text-gray-400 font-bold mb-4">Upload images for each color. These show when a customer selects that color.</p>
+                    <Section title={`Color Images (${formData.colors.length})`}>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {formData.colors.map((color) => {
                                 const rawIds = colorImages?.["_default"]?.[color.name] || [];
@@ -1035,7 +1041,7 @@ export default function AdminProductForm({ product, onSave, onCancel }) {
                                 );
                             })}
                         </div>
-                    </div>
+                    </Section>
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">

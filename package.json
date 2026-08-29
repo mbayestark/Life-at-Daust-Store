@@ -15,6 +15,7 @@
     "test:coverage": "vitest --coverage"
   },
   "dependencies": {
+    "@sentry/react": "^10.71.0",
     "aos": "^2.3.4",
     "convex": "^1.32.0",
     "cors": "^2.8.6",

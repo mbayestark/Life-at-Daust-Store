@@ -9,8 +9,6 @@
  */
 
 import type * as auth from "../auth.js";
-import type * as clearAllData from "../clearAllData.js";
-import type * as clearProducts from "../clearProducts.js";
 import type * as collections from "../collections.js";
 import type * as crons from "../crons.js";
 import type * as files from "../files.js";
@@ -32,8 +30,6 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
-  clearAllData: typeof clearAllData;
-  clearProducts: typeof clearProducts;
   collections: typeof collections;
   crons: typeof crons;
   files: typeof files;

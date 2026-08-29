@@ -18,6 +18,8 @@ export default function ProductCard({ product }) {
 
   const productId = product._id;
   const isSoldOut = product.stock === 0;
+  const isOnSale = product.salePrice != null && product.salePrice < product.price;
+  const effectivePrice = isOnSale ? product.salePrice : product.price;
 
   // Check if product requires specifications
   const needsSpecifications =
@@ -60,16 +62,25 @@ export default function ProductCard({ product }) {
 
 
         {/* Badge */}
-        {(product.badge || isSoldOut) && (
+        {(product.badge || isSoldOut || isOnSale) && (
           <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
             {isSoldOut ? (
               <span className="bg-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-sm">
                 Sold Out
               </span>
-            ) : product.badge && (
-              <span className="bg-brand-orange text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-sm">
-                {product.badge}
-              </span>
+            ) : (
+              <>
+                {isOnSale && (
+                  <span className="bg-red-500 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-sm">
+                    Solde
+                  </span>
+                )}
+                {product.badge && (
+                  <span className="bg-brand-orange text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-sm">
+                    {product.badge}
+                  </span>
+                )}
+              </>
             )}
           </div>
         )}
@@ -123,9 +134,16 @@ export default function ProductCard({ product }) {
         </div>
 
         <div className="flex items-center justify-between mt-3 sm:mt-4">
-          <p className="text-sm sm:text-lg font-extrabold text-brand-navy tracking-tight">
-            {formatPrice(product.price)}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className={`text-sm sm:text-lg font-extrabold tracking-tight ${isOnSale ? 'text-red-500' : 'text-brand-navy'}`}>
+              {formatPrice(effectivePrice)}
+            </p>
+            {isOnSale && (
+              <p className="text-[10px] sm:text-xs text-gray-400 line-through">
+                {formatPrice(product.price)}
+              </p>
+            )}
+          </div>
 
           {/* Mobile Add to Cart (Visible on mobile, hidden on desktop hover) */}
           {!isSoldOut && (

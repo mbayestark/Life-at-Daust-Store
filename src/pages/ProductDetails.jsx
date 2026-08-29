@@ -159,18 +159,32 @@ export default function ProductDetails() {
                 {/* Right: Info & Actions (Span 5) */}
                 <div className="lg:col-span-7 flex flex-col pt-0 sm:pt-4">
                     <div className="mb-3 sm:mb-10 animate-in slide-in-from-right-10 duration-700 delay-100">
-                        {product.badge && (
-                            <span className="inline-block px-2 py-1 sm:px-4 sm:py-1.5 rounded-full bg-orange-100 text-brand-orange text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] mb-2 sm:mb-6 shadow-sm">
-                                {product.badge}
-                            </span>
+                        {(product.badge || (product.salePrice != null && product.salePrice < product.price)) && (
+                            <div className="flex items-center gap-2 mb-2 sm:mb-6">
+                                {product.salePrice != null && product.salePrice < product.price && (
+                                    <span className="inline-block px-2 py-1 sm:px-4 sm:py-1.5 rounded-full bg-red-100 text-red-500 text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] shadow-sm">
+                                        Solde
+                                    </span>
+                                )}
+                                {product.badge && (
+                                    <span className="inline-block px-2 py-1 sm:px-4 sm:py-1.5 rounded-full bg-orange-100 text-brand-orange text-[9px] sm:text-[10px] font-black uppercase tracking-[0.2em] shadow-sm">
+                                        {product.badge}
+                                    </span>
+                                )}
+                            </div>
                         )}
                         <h1 className="text-base sm:text-[var(--text-4xl)] font-black text-brand-navy leading-tight tracking-tighter mb-1 sm:mb-2">
                             {product.name}
                         </h1>
                         <div className="flex items-center gap-2 sm:gap-6 flex-wrap">
-                            <span className="text-lg sm:text-3xl font-black text-brand-orange tracking-tight">
-                                {formatPrice(product.price)}
+                            <span className={`text-lg sm:text-3xl font-black tracking-tight ${product.salePrice != null && product.salePrice < product.price ? 'text-red-500' : 'text-brand-orange'}`}>
+                                {formatPrice(product.salePrice != null && product.salePrice < product.price ? product.salePrice : product.price)}
                             </span>
+                            {product.salePrice != null && product.salePrice < product.price && (
+                                <span className="text-base sm:text-xl text-gray-400 line-through">
+                                    {formatPrice(product.price)}
+                                </span>
+                            )}
                             <div className="hidden sm:block h-6 w-[1px] bg-gray-200" />
                             <div className="flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-1.5 bg-yellow-50 rounded-lg">
                                 <Star size={12} fill="#fbbf24" className="text-yellow-400 sm:w-4 sm:h-4" />
